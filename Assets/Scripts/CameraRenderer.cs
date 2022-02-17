@@ -45,11 +45,19 @@ public partial class CameraRender {
         PrepareForSceneWindow();
         if (!Cull(shadowSettings.maxDistance))
             return;
-        Setup();
+
+        //Shadow Pass
+        m_buffer.BeginSample(SampleName);
+        ExecuteBuffer();
         m_lighting.SetUp(context,m_cullResult,shadowSettings);
+        m_buffer.EndSample(SampleName);
+
+        //Regular Pass
+        Setup();
         DrawUnsupportedShaders();
         DrawVisibaleGeometry(useDynamicBatching,useGPUInstancing);
         DrawGizmos();
+        m_lighting.Cleanup();
         Submit();
     }
     void DrawVisibaleGeometry(bool useDynamicBatching, bool useGPUInstancing)

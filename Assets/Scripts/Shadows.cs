@@ -6,6 +6,7 @@ public class Shadows
     const string bufferName = "Shadows";
     const int maxShadowedDirectionalLightCount = 1;
 
+    static int dirShadowAtlasId = Shader.PropertyToID("_DirectionalShadowAtlas");
     struct ShadowedDirectionalLight
     {
         public int m_visibleLightIndex;
@@ -52,11 +53,36 @@ public class Shadows
         {
             RenderDirectionalShadows();
         }
+        else
+        {
+            //we do this because of there will be some problems when shadow sampling in webGL 2.0
+            buffer.GetTemporaryRT(dirShadowAtlasId, 1, 1, 32, FilterMode.Bilinear, RenderTextureFormat.Shadowmap);
+        }
     }
 
     void RenderDirectionalShadows()
     {
+        int atlasSize = (int)m_shadowSettings.directional.atlasSize;
+        buffer.GetTemporaryRT(dirShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.Shadowmap);
+        buffer.SetRenderTarget(dirShadowAtlasId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
+        buffer.ClearRenderTarget(true, false, Color.clear);
+        buffer.BeginSample(bufferName);
+        ExecuteBuffer();
+        for(int i = 0; i < m_shadowedDirectionalLightCount; i++)
+        {
+            RenderDirectionalShadows(i, atlasSize);
+        }
 
+    }
+    
+    void RenderDirectionalShadows(int index, int tileSize)
+    {
+
+    }
+    public void Cleanup()
+    {
+        buffer.ReleaseTemporaryRT(dirShadowAtlasId);
+        ExecuteBuffer();
     }
 }
 

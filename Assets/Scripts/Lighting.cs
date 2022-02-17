@@ -56,4 +56,9 @@ public class Lighting
         m_dirLightDirecitons[index] = -visibleLight.localToWorldMatrix.GetColumn(2);
         m_shadows.ReserveDirectionalShadows(visibleLight.light, index);
     }
+
+    public void Cleanup()
+    {
+        m_shadows.Cleanup();
+    }
 }
