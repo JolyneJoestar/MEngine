@@ -5,3 +5,5 @@
 /[Bb]uilds/
 /Assets/AssetStoreTools*
 /.vs
+/[Ll]ogs/
+/.sln
