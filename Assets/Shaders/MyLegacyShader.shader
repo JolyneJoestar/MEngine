@@ -104,5 +104,38 @@ Shader "MyPipeline/Legacy"
 
 			ENDCG
 		}
+
+		Pass{
+			Tags{
+				"LightMode" = "ShadowCaster"
+			}
+
+			ColorMask 0
+
+			CGPROGRAM
+			#pragma shader_feature_CLIPPING
+			#pragma multi_compile_instancing
+			#pragma vertex ShadowCasterPassVertex
+			#pragma fragment ShadowCasterPassFragment
+
+			#include "UnityCG.cginc"
+			struct Varyings
+			{
+				float4 positionCS : SV_POSITON;
+				float2 baseUV : VAR_BASE_UV;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+			Varyings ShadowCasterPassVertex()
+			{
+				Varyings a;
+				return a;
+			}
+
+			void ShadowCasterPassFragment()
+			{
+
+			}
+			ENDCG
+		}
 	}
 }
