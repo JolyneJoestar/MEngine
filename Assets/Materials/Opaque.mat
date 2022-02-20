@@ -61,10 +61,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - MClipping: 0
-    - MCutoff: 0.5
+    - MCutoff: 0.52
     - MDstBlend: 10
     - MMetallic: 0.411
-    - MSmoothness: 0.436
+    - MSmoothness: 0.171
     - MSrcBlend: 5
     - MZWrite: 1
     - _BumpScale: 1

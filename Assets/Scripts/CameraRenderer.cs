@@ -68,6 +68,7 @@ public partial class CameraRender {
             enableInstancing = useGPUInstancing
         };
         var filteringSettings = new FilteringSettings(RenderQueueRange.all);
+        drawingSettings.SetShaderPassName(1, m_customShaderTagId);
         m_context.DrawRenderers(m_cullResult, ref drawingSettings, ref filteringSettings);
         m_context.DrawSkybox(m_camera);
     }

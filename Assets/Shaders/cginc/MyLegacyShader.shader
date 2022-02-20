@@ -93,6 +93,7 @@ Shader "MyPipeline/Legacy"
 				UNITY_SETUP_INSTANCE_ID(vert);
 				float4 texColor = tex2D(MTexture, vert.uv)*UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, MTint);
 				Surface surface;
+				surface.position = vert.positionWS;
 				surface.normal = normalize(vert.normal);
 				surface.viewDirection = normalize(_WorldSpaceCameraPos - vert.positionWS);
 				surface.color = texColor.rgb;
@@ -122,6 +123,7 @@ Shader "MyPipeline/Legacy"
 			#pragma fragment ShadowCasterPassFragment
 
 			#include "UnityCG.cginc"
+			#include "Shadows.cginc"
 
 			sampler2D MTexture;
 

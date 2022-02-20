@@ -12,13 +12,15 @@ public class Lighting
     static int
         m_visibleLightCountId = Shader.PropertyToID("MVisibleLightCount"),
         m_dirLightColorId = Shader.PropertyToID("MVisibleLightColors"),
-        m_dirLightDirectionId = Shader.PropertyToID("MVisibleLightDirecitons");
+        m_dirLightDirectionId = Shader.PropertyToID("MVisibleLightDirecitons"),
+        m_dirLightShadowDataId = Shader.PropertyToID("MDirecitonLightShadowData");
 
     Shadows m_shadows = new Shadows();
 
     static Vector4[]
         m_dirLightColors = new Vector4[m_maxVisibleLightCount],
-        m_dirLightDirecitons = new Vector4[m_maxVisibleLightCount];
+        m_dirLightDirecitons = new Vector4[m_maxVisibleLightCount],
+        m_dirLightShadowData = new Vector4[m_maxVisibleLightCount];
     public void SetUp(ScriptableRenderContext context,CullingResults cullingResults, ShadowSettings shadowSettings)
     {
         this.m_cullingResults = cullingResults;
@@ -45,6 +47,7 @@ public class Lighting
         m_buffer.SetGlobalInt(m_visibleLightCountId, i);
         m_buffer.SetGlobalVectorArray(m_dirLightColorId, m_dirLightColors);
         m_buffer.SetGlobalVectorArray(m_dirLightDirectionId, m_dirLightDirecitons);
+        m_buffer.SetGlobalVectorArray(m_dirLightShadowDataId, m_dirLightShadowData);
     }
 
     void SetDirectionLight(int index,ref VisibleLight visibleLight)

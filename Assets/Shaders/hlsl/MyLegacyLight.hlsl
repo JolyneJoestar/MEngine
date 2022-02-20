@@ -7,6 +7,7 @@ CBUFFER_START(MLightBuffer)
 	int MVisibleLightCount;
 	float4 MVisibleLightColors[MAX_VISIBLE_LIGHTS];
 	float4 MVisibleLightDirecitons[MAX_VISIBLE_LIGHTS];
+    float4 MDirectionalLightShadowData[MAX_VISIBLE_LIGHTS];
 CBUFFER_END
 
 struct Light
@@ -23,8 +24,8 @@ int GetDirectionLightCount()
 Light GetDirectionLight(int index)
 {
     Light light;
-    light.color = MVisibleLightColors[index];
-    light.direction = MVisibleLightDirecitons[index];
+    light.color = MVisibleLightColors[index].xyz;
+    light.direction = MVisibleLightDirecitons[index].xyz;
     return light;
 }
 
