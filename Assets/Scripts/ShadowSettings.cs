@@ -15,10 +15,20 @@ public class ShadowSettings
     [System.Serializable]
     public struct Directional {
         public TextureSize atlasSize;
+
+        [Range(1, 4)]
+        public int cascadeCount;
+
+        [Range(0f, 1f)]
+        public float cascadeRatio1, cascadeRatio2, cascadeRatio3;
     }
 
     public Directional directional = new Directional
     {
-        atlasSize = TextureSize._1024
+        atlasSize = TextureSize._1024,
+        cascadeCount = 4,
+        cascadeRatio1 = 0.1f,
+        cascadeRatio2 = 0.25f,
+        cascadeRatio3 = 0.5f
     };
 }
