@@ -42,7 +42,7 @@ Light GetDirectionLight(int index, Surface surfaceWS)
 
 float3 IncomingLight(Surface surface,Light light)
 {
-    return saturate(dot(surface.normal,light.direction)) * light.color * light.attenuation;
+    return saturate(dot(surface.normal, light.direction) * light.attenuation) * light.color;
 }
 
 //float3 GetLighting(Surface surface, Light light)

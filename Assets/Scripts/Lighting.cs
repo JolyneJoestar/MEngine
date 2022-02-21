@@ -57,7 +57,7 @@ public class Lighting
         //m_buffer.SetGlobalVector(m_dirLightDiretion, -visibleLight.localToWorldMatrix.GetColumn(2));
         m_dirLightColors[index] = visibleLight.finalColor;
         m_dirLightDirecitons[index] = -visibleLight.localToWorldMatrix.GetColumn(2);
-        m_shadows.ReserveDirectionalShadows(visibleLight.light, index);
+        m_dirLightShadowData[index] = m_shadows.ReserveDirectionalShadows(visibleLight.light, index);
     }
 
     public void Cleanup()
