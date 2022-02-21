@@ -18,4 +18,4 @@ MonoBehaviour:
   shadowSettings:
     maxDistance: 200
     directional:
-      atlasSize: 512
+      atlasSize: 1024

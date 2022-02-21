@@ -13,7 +13,7 @@ public class Lighting
         m_visibleLightCountId = Shader.PropertyToID("MVisibleLightCount"),
         m_dirLightColorId = Shader.PropertyToID("MVisibleLightColors"),
         m_dirLightDirectionId = Shader.PropertyToID("MVisibleLightDirecitons"),
-        m_dirLightShadowDataId = Shader.PropertyToID("MDirecitonLightShadowData");
+        m_dirLightShadowDataId = Shader.PropertyToID("MDirectionalLightShadowData");
 
     Shadows m_shadows = new Shadows();
 
