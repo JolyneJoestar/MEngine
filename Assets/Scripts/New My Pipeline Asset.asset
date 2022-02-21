@@ -16,6 +16,6 @@ MonoBehaviour:
   useGPUInstancing: 1
   useSPRBatcher: 0
   shadowSettings:
-    maxDistance: 100
+    maxDistance: 50
     directional:
-      atlasSize: 2048
+      atlasSize: 512

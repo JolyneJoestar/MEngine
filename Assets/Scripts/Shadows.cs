@@ -4,7 +4,7 @@ using UnityEngine.Rendering;
 public class Shadows
 {
     const string bufferName = "Shadows";
-    const int maxShadowedDirectionalLightCount = 4;
+    const int maxShadowedDirectionalLightCount = 1;
 
     static int dirShadowAtlasId = Shader.PropertyToID("_DirectionalShadowAtlas"),
         dirShadowMatricesId = Shader.PropertyToID("_DirectionalShadowMatrices");
@@ -49,7 +49,7 @@ public class Shadows
             m_cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b))
         {
             m_shadowedDirectionalLights[m_shadowedDirectionalLightCount++] = new ShadowedDirectionalLight { m_visibleLightIndex = visibleLightIndex };
-            return new Vector2(light.shadowStrength, m_shadowedDirectionalLightCount++);
+//            return new Vector2(light.shadowStrength, m_shadowedDirectionalLightCount++);
         }
         return Vector2.zero;
     }
@@ -103,7 +103,7 @@ public class Shadows
             );
         shadowSettings.splitData = splitData;
 
-        dirShadowMatrices[index] = ConvertToAtlasMatrix(projectionMatrix * viewMatrix, SetTileViewPort(index, spligt, tileSize),spligt);
+//        dirShadowMatrices[index] = ConvertToAtlasMatrix(projectionMatrix * viewMatrix, SetTileViewPort(index, spligt, tileSize),spligt);
         buffer.SetViewProjectionMatrices(viewMatrix, projectionMatrix);
         ExecuteBuffer();
         m_context.DrawShadows(ref shadowSettings);

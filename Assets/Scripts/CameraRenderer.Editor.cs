@@ -19,7 +19,6 @@ partial class CameraRender
         new ShaderTagId("Vertex"),
         new ShaderTagId("VertexLMRGBM"),
         new ShaderTagId("VertexLM")
- //       new ShaderTagId("ShadowCaster")
     };
 
     string SampleName { get; set; }

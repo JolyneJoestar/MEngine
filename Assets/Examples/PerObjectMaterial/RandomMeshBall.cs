@@ -13,10 +13,10 @@ public class RandomMeshBall:MonoBehaviour
     [SerializeField]
     Material m_material= default;
 
-    Matrix4x4[] m_matrices = new Matrix4x4[1024];
-    Vector4[] m_colors = new Vector4[1024];
-    float[] m_metalic = new float[1024],
-           m_smoothness = new float[1024];
+    Matrix4x4[] m_matrices = new Matrix4x4[1023];
+    Vector4[] m_colors = new Vector4[1023];
+    float[] m_metalic = new float[1023],
+           m_smoothness = new float[1023];
 
     MaterialPropertyBlock m_block;
 
