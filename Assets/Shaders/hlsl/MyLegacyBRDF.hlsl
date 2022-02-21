@@ -1,5 +1,3 @@
-
-
 #ifndef MY_LEGACY_BRDF_INCLUDE
 #define MY_LEGACY_BRDF_INCLUDE
 
@@ -59,7 +57,7 @@ float3 DirectBRDF(Surface surface,BRDF brdf,Light light)
     return SpecularStrength(surface, brdf, light) * brdf.specular + brdf.diffuse;
 }
 
-float3 GetLighting(Surface surface,BRDF brdf,Light light)
+float3 GetLighting(Surface surface,BRDF brdf, Light light)
 {
     return IncomingLight(surface, light) * DirectBRDF(surface,brdf,light);
 }
@@ -69,7 +67,7 @@ float3 GetLighting(Surface surface,BRDF brdf)
     float3 color = 0.0;
     for (int i = 0; i < GetDirectionLightCount(); i++)
     {
-        color += GetLighting(surface, brdf, GetDirectionLight(i));
+        color += GetLighting(surface, brdf, GetDirectionLight(i, surface));
     }
     return color;
 }

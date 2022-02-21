@@ -4,7 +4,7 @@ using UnityEngine.Rendering;
 public class Shadows
 {
     const string bufferName = "Shadows";
-    const int maxShadowedDirectionalLightCount = 1;
+    const int maxShadowedDirectionalLightCount = 2;
 
     static int dirShadowAtlasId = Shader.PropertyToID("_DirectionalShadowAtlas"),
         dirShadowMatricesId = Shader.PropertyToID("_DirectionalShadowMatrices");
@@ -49,7 +49,7 @@ public class Shadows
             m_cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b))
         {
             m_shadowedDirectionalLights[m_shadowedDirectionalLightCount++] = new ShadowedDirectionalLight { m_visibleLightIndex = visibleLightIndex };
-//            return new Vector2(light.shadowStrength, m_shadowedDirectionalLightCount++);
+//            return new Vector2(light.shadowStrength, m_shadowedDirectionalLightCount);
         }
         return Vector2.zero;
     }
@@ -89,7 +89,7 @@ public class Shadows
     Vector2 SetTileViewPort(int index, int split, int tileSize)
     {
         Vector2 offset = new Vector2(index % split, index / split);
-        buffer.SetViewport(new Rect(offset.x, offset.y * tileSize, tileSize, tileSize));
+        buffer.SetViewport(new Rect(offset.x * tileSize, offset.y * tileSize, tileSize, tileSize));
         return offset;
     }
     void RenderDirectionalShadows(int index, int spligt, int tileSize)
@@ -102,8 +102,8 @@ public class Shadows
             out ShadowSplitData splitData
             );
         shadowSettings.splitData = splitData;
-
-//        dirShadowMatrices[index] = ConvertToAtlasMatrix(projectionMatrix * viewMatrix, SetTileViewPort(index, spligt, tileSize),spligt);
+        SetTileViewPort(index, spligt, tileSize);
+//        dirShadowMatrices[index] = ConvertToAtlasMatrix(projectionMatrix * viewMatrix, ,spligt);
         buffer.SetViewProjectionMatrices(viewMatrix, projectionMatrix);
         ExecuteBuffer();
         m_context.DrawShadows(ref shadowSettings);
