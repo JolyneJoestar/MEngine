@@ -10,14 +10,17 @@ public class Shadows
         dirShadowMatricesId = Shader.PropertyToID("_DirectionalShadowMatrices"),
         cascadeCountId = Shader.PropertyToID("_CascadeCount"),
         cascadeCullingSphereId = Shader.PropertyToID("_CascadeCullingSphere"),
-        shadowDistanceFadeId = Shader.PropertyToID("_ShadowDistanceFade");
+        shadowDistanceFadeId = Shader.PropertyToID("_ShadowDistanceFade"),
+        cascadeDataId = Shader.PropertyToID("_CascadeData");
 
     static Matrix4x4[] dirShadowMatrices = new Matrix4x4[maxShadowedDirectionalLightCount * maxCascades];
-    static Vector4[] cascadeCullingSphere = new Vector4[maxCascades];
+    static Vector4[] cascadeCullingSphere = new Vector4[maxCascades],
+                    cascadeData = new Vector4[maxCascades];
 
     struct ShadowedDirectionalLight
     {
         public int m_visibleLightIndex;
+        public float m_slopeScaleBias;    
     }
     ShadowedDirectionalLight[] m_shadowedDirectionalLights = new ShadowedDirectionalLight[maxShadowedDirectionalLightCount];
     CommandBuffer buffer = new CommandBuffer
@@ -46,16 +49,16 @@ public class Shadows
         buffer.Clear();
     }
 
-    public Vector2 ReserveDirectionalShadows(Light light, int visibleLightIndex)
+    public Vector3 ReserveDirectionalShadows(Light light, int visibleLightIndex)
     {
         if (m_shadowedDirectionalLightCount < maxShadowedDirectionalLightCount &&
             light.shadows != LightShadows.None && light.shadowStrength > 0f &&
             m_cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b))
         {
-            m_shadowedDirectionalLights[m_shadowedDirectionalLightCount] = new ShadowedDirectionalLight { m_visibleLightIndex = visibleLightIndex };
-            return new Vector2(light.shadowStrength, m_shadowSettings.directional.cascadeCount * m_shadowedDirectionalLightCount++);
+            m_shadowedDirectionalLights[m_shadowedDirectionalLightCount] = new ShadowedDirectionalLight { m_visibleLightIndex = visibleLightIndex, m_slopeScaleBias = light.shadowBias };
+            return new Vector3(light.shadowStrength, m_shadowSettings.directional.cascadeCount * m_shadowedDirectionalLightCount++, light.shadowNormalBias);
         }
-        return Vector2.zero;
+        return Vector3.zero;
     }
     public void Render()
     {
@@ -87,7 +90,8 @@ public class Shadows
             RenderDirectionalShadows(i, splite, tileSize);
         }
         buffer.SetGlobalMatrixArray(dirShadowMatricesId, dirShadowMatrices);
-        buffer.SetGlobalVector(shadowDistanceFadeId, new Vector4(1f / m_shadowSettings.maxDistance, 1f / m_shadowSettings.distanceFade));
+        float f = 1f - m_shadowSettings.directional.cascadeFade;
+        buffer.SetGlobalVector(shadowDistanceFadeId, new Vector4(1f / m_shadowSettings.maxDistance, 1f / m_shadowSettings.distanceFade, 1f / (1f - f * f)));
         buffer.EndSample(bufferName);
         ExecuteBuffer();
     }
@@ -98,6 +102,16 @@ public class Shadows
         buffer.SetViewport(new Rect(offset.x * tileSize, offset.y * tileSize, tileSize, tileSize));
         return offset;
     }
+
+    void SetCascadeData(int index, Vector4 cullingSphere, float tileSize)
+    {
+        float texelSize = 2f * cullingSphere.w / tileSize;
+        texelSize *= 1.4142136f;
+        cullingSphere.w *= cullingSphere.w;
+        cascadeData[index] = new Vector4(1f / cullingSphere.w, texelSize);
+        cascadeCullingSphere[index] = cullingSphere;
+    }
+
     void RenderDirectionalShadows(int index, int split, int tileSize)
     {
         ShadowedDirectionalLight light = m_shadowedDirectionalLights[index];
@@ -120,18 +134,17 @@ public class Shadows
             shadowSettings.splitData = splitData;
             if(index == 0)
             {
-                Vector4 cullingSphere = splitData.cullingSphere;
-                cullingSphere.w *= cullingSphere.w;
-                cascadeCullingSphere[i] = cullingSphere;
+                SetCascadeData(i, splitData.cullingSphere, tileSize);
             }
             dirShadowMatrices[tileIndex] = ConvertToAtlasMatrix(projectionMatrix * viewMatrix, SetTileViewPort(tileIndex, split, tileSize), split);
             buffer.SetGlobalInt(cascadeCountId, m_shadowSettings.directional.cascadeCount);
             buffer.SetGlobalVectorArray(cascadeCullingSphereId, cascadeCullingSphere);
+            buffer.SetGlobalVectorArray(cascadeDataId, cascadeData);
             buffer.SetViewProjectionMatrices(viewMatrix, projectionMatrix);
-            //buffer.SetGlobalDepthBias(500000f, 0f);
+            buffer.SetGlobalDepthBias(0, light.m_slopeScaleBias);
             ExecuteBuffer();
             m_context.DrawShadows(ref shadowSettings);
-            //buffer.SetGlobalDepthBias(0, 0f);
+            buffer.SetGlobalDepthBias(0, 0f);
         }
     }
     Matrix4x4 ConvertToAtlasMatrix(Matrix4x4 m, Vector2 offset, int split)

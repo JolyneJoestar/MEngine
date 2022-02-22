@@ -34,9 +34,15 @@ ShadowData GetShadowData(Surface surfaceWS)
     for (i = 0; i < _CascadeCount; i++)
     {
         float4 sphere = _CascadeCullingSphere[i];
-        float distance = SquareDistance(surfaceWS.position, sphere.xyz);
-        if (distance < sphere.w)
-            break;          
+        float distanceSqr = SquareDistance(surfaceWS.position, sphere.xyz);
+        if (distanceSqr < sphere.w)
+        {
+            if (i == _CascadeCount - 1)
+            {
+                data.strength *= FadedShadowStrength(distanceSqr, _CascadeData[i].x, _ShadowDistanceFade.z);
+            }
+            break;
+        }         
     }
     data.cascadeIndex = i;
     if(i == _CascadeCount)
@@ -49,6 +55,7 @@ DirectionalShadowData GetDirectionalShadowData(int lightIndex, ShadowData shadow
     DirectionalShadowData data;
     data.strength = MDirectionalLightShadowData[lightIndex].x * shadowData.strength;
     data.tileIndex = MDirectionalLightShadowData[lightIndex].y + shadowData.cascadeIndex;
+    data.normalBias = MDirectionalLightShadowData[lightIndex].z;
     return data;
 }
 
@@ -63,8 +70,8 @@ Light GetDirectionLight(int index, Surface surfaceWS, ShadowData shadowdata)
     light.color = MVisibleLightColors[index].xyz;
     light.direction = MVisibleLightDirecitons[index].xyz;
     DirectionalShadowData dirShadowData = GetDirectionalShadowData(index, shadowdata);
-    light.attenuation = GetDirectionalShadowAttenuation(dirShadowData, surfaceWS);
-//    light.attenuation = shadowdata.cascadeIndex * 0.25;
+    light.attenuation = GetDirectionalShadowAttenuation(dirShadowData, shadowdata, surfaceWS);
+//  light.attenuation = shadowdata.cascadeIndex * 0.25;
     return light;
 }
 

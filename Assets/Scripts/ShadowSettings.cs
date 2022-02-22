@@ -25,6 +25,8 @@ public class ShadowSettings
         [Range(0f, 1f)]
         public float cascadeRatio1, cascadeRatio2, cascadeRatio3;
 
+        [Range(0.001f, 1f)]
+        public float cascadeFade;
         public Vector3 CascadeRatios => new Vector3(cascadeRatio1, cascadeRatio2, cascadeRatio3);
     }
 
@@ -34,7 +36,8 @@ public class ShadowSettings
         cascadeCount = 4,
         cascadeRatio1 = 0.1f,
         cascadeRatio2 = 0.25f,
-        cascadeRatio3 = 0.5f
+        cascadeRatio3 = 0.5f,
+        cascadeFade = 0.1f
     };
     
 }
