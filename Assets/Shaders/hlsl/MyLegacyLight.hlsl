@@ -30,6 +30,7 @@ ShadowData GetShadowData(Surface surfaceWS)
 {
     ShadowData data;
     data.strength = FadedShadowStrength(surfaceWS.depth, _ShadowDistanceFade.x, _ShadowDistanceFade.y);
+    data.cascadeBlend = 1.0;
     int i;
     for (i = 0; i < _CascadeCount; i++)
     {
@@ -37,9 +38,14 @@ ShadowData GetShadowData(Surface surfaceWS)
         float distanceSqr = SquareDistance(surfaceWS.position, sphere.xyz);
         if (distanceSqr < sphere.w)
         {
+            float fade = FadedShadowStrength(distanceSqr, _CascadeData[i].x, _ShadowDistanceFade.z);
             if (i == _CascadeCount - 1)
             {
-                data.strength *= FadedShadowStrength(distanceSqr, _CascadeData[i].x, _ShadowDistanceFade.z);
+                data.strength *= fade;
+            }
+            else
+            {
+                data.cascadeBlend = fade;
             }
             break;
         }         

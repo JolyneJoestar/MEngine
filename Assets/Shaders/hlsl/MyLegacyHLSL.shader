@@ -31,6 +31,7 @@ Shader "MyPipeline/LegacyHLSL"
 
 				HLSLPROGRAM
 
+				#pragma multi_compile _ _DIRECTIONAL_PCF3 _DIRECTIONAL_PCF5 _DIRECTIONAL_PCF7
 				#pragma multi_compile_instancing
 				#pragma vertex LegacyVertex
 				#pragma fragment LegacyFragment
