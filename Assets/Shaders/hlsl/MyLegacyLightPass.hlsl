@@ -67,10 +67,12 @@ float4 LegacyFragment(MVertexOut vert) : SV_TARGET
 	surface.position = vert.positionWS;
 	surface.normal = normalize(vert.normal);
 	surface.viewDirection = normalize(_WorldSpaceCameraPos - vert.positionWS);
+    surface.depth = -TransformWorldToView(vert.positionWS).z;
 	surface.color = texColor.rgb;
 	surface.alpha = texColor.a;
 	surface.metallic = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial,MMetallic);
 	surface.smoothness = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, MSmoothness);
+    
 
 	BRDF brdf = GetBRDF(surface);
 //    return texColor;

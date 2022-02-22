@@ -9,12 +9,21 @@ TEXTURE2D_SHADOW(_DirectionalShadowAtlas);
 SAMPLER_CMP(SHADOW_SAMPLER);
 
 CBUFFER_START(_CustomShadows)
+int _CascadeCount;
+float4 _CascadeCullingSphere[MAX_CASCADE_COUNT];
 float4x4 _DirectionalShadowMatrices[MAX_SHADOWED_DIRECTIONAL_LIGHT_COUNT * MAX_CASCADE_COUNT];
+float4 _ShadowDistanceFade;
 CBUFFER_END
 
 struct DirectionalShadowData {
 	float strength;
 	int tileIndex;
+};
+
+struct ShadowData
+{
+    int cascadeIndex;
+    float strength;
 };
 
 float SamplerDirectionalShadowAtlas(float3 positionSTS)
@@ -26,7 +35,8 @@ float GetDirectionalShadowAttenuation(DirectionalShadowData data, Surface surfac
 {
 	if (data.strength <= 0.0)
 		return 1.0;
-	float3 positionSTS = mul(_DirectionalShadowMatrices[data.tileIndex], float4(surfaceWS.position, 1.0)).xyz;
+    
+    float3 positionSTS = mul(_DirectionalShadowMatrices[data.tileIndex], float4(surfaceWS.position, 1.0)).xyz;
 	float shadow = SamplerDirectionalShadowAtlas(positionSTS);
 	return lerp(1.0, shadow, data.strength);
 }

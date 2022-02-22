@@ -17,11 +17,38 @@ struct Light
 	float attenuation;
 };
 
-DirectionalShadowData GetDirectionalShadowData(int lightIndex)
+float SquareDistance(float3 A, float3 B)
+{
+    return dot(B - A, B - A);
+}
+
+float FadedShadowStrength(float distance, float scale, float fade)
+{
+    return saturate((1.0 - distance * scale) * fade);
+}
+ShadowData GetShadowData(Surface surfaceWS)
+{
+    ShadowData data;
+    data.strength = FadedShadowStrength(surfaceWS.depth, _ShadowDistanceFade.x, _ShadowDistanceFade.y);
+    int i;
+    for (i = 0; i < _CascadeCount; i++)
+    {
+        float4 sphere = _CascadeCullingSphere[i];
+        float distance = SquareDistance(surfaceWS.position, sphere.xyz);
+        if (distance < sphere.w)
+            break;          
+    }
+    data.cascadeIndex = i;
+    if(i == _CascadeCount)
+        data.strength = 0.0;
+    return data;
+}
+
+DirectionalShadowData GetDirectionalShadowData(int lightIndex, ShadowData shadowData)
 {
     DirectionalShadowData data;
-    data.strength = MDirectionalLightShadowData[lightIndex].x;
-    data.tileIndex = MDirectionalLightShadowData[lightIndex].y;
+    data.strength = MDirectionalLightShadowData[lightIndex].x * shadowData.strength;
+    data.tileIndex = MDirectionalLightShadowData[lightIndex].y + shadowData.cascadeIndex;
     return data;
 }
 
@@ -30,13 +57,14 @@ int GetDirectionLightCount()
     return MVisibleLightCount;
 }
 
-Light GetDirectionLight(int index, Surface surfaceWS)
+Light GetDirectionLight(int index, Surface surfaceWS, ShadowData shadowdata)
 {
     Light light;
     light.color = MVisibleLightColors[index].xyz;
     light.direction = MVisibleLightDirecitons[index].xyz;
-    DirectionalShadowData shadowData = GetDirectionalShadowData(index);
-    light.attenuation = GetDirectionalShadowAttenuation(shadowData, surfaceWS);
+    DirectionalShadowData dirShadowData = GetDirectionalShadowData(index, shadowdata);
+    light.attenuation = GetDirectionalShadowAttenuation(dirShadowData, surfaceWS);
+//    light.attenuation = shadowdata.cascadeIndex * 0.25;
     return light;
 }
 
