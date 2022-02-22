@@ -4,7 +4,7 @@ using UnityEngine.Rendering;
 public class Shadows
 {
     const string bufferName = "Shadows";
-    const int maxShadowedDirectionalLightCount = 1, maxCascades = 4;
+    const int maxShadowedDirectionalLightCount = 4, maxCascades = 4;
 
     static int dirShadowAtlasId = Shader.PropertyToID("_DirectionalShadowAtlas"),
         dirShadowMatricesId = Shader.PropertyToID("_DirectionalShadowMatrices"),
@@ -20,7 +20,8 @@ public class Shadows
     struct ShadowedDirectionalLight
     {
         public int m_visibleLightIndex;
-        public float m_slopeScaleBias;    
+        public float m_slopeScaleBias;
+        public float m_nearPlaneOffset;
     }
     ShadowedDirectionalLight[] m_shadowedDirectionalLights = new ShadowedDirectionalLight[maxShadowedDirectionalLightCount];
     CommandBuffer buffer = new CommandBuffer
@@ -55,7 +56,7 @@ public class Shadows
             light.shadows != LightShadows.None && light.shadowStrength > 0f &&
             m_cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b))
         {
-            m_shadowedDirectionalLights[m_shadowedDirectionalLightCount] = new ShadowedDirectionalLight { m_visibleLightIndex = visibleLightIndex, m_slopeScaleBias = light.shadowBias };
+            m_shadowedDirectionalLights[m_shadowedDirectionalLightCount] = new ShadowedDirectionalLight { m_visibleLightIndex = visibleLightIndex, m_slopeScaleBias = light.shadowBias, m_nearPlaneOffset = light.shadowNearPlane };
             return new Vector3(light.shadowStrength, m_shadowSettings.directional.cascadeCount * m_shadowedDirectionalLightCount++, light.shadowNormalBias);
         }
         return Vector3.zero;
@@ -125,7 +126,7 @@ public class Shadows
         {
 
             m_cullingResults.ComputeDirectionalShadowMatricesAndCullingPrimitives(
-                light.m_visibleLightIndex, i, cascadeCount, cascadeRatios, tileSize, 0f,
+                light.m_visibleLightIndex, i, cascadeCount, cascadeRatios, tileSize, light.m_nearPlaneOffset,
                 out Matrix4x4 viewMatrix, out Matrix4x4 projectionMatrix,
                 out ShadowSplitData splitData
                 );
