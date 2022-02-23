@@ -4,14 +4,17 @@
 #include "Common.hlsl"					
 #include "MyLegacySurface.hlsl"
 #include "Shadows.hlsl"
+#include "GI.hlsl"
 #include "MyLegacyLight.hlsl"
 #include "MyLegacyBRDF.hlsl"
+#include "LitInput.hlsl"
 
 
 struct MVertexIn {
 	float3 positionOS : POSITION;
 	float3 normalOS : NORMAL;
 	float2 uv : TEXCOORD0;
+    GI_ATTRIBUTE_DATA
 	UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
@@ -20,19 +23,9 @@ struct MVertexOut {
 	float3 positionWS : VAR_POSITION;
 	float3 normal : VAR_NORMAL;
 	float2 uv : VAR_BASE_UV;
+    GI_VARYINGS_DATA
 	UNITY_VERTEX_INPUT_INSTANCE_ID
 };
-
-TEXTURE2D(MTexture);
-SAMPLER(samplerMTexture);
-
-UNITY_INSTANCING_BUFFER_START(UnityPerMaterial)
-UNITY_DEFINE_INSTANCED_PROP(float4, MTexture_ST)
-UNITY_DEFINE_INSTANCED_PROP(float4, MTint)
-UNITY_DEFINE_INSTANCED_PROP(float, MMetallic)
-UNITY_DEFINE_INSTANCED_PROP(float, MSmoothness)
-UNITY_INSTANCING_BUFFER_END(UnityPerMaterial)
-
 
 float3 CalculateDiffuseFactor(int index, float3 normal)
 {
@@ -48,7 +41,7 @@ MVertexOut LegacyVertex(MVertexIn inVert)
 	MVertexOut vert;
 	UNITY_SETUP_INSTANCE_ID(inVert);
 	UNITY_TRANSFER_INSTANCE_ID(inVert, vert);
-
+    TRANSFER_GI_DATA(inVert, vert);
 	vert.positionWS = TransformObjectToWorld(inVert.positionOS);
 	vert.positionCS = TransformWorldToHClip(vert.positionWS);
 
@@ -61,8 +54,8 @@ MVertexOut LegacyVertex(MVertexIn inVert)
 float4 LegacyFragment(MVertexOut vert) : SV_TARGET
 {
 	UNITY_SETUP_INSTANCE_ID(vert);
-	float4 baseColor = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, MTint);
-	float4 texColor = SAMPLE_TEXTURE2D(MTexture, samplerMTexture, vert.uv) * baseColor;
+    
+    float4 texColor = GetBase(vert.uv);
 	Surface surface;
 	surface.position = vert.positionWS;
 	surface.normal = normalize(vert.normal);
@@ -70,13 +63,14 @@ float4 LegacyFragment(MVertexOut vert) : SV_TARGET
     surface.depth = -TransformWorldToView(vert.positionWS).z;
 	surface.color = texColor.rgb;
 	surface.alpha = texColor.a;
-	surface.metallic = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial,MMetallic);
-	surface.smoothness = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, MSmoothness);
-    
+    surface.metallic = GetMetallic(vert.uv);
+    surface.smoothness = GetSmoothness(vert.uv);
+    surface.dither = InterleavedGradientNoise(vert.positionCS.xy, 0);
 
 	BRDF brdf = GetBRDF(surface);
 //    return texColor;
-    return float4(GetLighting(surface, brdf), surface.alpha);
+    GI gi = GetGI(GI_FRAGMENT_DATA(vert), surface);
+    return float4(GetLighting(surface, brdf, gi), surface.alpha);
 }
 
 #endif //MY_LEGACY_LIGHT_PASS_INCLUDE

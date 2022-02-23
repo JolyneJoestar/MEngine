@@ -24,6 +24,13 @@ public class Shadows
         "_DIRECTIONAL_PCF5",
         "_DIRECTIONAL_PCF7",
     };
+
+    static string[] cascadeBlendKeywords =
+    {
+        "_CASCADE_BLEND_SOFT",
+        "_CASCADE_BLEND_DITHER"
+    };
+
     struct ShadowedDirectionalLight
     {
         public int m_visibleLightIndex;
@@ -100,7 +107,10 @@ public class Shadows
         buffer.SetGlobalMatrixArray(dirShadowMatricesId, dirShadowMatrices);
         float f = 1f - m_shadowSettings.directional.cascadeFade;
         buffer.SetGlobalVector(shadowDistanceFadeId, new Vector4(1f / m_shadowSettings.maxDistance, 1f / m_shadowSettings.distanceFade, 1f / (1f - f * f)));
-        SetKeyWorlds();
+        SetKeywords(directionalFilterKeywords, (int)m_shadowSettings.directional.filter - 1);
+
+        SetKeywords(cascadeBlendKeywords, (int)m_shadowSettings.directional.cascadeBlend - 1);
+
         buffer.SetGlobalVector(shadowAtlasSizeId, new Vector4(atlasSize, 1f / atlasSize));
         buffer.EndSample(bufferName);
         ExecuteBuffer();
@@ -133,6 +143,7 @@ public class Shadows
         int tileOffset = index * cascadeCount;
         Vector3 cascadeRatios = m_shadowSettings.directional.CascadeRatios;
 
+        float cullingFactor = Mathf.Max(0f, 0.8f - m_shadowSettings.directional.cascadeFade);
         for (int i = 0; i < cascadeCount; i++)
         {
 
@@ -143,6 +154,7 @@ public class Shadows
                 );
 
             int tileIndex = tileOffset + i;
+            splitData.shadowCascadeBlendCullingFactor = cullingFactor;
             shadowSettings.splitData = splitData;
             if(index == 0)
             {
@@ -184,18 +196,17 @@ public class Shadows
         return m;
     }
 
-    void SetKeyWorlds()
+    void SetKeywords(string[] keywords, int enableIndex)
     {
-        int enableIndex = (int)m_shadowSettings.directional.filter - 1;
-        for (int i = 0; i < directionalFilterKeywords.Length; i++)
+        for (int i = 0; i < keywords.Length; i++)
         {
             if (i == enableIndex)
             {
-                buffer.EnableShaderKeyword(directionalFilterKeywords[i]);
+                buffer.EnableShaderKeyword(keywords[i]);
             }
             else
             {
-                buffer.DisableShaderKeyword(directionalFilterKeywords[i]);
+                buffer.DisableShaderKeyword(keywords[i]);
             }
         }
     }

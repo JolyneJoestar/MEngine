@@ -65,7 +65,8 @@ public partial class CameraRender {
         var sortingSettings = new SortingSettings(m_camera) { criteria = SortingCriteria.CommonOpaque };
         var drawingSettings = new DrawingSettings(m_customShaderTagId, sortingSettings) {
             enableDynamicBatching = useDynamicBatching,
-            enableInstancing = useGPUInstancing
+            enableInstancing = useGPUInstancing,
+            perObjectData = PerObjectData.Lightmaps | PerObjectData.LightProbe | PerObjectData.LightProbeProxyVolume
         };
         var filteringSettings = new FilteringSettings(RenderQueueRange.all);
         drawingSettings.SetShaderPassName(1, m_customShaderTagId);
