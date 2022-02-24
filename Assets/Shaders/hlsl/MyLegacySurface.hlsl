@@ -10,5 +10,7 @@ struct Surface
     float alpha;
     float metallic;
     float smoothness;
+    float depth;
+    float dither;
 };
 #endif //MY_LEGACY_SURFACE_INCLUDE

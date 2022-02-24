@@ -13,7 +13,7 @@ public class Lighting
         m_visibleLightCountId = Shader.PropertyToID("MVisibleLightCount"),
         m_dirLightColorId = Shader.PropertyToID("MVisibleLightColors"),
         m_dirLightDirectionId = Shader.PropertyToID("MVisibleLightDirecitons"),
-        m_dirLightShadowDataId = Shader.PropertyToID("MDirecitonLightShadowData");
+        m_dirLightShadowDataId = Shader.PropertyToID("MDirectionalLightShadowData");
 
     Shadows m_shadows = new Shadows();
 
@@ -57,7 +57,7 @@ public class Lighting
         //m_buffer.SetGlobalVector(m_dirLightDiretion, -visibleLight.localToWorldMatrix.GetColumn(2));
         m_dirLightColors[index] = visibleLight.finalColor;
         m_dirLightDirecitons[index] = -visibleLight.localToWorldMatrix.GetColumn(2);
-        m_shadows.ReserveDirectionalShadows(visibleLight.light, index);
+        m_dirLightShadowData[index] = m_shadows.ReserveDirectionalShadows(visibleLight.light, index);
     }
 
     public void Cleanup()

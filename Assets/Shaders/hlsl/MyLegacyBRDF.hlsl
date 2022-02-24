@@ -1,9 +1,9 @@
-
-
 #ifndef MY_LEGACY_BRDF_INCLUDE
 #define MY_LEGACY_BRDF_INCLUDE
 
 #define MIN_REFLECTIVITY 0.04
+
+#include "GI.hlsl"
 
 struct BRDF
 {
@@ -25,7 +25,7 @@ float OneMinusReflectivity(float metallic)
 
 float SpecularStrength(Surface surface, BRDF brdf, Light light)
 {
-    float3 h = normalize(light.direction + surface.viewDirection);
+    float3 h = SafeNormalize(light.direction + surface.viewDirection);
     float nh2 = Square(saturate(dot(surface.normal, h)));
     float lh2 = Square(saturate(dot(light.direction, h)));
     float r2 = Square(brdf.roughness);
@@ -59,17 +59,18 @@ float3 DirectBRDF(Surface surface,BRDF brdf,Light light)
     return SpecularStrength(surface, brdf, light) * brdf.specular + brdf.diffuse;
 }
 
-float3 GetLighting(Surface surface,BRDF brdf,Light light)
+float3 GetLighting(Surface surface,BRDF brdf, Light light)
 {
     return IncomingLight(surface, light) * DirectBRDF(surface,brdf,light);
 }
 
-float3 GetLighting(Surface surface,BRDF brdf)
+float3 GetLighting(Surface surface,BRDF brdf, GI gi)
 {
-    float3 color = 0.0;
+    ShadowData shadowData = GetShadowData(surface);
+    float3 color = gi.diffuse * brdf.diffuse;
     for (int i = 0; i < GetDirectionLightCount(); i++)
     {
-        color += GetLighting(surface, brdf, GetDirectionLight(i));
+        color += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData));
     }
     return color;
 }
