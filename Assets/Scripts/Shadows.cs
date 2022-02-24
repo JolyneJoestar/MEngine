@@ -6,6 +6,8 @@ public class Shadows
     const string bufferName = "Shadows";
     const int maxShadowedDirectionalLightCount = 4, maxCascades = 4;
 
+    static ShaderTagId m_customShadowBlurShaderTagID = new ShaderTagId("ShadowBlur");
+
     static int dirShadowAtlasId = Shader.PropertyToID("_DirectionalShadowAtlas"),
         dirShadowMatricesId = Shader.PropertyToID("_DirectionalShadowMatrices"),
         cascadeCountId = Shader.PropertyToID("_CascadeCount"),
@@ -57,8 +59,8 @@ public class Shadows
 
     ShadowSettings m_shadowSettings;
 
-    ComputeShaders m_computeShader;
-    public void Setup(ScriptableRenderContext context, CullingResults cullingResults, ShadowSettings shadowSettings)
+    Camera m_camera;
+    public void Setup(ScriptableRenderContext context, CullingResults cullingResults, ShadowSettings shadowSettings, Camera camera)
     {
         this.m_context = context;
         this.m_cullingResults = cullingResults;
@@ -100,7 +102,7 @@ public class Shadows
             else
             {
                 buffer.GetTemporaryRT(dirShadowAtlasId, 1, 1, 32, FilterMode.Bilinear, RenderTextureFormat.RGFloat);
-                buffer.GetTemporaryRT(shadowVSMId, 1, 1, 32, FilterMode.Bilinear, RenderTextureFormat.RGFloat);
+                
             }
         }
     }
@@ -114,8 +116,7 @@ public class Shadows
         }
         else
         {
-            buffer.GetTemporaryRT(dirShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.RGFloat);
-            buffer.GetTemporaryRT(shadowVSMId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.RGFloat);
+            buffer.GetTemporaryRT(dirShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.RGFloat);           
         }
         
         buffer.SetRenderTarget(shadowVSMId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
@@ -141,6 +142,24 @@ public class Shadows
 
         buffer.SetGlobalVector(shadowAtlasSizeId, new Vector4(atlasSize, 1f / atlasSize));
         buffer.EndSample(bufferName);
+        ExecuteBuffer();
+    }
+    public void DrawShadowBlur(bool useDynamicBatching, bool useGPUInstancing)
+    {
+        var sortingSettings = new SortingSettings(m_camera) { criteria = SortingCriteria.CommonOpaque };
+        var drawingSettings = new DrawingSettings(m_customShadowBlurShaderTagID, sortingSettings)
+        {
+            enableDynamicBatching = useDynamicBatching,
+            enableInstancing = useGPUInstancing,
+        };
+        buffer.GetTemporaryRT(shadowVSMId, (int)m_shadowSettings.directional.atlasSize, (int)m_shadowSettings.directional.atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.RGFloat);
+        buffer.SetRenderTarget(shadowVSMId);
+        buffer.ClearRenderTarget(true, false, Color.clear);
+        buffer.BeginSample("ShadowBlur");
+        var filteringSettings = new FilteringSettings(RenderQueueRange.all);
+        drawingSettings.SetShaderPassName(1, m_customShadowBlurShaderTagID);
+        m_context.DrawRenderers(m_cullingResults, ref drawingSettings, ref filteringSettings);
+        buffer.EndSample("ShadowBlur");
         ExecuteBuffer();
     }
 

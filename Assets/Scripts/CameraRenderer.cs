@@ -49,12 +49,14 @@ public partial class CameraRender {
         //Shadow Pass
         m_buffer.BeginSample(SampleName);
         ExecuteBuffer();
-        m_lighting.SetUp(context,m_cullResult,shadowSettings);
+        m_lighting.SetUp(context,m_cullResult,shadowSettings,camera);
         m_buffer.EndSample(SampleName);
 
+        //m_lighting.RenderShadowBlur(useDynamicBatching,useGPUInstancing);
         //CS Pass
         //m_buffer.BeginSample(SampleName);
-        //m_buffer.
+        //ExecuteBuffer();
+        //DrawShadowBlur(useDynamicBatching, useGPUInstancing);
         //m_buffer.EndSample(SampleName);
 
         //Regular Pass
@@ -78,7 +80,6 @@ public partial class CameraRender {
         m_context.DrawRenderers(m_cullResult, ref drawingSettings, ref filteringSettings);
         m_context.DrawSkybox(m_camera);
     }
-
     void Submit()
     {
         m_buffer.EndSample(SampleName);
