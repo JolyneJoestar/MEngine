@@ -33,6 +33,7 @@ Shader "MyPipeline/LegacyHLSL"
 
 				#pragma multi_compile _ _DIRECTIONAL_PCF3 _DIRECTIONAL_PCF5 _DIRECTIONAL_PCF7
 				#pragma multi_compile _ _CASCADE_BLEND_SOFT _CASCADE_BLEND_DITHER
+				#pragma multi_compile _ _PCF _VSM _PCSS
 				#pragma multi_compile _ LIGHTMAP_ON
 				#pragma multi_compile_instancing
 				#pragma vertex LegacyVertex
@@ -48,12 +49,13 @@ Shader "MyPipeline/LegacyHLSL"
 					"LightMode" = "ShadowCaster"
 				}
 
-				ColorMask 0
+				//ColorMask 0
 
 				HLSLPROGRAM
 				#pragma target 3.5
 				#pragma shader_feature _CLIPPING
 				#pragma multi_compile_instancing
+				#pragma multi_compile_VSM
 				#pragma vertex ShadowCasterPassVertex
 				#pragma fragment ShadowCasterPassFragment
 
@@ -74,6 +76,26 @@ Shader "MyPipeline/LegacyHLSL"
 				#pragma vertex MetaPassVertex
 				#pragma fragment MetaPassFragment
 				#include "MetaPass.hlsl"
+				ENDHLSL
+			}
+
+			Pass{
+				Tags{
+					"LightMode" = "ShadowBlur"
+				}
+
+				//ColorMask 0
+
+				HLSLPROGRAM
+				#pragma target 3.5
+				#pragma shader_feature _CLIPPING
+				#pragma multi_compile_instancing
+				#pragma multi_compile_VSM
+				#pragma vertex ShadowBlurPassVertex
+				#pragma fragment ShadowBlurPassFragment
+
+				#include "ShadowBlurPass.hlsl"
+					
 				ENDHLSL
 			}
 		}

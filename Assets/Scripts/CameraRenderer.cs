@@ -52,6 +52,11 @@ public partial class CameraRender {
         m_lighting.SetUp(context,m_cullResult,shadowSettings);
         m_buffer.EndSample(SampleName);
 
+        //CS Pass
+        //m_buffer.BeginSample(SampleName);
+        //m_buffer.
+        //m_buffer.EndSample(SampleName);
+
         //Regular Pass
         Setup();
         DrawUnsupportedShaders();

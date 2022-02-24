@@ -31,8 +31,8 @@ Varyings ShadowCasterPassVertex(Attributes input) {
 	output.positionCS = TransformWorldToHClip(positionWS);
 
 #if UNITY_REVERSED_Z
-		output.positionCS.z =
-			min(output.positionCS.z, output.positionCS.w * UNITY_NEAR_CLIP_VALUE);
+	output.positionCS.z =
+		min(output.positionCS.z, output.positionCS.w * UNITY_NEAR_CLIP_VALUE);
 #else
     output.positionCS.z =
 			max(output.positionCS.z, output.positionCS.w * UNITY_NEAR_CLIP_VALUE);
@@ -43,11 +43,18 @@ Varyings ShadowCasterPassVertex(Attributes input) {
 	return output;
 }
 
-void ShadowCasterPassFragment(Varyings input) {
+float4 ShadowCasterPassFragment(Varyings input) : SV_TARGET
+{
 	UNITY_SETUP_INSTANCE_ID(input);
-	float4 baseMap = SAMPLE_TEXTURE2D(MBaseMap, samplerMBaseMap, input.baseUV);
-	float4 baseColor = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, MBaseColor);
-	float4 base = baseMap * baseColor;
+    float4 baseMap = float4(0.0, 0.0, 0.0, 0.0);
+#if defined(_VSM)
+    baseMap.r = input.positionCS.z;
+    baseMap.g = input.positionCS.z * input.positionCS.z;
+#else
+    baseMap.r = input.positionCS.z;
+    baseMap.g = input.positionCS.z * input.positionCS.z;
+#endif
+    return baseMap;
 #if defined(_CLIPPING)
 	clip(base.a - UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, MCutoff));
 #endif

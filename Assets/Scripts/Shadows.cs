@@ -12,7 +12,8 @@ public class Shadows
         cascadeCullingSphereId = Shader.PropertyToID("_CascadeCullingSphere"),
         shadowDistanceFadeId = Shader.PropertyToID("_ShadowDistanceFade"),
         cascadeDataId = Shader.PropertyToID("_CascadeData"),
-        shadowAtlasSizeId = Shader.PropertyToID("_ShadowAtlasSize");
+        shadowAtlasSizeId = Shader.PropertyToID("_ShadowAtlasSize"),
+        shadowVSMId = Shader.PropertyToID("_ShadowVSM");
 
     static Matrix4x4[] dirShadowMatrices = new Matrix4x4[maxShadowedDirectionalLightCount * maxCascades];
     static Vector4[] cascadeCullingSphere = new Vector4[maxCascades],
@@ -31,6 +32,12 @@ public class Shadows
         "_CASCADE_BLEND_DITHER"
     };
 
+    static string[] softShadowKeywords =
+    {
+        "_PCF",
+        "_VSM",
+        "PCSS"
+    };
     struct ShadowedDirectionalLight
     {
         public int m_visibleLightIndex;
@@ -50,6 +57,7 @@ public class Shadows
 
     ShadowSettings m_shadowSettings;
 
+    ComputeShaders m_computeShader;
     public void Setup(ScriptableRenderContext context, CullingResults cullingResults, ShadowSettings shadowSettings)
     {
         this.m_context = context;
@@ -84,15 +92,33 @@ public class Shadows
         else
         {
             //we do this because of there will be some problems when shadow sampling in webGL 2.0
-            buffer.GetTemporaryRT(dirShadowAtlasId, 1, 1, 32, FilterMode.Bilinear, RenderTextureFormat.Shadowmap);
+ //           buffer.GetTemporaryRT(dirShadowAtlasId, 1, 1, 32, FilterMode.Bilinear, RenderTextureFormat.RGFloat);
+            if (m_shadowSettings.directional.softShadowType != SoftShadowType.VSM)
+            {
+                buffer.GetTemporaryRT(dirShadowAtlasId, 1, 1, 32, FilterMode.Bilinear, RenderTextureFormat.Shadowmap);
+            }
+            else
+            {
+                buffer.GetTemporaryRT(dirShadowAtlasId, 1, 1, 32, FilterMode.Bilinear, RenderTextureFormat.RGFloat);
+                buffer.GetTemporaryRT(shadowVSMId, 1, 1, 32, FilterMode.Bilinear, RenderTextureFormat.RGFloat);
+            }
         }
     }
 
     void RenderDirectionalShadows()
     {
         int atlasSize = (int)m_shadowSettings.directional.atlasSize;
-        buffer.GetTemporaryRT(dirShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.Shadowmap);
-        buffer.SetRenderTarget(dirShadowAtlasId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
+        if (m_shadowSettings.directional.softShadowType != SoftShadowType.VSM)
+        {
+            buffer.GetTemporaryRT(dirShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.Shadowmap);
+        }
+        else
+        {
+            buffer.GetTemporaryRT(dirShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.RGFloat);
+            buffer.GetTemporaryRT(shadowVSMId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.RGFloat);
+        }
+        
+        buffer.SetRenderTarget(shadowVSMId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
         buffer.ClearRenderTarget(true, false, Color.clear);
         buffer.BeginSample(bufferName);
         ExecuteBuffer();
@@ -110,6 +136,8 @@ public class Shadows
         SetKeywords(directionalFilterKeywords, (int)m_shadowSettings.directional.filter - 1);
 
         SetKeywords(cascadeBlendKeywords, (int)m_shadowSettings.directional.cascadeBlend - 1);
+
+        SetKeywords(softShadowKeywords, (int)m_shadowSettings.directional.softShadowType - 1);
 
         buffer.SetGlobalVector(shadowAtlasSizeId, new Vector4(atlasSize, 1f / atlasSize));
         buffer.EndSample(bufferName);
@@ -214,6 +242,7 @@ public class Shadows
     public void Cleanup()
     {
         buffer.ReleaseTemporaryRT(dirShadowAtlasId);
+        buffer.ReleaseTemporaryRT(shadowVSMId);
         ExecuteBuffer();
     }
 }

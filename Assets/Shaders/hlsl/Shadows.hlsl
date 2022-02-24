@@ -16,6 +16,8 @@
 #define MAX_SHADOWED_DIRECTIONAL_LIGHT_COUNT 4
 #define MAX_CASCADE_COUNT 4
 
+
+TEXTURE2D_SHADOW(_ShadowVSM);
 TEXTURE2D_SHADOW(_DirectionalShadowAtlas);
 #define SHADOW_SAMPLER sampler_linear_clamp_compare
 SAMPLER_CMP(SHADOW_SAMPLER);
@@ -64,8 +66,11 @@ float FilterDirectionalShadow(float3 positionSTS)
 		}
 		dBlocker /= DIRECTIONAL_FILTER_SAMPLES;
 		float dReceiver = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas,positionSTS.xy).r;
-		float weight = (dReceiver - dBlocker) * 100.0 / dBlocker;
-		return shadow;
+		float weight = (dReceiver - dBlocker) * 50 / dBlocker;
+        if(weight > 0.5)
+		    return shadow;
+        else
+            return SamplerDirectionalShadowAtlas(positionSTS);
 #else
     return SamplerDirectionalShadowAtlas(positionSTS);
 #endif
