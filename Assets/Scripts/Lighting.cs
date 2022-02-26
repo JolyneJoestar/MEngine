@@ -59,7 +59,11 @@ public class Lighting
     {
         return m_shadows.GetBluredDirShadowAtlasId();
     }
-    void SetDirectionLight(int index,ref VisibleLight visibleLight)
+    public int GetAtlasSize()
+    {
+        return m_shadows.GetAtlasSize();
+    }
+        void SetDirectionLight(int index,ref VisibleLight visibleLight)
     {
         //       UnityEngine.Light light = RenderSettings.sun;
         //m_buffer.SetGlobalVector(m_dirLightColorId, visibleLight.finalColor);

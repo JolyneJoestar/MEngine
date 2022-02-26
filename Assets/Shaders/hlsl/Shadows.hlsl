@@ -68,7 +68,7 @@ float FilterDirectionalShadow(float3 positionSTS)
 		dBlocker /= DIRECTIONAL_FILTER_SAMPLES;
 		float dReceiver = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas,positionSTS.xy).r;
 		float weight = (dReceiver - dBlocker) * 100.0 / dBlocker;
-		return shadow;
+		return shadow + weight;
 #else
     return SamplerDirectionalShadowAtlas(positionSTS);
 #endif

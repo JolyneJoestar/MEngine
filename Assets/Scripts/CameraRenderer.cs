@@ -56,7 +56,7 @@ public partial class CameraRender {
         postFXStack.Setup(context, camera, postFXSettings);
         if (postFXStack.IsActive)
         {
-            postFXStack.Render(m_lighting.GetDirShadowAtlasId(),m_lighting.GetBluredDirShadowAtlasId());
+            postFXStack.Render(m_lighting.GetDirShadowAtlasId(),m_lighting.GetBluredDirShadowAtlasId(), m_lighting.GetAtlasSize());
         }
         m_buffer.EndSample(SampleName);
 

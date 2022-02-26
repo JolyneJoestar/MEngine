@@ -16,6 +16,8 @@ public class PostFXStack
 
 	PostFXSettings settings;
 	int fxSourceId = Shader.PropertyToID("_PostFXSource");
+	int texSize = Shader.PropertyToID("_TexSize");
+
 	enum Pass
 	{
 		Copy
@@ -29,15 +31,15 @@ public class PostFXStack
 		this.camera = camera;
 		this.settings = settings;
 	}
-	public void Render(int sourceId, int targetId)
+	public void Render(int sourceId, int targetId, int size)
 	{
-		Draw(sourceId, targetId, Pass.Copy);
+		Draw(sourceId, targetId, Pass.Copy, size);
 		context.ExecuteCommandBuffer(buffer);
 		buffer.Clear();
 	}
 
 	void Draw(
-		RenderTargetIdentifier from, RenderTargetIdentifier to, Pass pass
+		RenderTargetIdentifier from, RenderTargetIdentifier to, Pass pass, int size
 	)
 	{
 		buffer.SetGlobalTexture(fxSourceId, from);
@@ -45,11 +47,11 @@ public class PostFXStack
 			to, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store
 		);
 		buffer.ClearRenderTarget(true, false, Color.clear);
+		buffer.SetGlobalInt(texSize, size);
 		buffer.DrawProcedural(
 			Matrix4x4.identity, settings.Material, (int)pass,
 			MeshTopology.Triangles, 3
 		);
-		context.ExecuteCommandBuffer(buffer);
 		buffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
 	}
 }

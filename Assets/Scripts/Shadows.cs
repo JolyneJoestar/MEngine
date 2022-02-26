@@ -222,6 +222,11 @@ public class Shadows
     {
         return bluredDirShadowAtlasId;
     }
+
+    public int GetAtlasSize()
+    {
+        return (int)m_shadowSettings.directional.atlasSize;
+    }
     public void Cleanup()
     {
         buffer.ReleaseTemporaryRT(dirShadowAtlasId);
