@@ -12,6 +12,7 @@ public class Shadows
         cascadeCullingSphereId = Shader.PropertyToID("_CascadeCullingSphere"),
         shadowDistanceFadeId = Shader.PropertyToID("_ShadowDistanceFade"),
         cascadeDataId = Shader.PropertyToID("_CascadeData"),
+        bluredDirShadowAtlasId = Shader.PropertyToID("_BluredDirShadowAtlasId"),
         shadowAtlasSizeId = Shader.PropertyToID("_ShadowAtlasSize");
 
     static Matrix4x4[] dirShadowMatrices = new Matrix4x4[maxShadowedDirectionalLightCount * maxCascades];
@@ -92,6 +93,7 @@ public class Shadows
     {
         int atlasSize = (int)m_shadowSettings.directional.atlasSize;
         buffer.GetTemporaryRT(dirShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.Shadowmap);
+        buffer.GetTemporaryRT(bluredDirShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.RG16);
         buffer.SetRenderTarget(dirShadowAtlasId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
         buffer.ClearRenderTarget(true, false, Color.clear);
         buffer.BeginSample(bufferName);
@@ -211,9 +213,19 @@ public class Shadows
         }
     }
 
+    public int GetDirShadowAtlasId()
+    {
+        return dirShadowAtlasId;
+    }
+
+    public int GetBluredDirShadowAtlasId()
+    {
+        return bluredDirShadowAtlasId;
+    }
     public void Cleanup()
     {
         buffer.ReleaseTemporaryRT(dirShadowAtlasId);
+        buffer.ReleaseTemporaryRT(bluredDirShadowAtlasId);
         ExecuteBuffer();
     }
 }

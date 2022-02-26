@@ -21,6 +21,9 @@ TEXTURE2D_SHADOW(_DirectionalShadowAtlas);
 SAMPLER_CMP(SHADOW_SAMPLER);
 SAMPLER(sampler_DirectionalShadowAtlas);
 
+TEXTURE2D(_BluredDirShadowAtlasId);
+SAMPLER(sampler_BluredDirShadowAtlasId);
+
 CBUFFER_START(_CustomShadows)
 int _CascadeCount;
 float4 _CascadeCullingSphere[MAX_CASCADE_COUNT];
@@ -59,7 +62,7 @@ float FilterDirectionalShadow(float3 positionSTS)
 		float dBlocker = 0;
 		for(int i = 0; i < DIRECTIONAL_FILTER_SAMPLES; i++)
 		{
-			dBlocker += SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas, positions[i].xy).r;
+			dBlocker += SAMPLE_TEXTURE2D(_BluredDirShadowAtlasId, sampler_BluredDirShadowAtlasId, positions[i].xy).r;
 			shadow += weights[i] * SamplerDirectionalShadowAtlas(float3(positions[i].xy, positionSTS.z));
 		}
 		dBlocker /= DIRECTIONAL_FILTER_SAMPLES;

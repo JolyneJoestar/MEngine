@@ -18,7 +18,10 @@ public partial class CameraRender {
 
     Lighting m_lighting = new Lighting();
     static ShaderTagId m_customShaderTagId = new ShaderTagId("SPRDefaultLegay");
+    
+    static int frameBufferId = Shader.PropertyToID("_CameraFrameBuffer");
 
+    PostFXStack postFXStack = new PostFXStack();
     void ConfigerLights(ref CullingResults cull)
     {
         for (int i = 0; i < cull.visibleLights.Length; i++)
@@ -36,7 +39,7 @@ public partial class CameraRender {
             //            Debug.Log(m_visibleLightColor[i]);
         }
     }
-    public void Render(ScriptableRenderContext context, Camera camera,bool useDynamicBatching, bool useGPUInstancing, ShadowSettings shadowSettings)
+    public void Render(ScriptableRenderContext context, Camera camera,bool useDynamicBatching, bool useGPUInstancing, ShadowSettings shadowSettings, PostFXSettings postFXSettings)
     {
         this.m_context = context;
         this.m_camera = camera;
@@ -50,6 +53,11 @@ public partial class CameraRender {
         m_buffer.BeginSample(SampleName);
         ExecuteBuffer();
         m_lighting.SetUp(context,m_cullResult,shadowSettings);
+        postFXStack.Setup(context, camera, postFXSettings);
+        if (postFXStack.IsActive)
+        {
+            postFXStack.Render(m_lighting.GetDirShadowAtlasId(),m_lighting.GetBluredDirShadowAtlasId());
+        }
         m_buffer.EndSample(SampleName);
 
         //Regular Pass
@@ -57,7 +65,7 @@ public partial class CameraRender {
         DrawUnsupportedShaders();
         DrawVisibaleGeometry(useDynamicBatching,useGPUInstancing);
         DrawGizmos();
-        m_lighting.Cleanup();
+        Cleanup();
         Submit();
     }
     void DrawVisibaleGeometry(bool useDynamicBatching, bool useGPUInstancing)
@@ -83,10 +91,30 @@ public partial class CameraRender {
     void Setup()
     {
         m_context.SetupCameraProperties(m_camera);
+        //if (postFXStack.IsActive)
+        //{
+        //    m_buffer.GetTemporaryRT(
+        //        frameBufferId, m_camera.pixelWidth, m_camera.pixelHeight,
+        //        32, FilterMode.Bilinear, RenderTextureFormat.Default
+        //    );
+        //    m_buffer.SetRenderTarget(
+        //        frameBufferId,
+        //        RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store
+        //    );
+        //}
         m_buffer.ClearRenderTarget(true, true, Color.clear);
         m_buffer.BeginSample(SampleName);
         ExecuteBuffer();
 
+    }
+
+    void Cleanup()
+    {
+        m_lighting.Cleanup();
+        if (postFXStack.IsActive)
+        {
+            m_buffer.ReleaseTemporaryRT(frameBufferId);
+        }
     }
     void ExecuteBuffer()
     {

@@ -50,6 +50,15 @@ public class Lighting
         m_buffer.SetGlobalVectorArray(m_dirLightShadowDataId, m_dirLightShadowData);
     }
 
+    public int GetDirShadowAtlasId()
+    {
+        return m_shadows.GetDirShadowAtlasId();
+    }
+
+    public int GetBluredDirShadowAtlasId()
+    {
+        return m_shadows.GetBluredDirShadowAtlasId();
+    }
     void SetDirectionLight(int index,ref VisibleLight visibleLight)
     {
         //       UnityEngine.Light light = RenderSettings.sun;
