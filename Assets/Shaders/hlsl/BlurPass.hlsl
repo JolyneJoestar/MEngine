@@ -11,11 +11,11 @@ int _TexSize;
 
 
 TEXTURE2D(_PostFXSource);
-SAMPLER(sampler_linear_clamp);
+SAMPLER(sampler_PostFXSource);
 
 float GetSource(float2 screenUV)
 {
-    return SAMPLE_TEXTURE2D(_PostFXSource, sampler_linear_clamp, screenUV).r;
+    return SAMPLE_TEXTURE2D(_PostFXSource, sampler_PostFXSource, screenUV).r;
 }
 
 Varyings DefaultPassVertex(uint vertexID : SV_VertexID)
@@ -23,7 +23,7 @@ Varyings DefaultPassVertex(uint vertexID : SV_VertexID)
     Varyings output;
     output.positionCS = float4(
 		vertexID <= 1 ? -1.0 : 3.0,
-		vertexID == 1 ? 3.0 : -1.0,
+		vertexID == 1 ? -3.0 : 1.0,
 		0.0, 1.0
 	);
     output.screenUV = float2(
@@ -47,21 +47,18 @@ void GetUV(float2 uv,float size, out float2 outUV[9])
 
 float4 CopyPassFragment(Varyings input) : SV_TARGET
 {
-    float depth = 0.0;
-    float conv = 0.0;
+    float ex = 0.0;
+    float e_x2 = 0.0;
     float2 uv[9];
     GetUV(input.screenUV, 1024.0, uv);
     for (int i = 0; i < 9; i++)
     {
-        depth += GetSource(uv[i]);
+        ex += GetSource(uv[i]);
+        e_x2 += GetSource(uv[i]) * GetSource(uv[i]);
+
     }
-    depth /= 9.0;
-    for (int j = 0; j < 9; j++)
-    {
-        float a = GetSource(uv[j]) - depth;
-        conv += a * a;
-    }
-    conv /= 9.0;
-    return float4(depth, conv, 0.0, 0.0);
+    ex /= 9.0;
+    e_x2 /= 9.0;
+    return float4(ex, e_x2, 0.0, 0.0);
 }
 #endif //BLUR_PASS_INCLUDED

@@ -54,21 +54,25 @@ float SamplerDirectionalShadowAtlas(float3 positionSTS)
 float FilterDirectionalShadow(float3 positionSTS)
 {
 #if defined(DIRECTIONAL_FILTER_SETUP)
-		float weights[DIRECTIONAL_FILTER_SAMPLES];
-		float2 positions[DIRECTIONAL_FILTER_SAMPLES];
-		float4 size = _ShadowAtlasSize.yyxx;
-		DIRECTIONAL_FILTER_SETUP(size, positionSTS.xy, weights, positions);
-		float shadow = 0;
-		float dBlocker = 0;
-		for(int i = 0; i < DIRECTIONAL_FILTER_SAMPLES; i++)
-		{
-			dBlocker += SAMPLE_TEXTURE2D(_BluredDirShadowAtlasId, sampler_BluredDirShadowAtlasId, positions[i].xy).r;
-			shadow += weights[i] * SamplerDirectionalShadowAtlas(float3(positions[i].xy, positionSTS.z));
-		}
-		dBlocker /= DIRECTIONAL_FILTER_SAMPLES;
-		float dReceiver = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas,positionSTS.xy).r;
-		float weight = (dReceiver - dBlocker) * 100.0 / dBlocker;
-		return shadow + weight;
+		//float weights[DIRECTIONAL_FILTER_SAMPLES];
+		//float2 positions[DIRECTIONAL_FILTER_SAMPLES];
+		//float4 size = _ShadowAtlasSize.yyxx;
+		//DIRECTIONAL_FILTER_SETUP(size, positionSTS.xy, weights, positions);
+		//float shadow = 0;
+		//float dBlocker = 0;
+		//for(int i = 0; i < DIRECTIONAL_FILTER_SAMPLES; i++)
+		//{
+		//	dBlocker += SAMPLE_TEXTURE2D(_BluredDirShadowAtlasId, sampler_BluredDirShadowAtlasId, positions[i].xy).r;
+		//	shadow += weights[i] * SamplerDirectionalShadowAtlas(float3(positions[i].xy, positionSTS.z));
+		//}
+		//dBlocker /= DIRECTIONAL_FILTER_SAMPLES;
+		//float dReceiver = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas,positionSTS.xy).r;
+		//float weight = (dReceiver - dBlocker) * 100.0 / dBlocker;
+		float2 depth = SAMPLE_TEXTURE2D(_BluredDirShadowAtlasId, sampler_BluredDirShadowAtlasId, positionSTS.xy).rg;
+		float convi = depth.y - depth.x * depth.x;
+		float delta = positionSTS.z - depth.x;
+		float result = convi / (convi + delta * delta);
+		return max(saturate(result),positionSTS.z >= depth.x);
 #else
     return SamplerDirectionalShadowAtlas(positionSTS);
 #endif
