@@ -18,10 +18,8 @@ public partial class CameraRender {
 
     Lighting m_lighting = new Lighting();
     static ShaderTagId m_customShaderTagId = new ShaderTagId("SPRDefaultLegay");
-    
-    static int frameBufferId = Shader.PropertyToID("_CameraFrameBuffer");
+ 
 
-    PostFXStack postFXStack = new PostFXStack();
     void ConfigerLights(ref CullingResults cull)
     {
         for (int i = 0; i < cull.visibleLights.Length; i++)
@@ -52,12 +50,8 @@ public partial class CameraRender {
         //Shadow Pass
         m_buffer.BeginSample(SampleName);
         ExecuteBuffer();
-        m_lighting.SetUp(context,m_cullResult,shadowSettings);
-        postFXStack.Setup(context, camera, postFXSettings);
-        if (postFXStack.IsActive)
-        {
-            postFXStack.Render(m_lighting.GetDirShadowAtlasId(),m_lighting.GetBluredDirShadowAtlasId(), m_lighting.GetAtlasSize());
-        }
+        m_lighting.SetUp(context,m_cullResult,shadowSettings,camera, postFXSettings);
+
         m_buffer.EndSample(SampleName);
 
         //Regular Pass
@@ -111,10 +105,6 @@ public partial class CameraRender {
     void Cleanup()
     {
         m_lighting.Cleanup();
-        if (postFXStack.IsActive)
-        {
-            m_buffer.ReleaseTemporaryRT(frameBufferId);
-        }
     }
     void ExecuteBuffer()
     {

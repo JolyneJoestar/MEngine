@@ -19,6 +19,7 @@ public class Shadows
     static Vector4[] cascadeCullingSphere = new Vector4[maxCascades],
                     cascadeData = new Vector4[maxCascades];
 
+    ShadowBlur shadowBlur = new ShadowBlur();
     static string[] directionalFilterKeywords =
     {
         "_DIRECTIONAL_PCF3",
@@ -31,7 +32,14 @@ public class Shadows
         "_CASCADE_BLEND_SOFT",
         "_CASCADE_BLEND_DITHER"
     };
-
+    static string[] shadowTypeKeyWords =
+    {
+        "_PCF",
+        "_VSM",
+        "_ESM",
+        "_PCSS",
+        "_CSM"
+    };
     struct ShadowedDirectionalLight
     {
         public int m_visibleLightIndex;
@@ -51,11 +59,12 @@ public class Shadows
 
     ShadowSettings m_shadowSettings;
 
-    public void Setup(ScriptableRenderContext context, CullingResults cullingResults, ShadowSettings shadowSettings)
+    public void Setup(ScriptableRenderContext context, CullingResults cullingResults, ShadowSettings shadowSettings, Camera camera, PostFXSettings postFXSettings)
     {
         this.m_context = context;
         this.m_cullingResults = cullingResults;
         this.m_shadowSettings = shadowSettings;
+        shadowBlur.Setup(context, camera, postFXSettings);
         m_shadowedDirectionalLightCount = 0;
     }
 
@@ -110,12 +119,16 @@ public class Shadows
         float f = 1f - m_shadowSettings.directional.cascadeFade;
         buffer.SetGlobalVector(shadowDistanceFadeId, new Vector4(1f / m_shadowSettings.maxDistance, 1f / m_shadowSettings.distanceFade, 1f / (1f - f * f)));
         SetKeywords(directionalFilterKeywords, (int)m_shadowSettings.directional.filter - 1);
-
+        SetKeywords(shadowTypeKeyWords, (int)m_shadowSettings.directional.softshadow);
         SetKeywords(cascadeBlendKeywords, (int)m_shadowSettings.directional.cascadeBlend - 1);
 
         buffer.SetGlobalVector(shadowAtlasSizeId, new Vector4(atlasSize, 1f / atlasSize));
         buffer.EndSample(bufferName);
         ExecuteBuffer();
+        if (shadowBlur.IsActive && m_shadowSettings.directional.softshadow == ShadowSettings.Directional.SoftShodowType.VSM)
+        {
+            shadowBlur.Render(dirShadowAtlasId, bluredDirShadowAtlasId, (int)m_shadowSettings.directional.atlasSize);
+        }
     }
 
     Vector2 SetTileViewPort(int index, int split, int tileSize)

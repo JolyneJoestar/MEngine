@@ -49,16 +49,26 @@ float4 CopyPassFragment(Varyings input) : SV_TARGET
 {
     float ex = 0.0;
     float e_x2 = 0.0;
-    float2 uv[9];
-    GetUV(input.screenUV, 1024.0, uv);
-    for (int i = 0; i < 9; i++)
+//    float2 uv[9];
+ //   GetUV(input.screenUV, 1024.0, uv);
+    float4 texcol = 0;
+    int c = 5;
+    float allP = 0;
+                      
+    for (int x = -c; x <= c; x++)
     {
-        ex += GetSource(uv[i]);
-        e_x2 += GetSource(uv[i]) * GetSource(uv[i]);
 
+        for (int y = -c; y <= c; y++)
+        {
+            float p = 1.0 / max(0.5, pow(length(float2(x, y)), 2));
+            float d = GetSource((input.screenUV + float2(x, y) / 1024));
+            ex += d * p;
+            e_x2 += d * d * p;
+            allP += p;
+        }
     }
-    ex /= 9.0;
-    e_x2 /= 9.0;
+    ex /= allP;
+    e_x2 /= allP;
     return float4(ex, e_x2, 0.0, 0.0);
 }
 #endif //BLUR_PASS_INCLUDED

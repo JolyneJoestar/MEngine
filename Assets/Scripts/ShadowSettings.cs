@@ -38,7 +38,12 @@ public class ShadowSettings
         {
             Hard, Soft, Dither
         }
+        public enum SoftShodowType
+        {
+            PCF, VSM, ESM, PCSS, CSM 
+        }
         public CascadeBlendMode cascadeBlend;
+        public SoftShodowType softshadow;
     }
 
     public Directional directional = new Directional
@@ -50,7 +55,8 @@ public class ShadowSettings
         cascadeRatio2 = 0.25f,
         cascadeRatio3 = 0.5f,
         cascadeFade = 0.1f,
-        cascadeBlend = Directional.CascadeBlendMode.Hard
+        cascadeBlend = Directional.CascadeBlendMode.Hard,
+        softshadow = Directional.SoftShodowType.PCF
     };
     
 }

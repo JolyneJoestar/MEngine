@@ -7,7 +7,7 @@ Shader "Hidden/Custom RP/Post FX Stack" {
 
 		HLSLINCLUDE
 		#include "Common.hlsl"
-		#include "BlurPass.hlsl"
+		#include "VSMBlurPass.hlsl"
 		ENDHLSL
 
 		Pass {
