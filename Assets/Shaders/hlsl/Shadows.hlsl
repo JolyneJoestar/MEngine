@@ -66,7 +66,7 @@ float GetBlockHeight(float2 uv,float height)
         for (int y = -c; y <= c; y++)
         {
             float p = 1.0 / max(0.5, pow(length(float2(x, y)), 2));
-            float d = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas,(uv + float2(x, y) / 1024));
+            float d = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas,(uv + float2(x, y) / 2048));
             if(d > height)
             {
                 block += (d - height);
@@ -102,7 +102,38 @@ float FilterDirectionalShadow(float3 positionSTS)
     #else
     	        float height = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas, positionSTS.xy).r;
                 float block = GetBlockHeight(positionSTS.xy, height);
-                return SamplerDirectionalShadowAtlas(positionSTS);
+                if(block < 0.2)
+                {
+                    return SamplerDirectionalShadowAtlas(positionSTS);
+                }
+                else if(block < 0.4)
+                {
+                    float weights[9];
+		            float2 positions[9];
+		            float4 size = _ShadowAtlasSize.yyxx;
+		            SampleShadow_ComputeSamples_Tent_5x5(size, positionSTS.xy, weights, positions);
+		            float shadow = 0;
+		            for (int i = 0; i < 9; i++) {
+			            shadow += weights[i] * SamplerDirectionalShadowAtlas(
+				            float3(positions[i].xy, positionSTS.z)
+			            );
+		            }
+		            return shadow;
+                }
+                else
+                {
+                    float weights[16];
+		            float2 positions[16];
+		            float4 size = _ShadowAtlasSize.yyxx;
+		            SampleShadow_ComputeSamples_Tent_7x7(size, positionSTS.xy, weights, positions);
+		            float shadow = 0;
+		            for (int i = 0; i < 16; i++) {
+			            shadow += weights[i] * SamplerDirectionalShadowAtlas(
+				            float3(positions[i].xy, positionSTS.z)
+			            );
+		            }
+		            return shadow;
+                }
     #endif
 #else
     return SamplerDirectionalShadowAtlas(positionSTS);
