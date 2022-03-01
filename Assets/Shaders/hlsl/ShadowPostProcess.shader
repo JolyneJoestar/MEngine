@@ -1,4 +1,4 @@
-Shader "Hidden/Custom RP/Post FX Stack" {
+Shader "Hidden/Custom RP/Shadow Post Process" {
 
 	SubShader{
 		Cull Off
@@ -11,7 +11,7 @@ Shader "Hidden/Custom RP/Post FX Stack" {
 		ENDHLSL
 
 		Pass {
-			Name "Copy"
+			Name "VSM"
 
 			HLSLPROGRAM
 				#pragma target 3.5

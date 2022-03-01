@@ -1,5 +1,5 @@
-#ifndef BLUR_PASS_INCLUDED
-#define BLUR_PASS_INCLUDED
+#ifndef CONVOLUTION_PRE_PASS_INCLUDED
+#define CONVOLUTION_PRE_PASS_INCLUDED
 
 struct Varyings
 {
@@ -32,18 +32,6 @@ Varyings DefaultPassVertex(uint vertexID : SV_VertexID)
 	);
     return output;
 }
-void GetUV(float2 uv,float size, out float2 outUV[9])
-{
-    outUV[0] = uv;
-    outUV[1] = uv + float2(1.0 / size, 1.0 / size);
-    outUV[2] = uv + float2(1.0 / size, -1.0 / size);
-    outUV[3] = uv + float2(-1.0 / size, 1.0 / size);
-    outUV[4] = uv + float2(-1.0 / size, -1.0 / size);
-    outUV[5] = uv + float2(0.0, 1.0 / size);
-    outUV[6] = uv + float2(0.0, -1.0 / size);
-    outUV[7] = uv + float2(1.0 / size, 0.0);
-    outUV[8] = uv + float2(-1.0 / size, 0.0);
-}
 
 float4 CopyPassFragment(Varyings input) : SV_TARGET
 {
@@ -71,4 +59,4 @@ float4 CopyPassFragment(Varyings input) : SV_TARGET
     e_x2 /= allP;
     return float4(ex, e_x2, 0.0, 0.0);
 }
-#endif //BLUR_PASS_INCLUDED
+#endif //CONVOLUTION_PRE_PASS_INCLUDED

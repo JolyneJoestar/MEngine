@@ -1,8 +1,12 @@
 using UnityEngine;
 
+public enum Pass
+{
+    Copy, Fourier
+}
 
-[CreateAssetMenu(menuName = "Rendering/Custom Post FX Settings")]
-public class PostFXSettings : ScriptableObject
+[CreateAssetMenu(menuName = "Rendering/Custom Shadow Post Settings")]
+public class ShadowPostSettings : ScriptableObject
 {
 	[SerializeField]
 	Shader shader = default;
@@ -22,3 +26,4 @@ public class PostFXSettings : ScriptableObject
 		}
 	}
 }
+

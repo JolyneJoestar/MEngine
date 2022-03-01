@@ -21,11 +21,11 @@ public class Lighting
         m_dirLightColors = new Vector4[m_maxVisibleLightCount],
         m_dirLightDirecitons = new Vector4[m_maxVisibleLightCount],
         m_dirLightShadowData = new Vector4[m_maxVisibleLightCount];
-    public void SetUp(ScriptableRenderContext context,CullingResults cullingResults, ShadowSettings shadowSettings,Camera camera, PostFXSettings postFXSetting)
+    public void SetUp(ScriptableRenderContext context,CullingResults cullingResults, ShadowSettings shadowSettings,Camera camera, ShadowPostSettings shadowPostSettings)
     {
         this.m_cullingResults = cullingResults;
         m_buffer.BeginSample(m_bufferName);
-        m_shadows.Setup(context, cullingResults, shadowSettings,camera, postFXSetting);
+        m_shadows.Setup(context, cullingResults, shadowSettings,camera, shadowPostSettings);
         SetupLights();
         m_shadows.Render();
         m_buffer.EndSample(m_bufferName);

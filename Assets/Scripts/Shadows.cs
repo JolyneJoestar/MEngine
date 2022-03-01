@@ -15,11 +15,20 @@ public class Shadows
         bluredDirShadowAtlasId = Shader.PropertyToID("_BluredDirShadowAtlasId"),
         shadowAtlasSizeId = Shader.PropertyToID("_ShadowAtlasSize");
 
+    static int[] convolutionDataId =
+    {
+        Shader.PropertyToID(""),
+        Shader.PropertyToID(""),
+        Shader.PropertyToID(""),
+        Shader.PropertyToID("")
+    };
+
     static Matrix4x4[] dirShadowMatrices = new Matrix4x4[maxShadowedDirectionalLightCount * maxCascades];
     static Vector4[] cascadeCullingSphere = new Vector4[maxCascades],
                     cascadeData = new Vector4[maxCascades];
 
     ShadowBlur shadowBlur = new ShadowBlur();
+    ConvolutionShadowMap convolutionShadowMap = new ConvolutionShadowMap();
     static string[] directionalFilterKeywords =
     {
         "_DIRECTIONAL_PCF3",
@@ -59,12 +68,12 @@ public class Shadows
 
     ShadowSettings m_shadowSettings;
 
-    public void Setup(ScriptableRenderContext context, CullingResults cullingResults, ShadowSettings shadowSettings, Camera camera, PostFXSettings postFXSettings)
+    public void Setup(ScriptableRenderContext context, CullingResults cullingResults, ShadowSettings shadowSettings, Camera camera, ShadowPostSettings shadowPostSettings)
     {
         this.m_context = context;
         this.m_cullingResults = cullingResults;
         this.m_shadowSettings = shadowSettings;
-        shadowBlur.Setup(context, camera, postFXSettings);
+        shadowBlur.Setup(context, camera, shadowPostSettings);
         m_shadowedDirectionalLightCount = 0;
     }
 
@@ -128,6 +137,10 @@ public class Shadows
         if (shadowBlur.IsActive && m_shadowSettings.directional.softshadow == ShadowSettings.Directional.SoftShodowType.VSM)
         {
             shadowBlur.Render(dirShadowAtlasId, bluredDirShadowAtlasId, (int)m_shadowSettings.directional.atlasSize);
+        }
+        else if(convolutionShadowMap.IsActive && m_shadowSettings.directional.softshadow == ShadowSettings.Directional.SoftShodowType.CSM)
+        {
+            convolutionShadowMap.Render(dirShadowAtlasId, convolutionDataId, (int)m_shadowSettings.directional.atlasSize);
         }
     }
 

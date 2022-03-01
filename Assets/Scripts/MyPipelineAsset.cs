@@ -10,8 +10,8 @@ public class MyPipelineAsset : RenderPipelineAsset
     [SerializeField]
     ShadowSettings shadowSettings = default;
     [SerializeField]
-    PostFXSettings postFXSettings = default;
-    protected override RenderPipeline CreatePipeline() => new MyPipline(useDynamicBatching,useGPUInstancing,useSPRBatcher,shadowSettings, postFXSettings);
+    ShadowPostSettings shadowPostSettings = default;
+    protected override RenderPipeline CreatePipeline() => new MyPipline(useDynamicBatching,useGPUInstancing,useSPRBatcher,shadowSettings, shadowPostSettings);
 }
 
 

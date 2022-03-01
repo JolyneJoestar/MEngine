@@ -37,7 +37,7 @@ public partial class CameraRender {
             //            Debug.Log(m_visibleLightColor[i]);
         }
     }
-    public void Render(ScriptableRenderContext context, Camera camera,bool useDynamicBatching, bool useGPUInstancing, ShadowSettings shadowSettings, PostFXSettings postFXSettings)
+    public void Render(ScriptableRenderContext context, Camera camera,bool useDynamicBatching, bool useGPUInstancing, ShadowSettings shadowSettings, ShadowPostSettings shadowPostSettings)
     {
         this.m_context = context;
         this.m_camera = camera;
@@ -50,7 +50,7 @@ public partial class CameraRender {
         //Shadow Pass
         m_buffer.BeginSample(SampleName);
         ExecuteBuffer();
-        m_lighting.SetUp(context,m_cullResult,shadowSettings,camera, postFXSettings);
+        m_lighting.SetUp(context,m_cullResult,shadowSettings,camera, shadowPostSettings);
 
         m_buffer.EndSample(SampleName);
 

@@ -1,9 +1,9 @@
 using UnityEngine;
 using UnityEngine.Rendering;
-public class ShadowBlur
-{
 
-    const string bufferName = "Shadow Blur";
+public class ConvolutionShadowMap
+{
+    const string bufferName = "CSM";
 
     CommandBuffer buffer = new CommandBuffer
     {
@@ -27,21 +27,24 @@ public class ShadowBlur
         this.camera = camera;
         this.settings = settings;
     }
-    public void Render(int sourceId, int targetId, int size)
+    public void Render(int sourceId, int[] targetId, int size)
     {
-        Draw(sourceId, targetId, Pass.Copy, size);
+        RenderTargetIdentifier[] targets = new RenderTargetIdentifier[targetId.Length];
+        for(int i = 0; i < targetId.Length; i++)
+        {
+            targets[i] = targetId[i];
+        }
+        Draw(sourceId, targets, Pass.Fourier, size);
         context.ExecuteCommandBuffer(buffer);
         buffer.Clear();
     }
 
     void Draw(
-        RenderTargetIdentifier from, RenderTargetIdentifier to, Pass pass, int size
+        RenderTargetIdentifier from, RenderTargetIdentifier[] to, Pass pass, int size
     )
     {
         buffer.SetGlobalTexture(shadowBlurSourceId, from);
-        buffer.SetRenderTarget(
-            to, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store
-        );
+        buffer.SetRenderTarget(to, BuiltinRenderTextureType.Depth);
         buffer.ClearRenderTarget(true, false, Color.clear);
         buffer.SetGlobalInt(texSize, size);
         buffer.DrawProcedural(

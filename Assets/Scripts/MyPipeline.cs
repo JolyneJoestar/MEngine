@@ -6,8 +6,8 @@ public class MyPipline : RenderPipeline
     CameraRender m_render = new CameraRender();
     bool m_useDynamicBatching, m_useGPUIstancing;
     ShadowSettings m_shadowSettings;
-    PostFXSettings m_postFXSettings;
-    public MyPipline(bool useDynamicBatching,bool useGPUInstancing, bool useSPRBatcher, ShadowSettings shadowSettings, PostFXSettings postFXSettings)
+    ShadowPostSettings m_postFXSettings;
+    public MyPipline(bool useDynamicBatching,bool useGPUInstancing, bool useSPRBatcher, ShadowSettings shadowSettings, ShadowPostSettings postFXSettings)
     {
         this.m_useDynamicBatching = useDynamicBatching;
         this.m_useGPUIstancing = useGPUInstancing;
