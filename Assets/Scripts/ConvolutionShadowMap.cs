@@ -5,6 +5,7 @@ public class ConvolutionShadowMap
 {
     const string bufferName = "CSM";
 
+    const int MAX_FOURIEPRETEXTURE = 4;
     CommandBuffer buffer = new CommandBuffer
     {
         name = bufferName
@@ -17,7 +18,7 @@ public class ConvolutionShadowMap
     ShadowPostSettings settings;
     int shadowBlurSourceId = Shader.PropertyToID("_ShadowBlurSource");
     int texSize = Shader.PropertyToID("_TexSize");
-
+    RenderTargetIdentifier[] targets = new RenderTargetIdentifier[MAX_FOURIEPRETEXTURE];
     public bool IsActive => settings != null;
     public void Setup(
         ScriptableRenderContext context, Camera camera, ShadowPostSettings settings
@@ -29,10 +30,9 @@ public class ConvolutionShadowMap
     }
     public void Render(int sourceId, int[] targetId, int size)
     {
-        RenderTargetIdentifier[] targets = new RenderTargetIdentifier[targetId.Length];
         for(int i = 0; i < targetId.Length; i++)
         {
-            targets[i] = targetId[i];
+            targets[i] = new RenderTargetIdentifier(targetId[i]);
         }
         Draw(sourceId, targets, Pass.Fourier, size);
         context.ExecuteCommandBuffer(buffer);

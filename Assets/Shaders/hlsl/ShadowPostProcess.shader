@@ -27,7 +27,7 @@ Shader "Hidden/Custom RP/Shadow Post Process" {
 			HLSLPROGRAM
 				#pragma target 3.5
 				#pragma vertex DefaultPassVertex
-				#pragma fragment CopyPassFragment
+				#pragma fragment FourierGenPassFragment
 
 				#include "ConvolutionPrePass.hlsl"
 			ENDHLSL

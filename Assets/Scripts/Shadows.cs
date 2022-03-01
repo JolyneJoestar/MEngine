@@ -15,12 +15,12 @@ public class Shadows
         bluredDirShadowAtlasId = Shader.PropertyToID("_BluredDirShadowAtlasId"),
         shadowAtlasSizeId = Shader.PropertyToID("_ShadowAtlasSize");
 
-    static int[] convolutionDataId =
+    static int[] FourierBufferDataId =
     {
-        Shader.PropertyToID(""),
-        Shader.PropertyToID(""),
-        Shader.PropertyToID(""),
-        Shader.PropertyToID("")
+        Shader.PropertyToID("_FourierBufferOneId"),
+        Shader.PropertyToID("_FourierBufferTwoId"),
+        Shader.PropertyToID("_FourierBufferThreeId"),
+        Shader.PropertyToID("_FourierBufferFourId")
     };
 
     static Matrix4x4[] dirShadowMatrices = new Matrix4x4[maxShadowedDirectionalLightCount * maxCascades];
@@ -74,6 +74,7 @@ public class Shadows
         this.m_cullingResults = cullingResults;
         this.m_shadowSettings = shadowSettings;
         shadowBlur.Setup(context, camera, shadowPostSettings);
+        convolutionShadowMap.Setup(context, camera, shadowPostSettings);
         m_shadowedDirectionalLightCount = 0;
     }
 
@@ -112,6 +113,7 @@ public class Shadows
         int atlasSize = (int)m_shadowSettings.directional.atlasSize;
         buffer.GetTemporaryRT(dirShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.Shadowmap);
         buffer.GetTemporaryRT(bluredDirShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.RG32);
+        
         buffer.SetRenderTarget(dirShadowAtlasId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
         buffer.ClearRenderTarget(true, false, Color.clear);
         buffer.BeginSample(bufferName);
@@ -140,7 +142,11 @@ public class Shadows
         }
         else if(convolutionShadowMap.IsActive && m_shadowSettings.directional.softshadow == ShadowSettings.Directional.SoftShodowType.CSM)
         {
-            convolutionShadowMap.Render(dirShadowAtlasId, convolutionDataId, (int)m_shadowSettings.directional.atlasSize);
+            for(int i = 0; i < FourierBufferDataId.Length; i++)
+            {
+                buffer.GetTemporaryRT(FourierBufferDataId[i], atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
+            }
+            convolutionShadowMap.Render(dirShadowAtlasId, FourierBufferDataId, (int)m_shadowSettings.directional.atlasSize);
         }
     }
 

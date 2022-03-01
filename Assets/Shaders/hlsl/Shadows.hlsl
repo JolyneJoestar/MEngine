@@ -20,6 +20,18 @@
 TEXTURE2D(_BluredDirShadowAtlasId);
 SAMPLER(sampler_BluredDirShadowAtlasId);
 #endif
+
+#if defined(_CSM)
+TEXTURE2D(_FourierBufferOneId);
+SAMPLER(sampler_FourierBufferOneId);
+TEXTURE2D(_FourierBufferTwoId);
+SAMPLER(sampler_FourierBufferTwoId);
+TEXTURE2D(_FourierBufferThreeId);
+SAMPLER(sampler_FourierBufferThreeId);
+TEXTURE2D(_FourierBufferFourId);
+SAMPLER(sampler_FourierBufferFourId);
+#endif
+
 TEXTURE2D_SHADOW(_DirectionalShadowAtlas);
 #define SHADOW_SAMPLER sampler_linear_clamp_compare
 SAMPLER_CMP(SHADOW_SAMPLER);
@@ -99,7 +111,7 @@ float FilterDirectionalShadow(float3 positionSTS)
 			        );
 		        }
 		        return shadow;
-    #else
+    #elif defined(_PCSS)
     	        float height = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas, positionSTS.xy).r;
                 float block = GetBlockHeight(positionSTS.xy, height);
                 if(block < 0.2)
@@ -134,6 +146,14 @@ float FilterDirectionalShadow(float3 positionSTS)
 		            }
 		            return shadow;
                 }
+    #elif defined(_CSM)
+                float a =  SAMPLE_TEXTURE2D(_FourierBufferOneId, sampler_FourierBufferOneId, positionSTS.xy).r;
+                a += SAMPLE_TEXTURE2D(_FourierBufferTwoId, sampler_FourierBufferTwoId, positionSTS.xy).r;
+                a += SAMPLE_TEXTURE2D(_FourierBufferThreeId, sampler_FourierBufferThreeId, positionSTS.xy).r;
+                a += SAMPLE_TEXTURE2D(_FourierBufferFourId, sampler_FourierBufferFourId, positionSTS.xy).r;
+                return a;
+    #else
+                 return SamplerDirectionalShadowAtlas(positionSTS);
     #endif
 #else
     return SamplerDirectionalShadowAtlas(positionSTS);

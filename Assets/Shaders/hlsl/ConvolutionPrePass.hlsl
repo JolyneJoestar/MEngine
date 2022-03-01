@@ -7,15 +7,22 @@ struct Varyings
     float2 screenUV : VAR_SCREEN_UV;
 };
 
+struct FourierOutput
+{
+    float4 FourierOutputOne : SV_Target0;
+    float4 FourierOutputTwo : SV_Target1;
+    float4 FourierOutputThree : SV_Target2;
+    float4 FourierOutputFour : SV_Target3;
+};
 int _TexSize;
 
 
-TEXTURE2D(_PostFXSource);
-SAMPLER(sampler_PostFXSource);
+TEXTURE2D(_ShadowBlurSource);
+SAMPLER(sampler_ShadowBlurSource);
 
 float GetSource(float2 screenUV)
 {
-    return SAMPLE_TEXTURE2D(_PostFXSource, sampler_PostFXSource, screenUV).r;
+    return SAMPLE_TEXTURE2D(_ShadowBlurSource, sampler_ShadowBlurSource, screenUV).r;
 }
 
 Varyings DefaultPassVertex(uint vertexID : SV_VertexID)
@@ -33,30 +40,13 @@ Varyings DefaultPassVertex(uint vertexID : SV_VertexID)
     return output;
 }
 
-float4 CopyPassFragment(Varyings input) : SV_TARGET
+FourierOutput FourierGenPassFragment(Varyings input)
 {
-    float ex = 0.0;
-    float e_x2 = 0.0;
-//    float2 uv[9];
- //   GetUV(input.screenUV, 1024.0, uv);
-    float4 texcol = 0;
-    int c = 5;
-    float allP = 0;
-                      
-    for (int x = -c; x <= c; x++)
-    {
-
-        for (int y = -c; y <= c; y++)
-        {
-            float p = 1.0 / max(0.5, pow(length(float2(x, y)), 2));
-            float d = GetSource((input.screenUV + float2(x, y) / 1024));
-            ex += d * p;
-            e_x2 += d * d * p;
-            allP += p;
-        }
-    }
-    ex /= allP;
-    e_x2 /= allP;
-    return float4(ex, e_x2, 0.0, 0.0);
+    FourierOutput output;
+    output.FourierOutputOne = float4(GetSource(input.screenUV), 0, 0, 1);
+    output.FourierOutputTwo = float4(0.3, GetSource(input.screenUV), 0.3, 1);
+    output.FourierOutputThree = float4(0.5, 0.5, GetSource(input.screenUV), 1);
+    output.FourierOutputFour = float4(0.8, 0.8, GetSource(input.screenUV), 1);
+    return output;
 }
 #endif //CONVOLUTION_PRE_PASS_INCLUDED
