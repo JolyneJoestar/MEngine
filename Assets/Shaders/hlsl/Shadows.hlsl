@@ -66,7 +66,7 @@ float GetBlockHeight(float2 uv,float height)
         for (int y = -c; y <= c; y++)
         {
             float p = 1.0 / max(0.5, pow(length(float2(x, y)), 2));
-            float d = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas,(uv + float2(x, y) / 2048));
+            float d = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas,(uv + float2(x, y) / 2048.0)).r;
             if(d > height)
             {
                 block += (d - height);

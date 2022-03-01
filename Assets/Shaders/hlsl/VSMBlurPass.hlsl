@@ -7,7 +7,10 @@ struct Varyings
     float2 screenUV : VAR_SCREEN_UV;
 };
 
+CBUFFER_START(_VSM_BLUR)
 int _TexSize;
+int _CasecadeSize;
+CBUFFER_END
 
 
 TEXTURE2D(_ShadowBlurSource);
@@ -32,6 +35,10 @@ Varyings DefaultPassVertex(uint vertexID : SV_VertexID)
 	);
     return output;
 }
+int GetBlurRadian()
+{
+    
+}
 void GetUV(float2 uv,float size, out float2 outUV[9])
 {
     outUV[0] = uv;
@@ -51,8 +58,12 @@ float4 CopyPassFragment(Varyings input) : SV_TARGET
     float e_x2 = 0.0;
 //    float2 uv[9];
  //   GetUV(input.screenUV, 1024.0, uv);
+//    float size = _CasecadeSize > 1 ? 2.0 : 1.0;
+    
+    int m = input.screenUV.x < 0.5 ? 3 : 0;
+    int n = input.screenUV.y < 0.5 ? 3 : 0;
     float4 texcol = 0;
-    int c = 5;
+    int c = m + n;
     float allP = 0;
                       
     for (int x = -c; x <= c; x++)
@@ -61,7 +72,7 @@ float4 CopyPassFragment(Varyings input) : SV_TARGET
         for (int y = -c; y <= c; y++)
         {
             float p = 1.0 / max(0.5, pow(length(float2(x, y)), 2));
-            float d = GetSource((input.screenUV + float2(x, y) / 1024));
+            float d = GetSource((input.screenUV + float2(x, y) / 2048));
             ex += d * p;
             e_x2 += d * d * p;
             allP += p;
