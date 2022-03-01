@@ -7,7 +7,6 @@ Shader "Hidden/Custom RP/Shadow Post Process" {
 
 		HLSLINCLUDE
 		#include "Common.hlsl"
-		#include "VSMBlurPass.hlsl"
 		ENDHLSL
 
 		Pass {
@@ -17,6 +16,20 @@ Shader "Hidden/Custom RP/Shadow Post Process" {
 				#pragma target 3.5
 				#pragma vertex DefaultPassVertex
 				#pragma fragment CopyPassFragment
+
+				#include "VSMBlurPass.hlsl"
+			ENDHLSL
+		}
+
+		Pass {
+			Name "CSM"
+
+			HLSLPROGRAM
+				#pragma target 3.5
+				#pragma vertex DefaultPassVertex
+				#pragma fragment CopyPassFragment
+
+				#include "ConvolutionPrePass.hlsl"
 			ENDHLSL
 		}
 	}
