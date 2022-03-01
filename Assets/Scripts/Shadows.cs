@@ -102,7 +102,7 @@ public class Shadows
     {
         int atlasSize = (int)m_shadowSettings.directional.atlasSize;
         buffer.GetTemporaryRT(dirShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.Shadowmap);
-        buffer.GetTemporaryRT(bluredDirShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.RG16);
+        buffer.GetTemporaryRT(bluredDirShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.RG32);
         buffer.SetRenderTarget(dirShadowAtlasId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
         buffer.ClearRenderTarget(true, false, Color.clear);
         buffer.BeginSample(bufferName);
