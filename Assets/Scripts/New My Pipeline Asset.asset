@@ -26,4 +26,6 @@ MonoBehaviour:
       cascadeRatio2: 0.294
       cascadeRatio3: 0.501
       cascadeFade: 0.109
-      cascadeBlend: 2
+      cascadeBlend: 1
+      softshadow: 1
+  shadowPostSettings: {fileID: 11400000, guid: f4c5f29ea4d85e849af1ade89b76b837, type: 2}

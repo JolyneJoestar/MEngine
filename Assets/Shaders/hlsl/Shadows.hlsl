@@ -16,10 +16,16 @@
 #define MAX_SHADOWED_DIRECTIONAL_LIGHT_COUNT 4
 #define MAX_CASCADE_COUNT 4
 
+#if defined(_VSM)
+TEXTURE2D(_BluredDirShadowAtlasId);
+SAMPLER(sampler_BluredDirShadowAtlasId);
+#endif
 TEXTURE2D_SHADOW(_DirectionalShadowAtlas);
 #define SHADOW_SAMPLER sampler_linear_clamp_compare
 SAMPLER_CMP(SHADOW_SAMPLER);
 SAMPLER(sampler_DirectionalShadowAtlas);
+
+
 
 CBUFFER_START(_CustomShadows)
 int _CascadeCount;
@@ -48,24 +54,87 @@ float SamplerDirectionalShadowAtlas(float3 positionSTS)
 	return SAMPLE_TEXTURE2D_SHADOW(_DirectionalShadowAtlas, SHADOW_SAMPLER, positionSTS);
 }
 
+float GetBlockHeight(float2 uv,float height)
+{
+    float block = 0.0;
+    int c = 5;
+    float allP = 0;
+                      
+    for (int x = -c; x <= c; x++)
+    {
+
+        for (int y = -c; y <= c; y++)
+        {
+            float p = 1.0 / max(0.5, pow(length(float2(x, y)), 2));
+            float d = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas,(uv + float2(x, y) / 2048.0)).r;
+            if(d > height)
+            {
+                block += (d - height);
+                allP += p;
+            }
+        }
+    }
+    return block / allP;
+}
+
 float FilterDirectionalShadow(float3 positionSTS)
 {
 #if defined(DIRECTIONAL_FILTER_SETUP)
-		float weights[DIRECTIONAL_FILTER_SAMPLES];
-		float2 positions[DIRECTIONAL_FILTER_SAMPLES];
-		float4 size = _ShadowAtlasSize.yyxx;
-		DIRECTIONAL_FILTER_SETUP(size, positionSTS.xy, weights, positions);
-		float shadow = 0;
-		float dBlocker = 0;
-		for(int i = 0; i < DIRECTIONAL_FILTER_SAMPLES; i++)
-		{
-			dBlocker += SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas, positions[i].xy).r;
-			shadow += weights[i] * SamplerDirectionalShadowAtlas(float3(positions[i].xy, positionSTS.z));
-		}
-		dBlocker /= DIRECTIONAL_FILTER_SAMPLES;
-		float dReceiver = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas,positionSTS.xy).r;
-		float weight = (dReceiver - dBlocker) * 100.0 / dBlocker;
-		return shadow;
+    #if defined(_VSM)
+		    float2 depth = SAMPLE_TEXTURE2D(_BluredDirShadowAtlasId, sampler_BluredDirShadowAtlasId, positionSTS.xy).rg;
+		    float convi = max(0.00000001,depth.y - depth.x * depth.x);
+		    float delta = positionSTS.z - depth.x;
+		    float result = convi / (convi + delta * delta);
+		    return positionSTS.z >= depth.x ? 1.0 : result;
+    #elif defined(_PCF)
+
+                float weights[DIRECTIONAL_FILTER_SAMPLES];
+		        float2 positions[DIRECTIONAL_FILTER_SAMPLES];
+		        float4 size = _ShadowAtlasSize.yyxx;
+		        DIRECTIONAL_FILTER_SETUP(size, positionSTS.xy, weights, positions);
+		        float shadow = 0;
+		        for (int i = 0; i < DIRECTIONAL_FILTER_SAMPLES; i++) {
+			        shadow += weights[i] * SamplerDirectionalShadowAtlas(
+				        float3(positions[i].xy, positionSTS.z)
+			        );
+		        }
+		        return shadow;
+    #else
+    	        float height = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas, positionSTS.xy).r;
+                float block = GetBlockHeight(positionSTS.xy, height);
+                if(block < 0.2)
+                {
+                    return SamplerDirectionalShadowAtlas(positionSTS);
+                }
+                else if(block < 0.4)
+                {
+                    float weights[9];
+		            float2 positions[9];
+		            float4 size = _ShadowAtlasSize.yyxx;
+		            SampleShadow_ComputeSamples_Tent_5x5(size, positionSTS.xy, weights, positions);
+		            float shadow = 0;
+		            for (int i = 0; i < 9; i++) {
+			            shadow += weights[i] * SamplerDirectionalShadowAtlas(
+				            float3(positions[i].xy, positionSTS.z)
+			            );
+		            }
+		            return shadow;
+                }
+                else
+                {
+                    float weights[16];
+		            float2 positions[16];
+		            float4 size = _ShadowAtlasSize.yyxx;
+		            SampleShadow_ComputeSamples_Tent_7x7(size, positionSTS.xy, weights, positions);
+		            float shadow = 0;
+		            for (int i = 0; i < 16; i++) {
+			            shadow += weights[i] * SamplerDirectionalShadowAtlas(
+				            float3(positions[i].xy, positionSTS.z)
+			            );
+		            }
+		            return shadow;
+                }
+    #endif
 #else
     return SamplerDirectionalShadowAtlas(positionSTS);
 #endif

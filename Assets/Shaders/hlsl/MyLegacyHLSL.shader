@@ -33,6 +33,7 @@ Shader "MyPipeline/LegacyHLSL"
 
 				#pragma multi_compile _ _DIRECTIONAL_PCF3 _DIRECTIONAL_PCF5 _DIRECTIONAL_PCF7
 				#pragma multi_compile _ _CASCADE_BLEND_SOFT _CASCADE_BLEND_DITHER
+				#pragma multi_compile _ _PCF _VSM _ESM _PCSS _CSM
 				#pragma multi_compile _ LIGHTMAP_ON
 				#pragma multi_compile_instancing
 				#pragma vertex LegacyVertex

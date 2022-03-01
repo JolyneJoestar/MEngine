@@ -21,11 +21,11 @@ public class Lighting
         m_dirLightColors = new Vector4[m_maxVisibleLightCount],
         m_dirLightDirecitons = new Vector4[m_maxVisibleLightCount],
         m_dirLightShadowData = new Vector4[m_maxVisibleLightCount];
-    public void SetUp(ScriptableRenderContext context,CullingResults cullingResults, ShadowSettings shadowSettings)
+    public void SetUp(ScriptableRenderContext context,CullingResults cullingResults, ShadowSettings shadowSettings,Camera camera, ShadowPostSettings shadowPostSettings)
     {
         this.m_cullingResults = cullingResults;
         m_buffer.BeginSample(m_bufferName);
-        m_shadows.Setup(context, cullingResults, shadowSettings);
+        m_shadows.Setup(context, cullingResults, shadowSettings,camera, shadowPostSettings);
         SetupLights();
         m_shadows.Render();
         m_buffer.EndSample(m_bufferName);
@@ -50,7 +50,20 @@ public class Lighting
         m_buffer.SetGlobalVectorArray(m_dirLightShadowDataId, m_dirLightShadowData);
     }
 
-    void SetDirectionLight(int index,ref VisibleLight visibleLight)
+    public int GetDirShadowAtlasId()
+    {
+        return m_shadows.GetDirShadowAtlasId();
+    }
+
+    public int GetBluredDirShadowAtlasId()
+    {
+        return m_shadows.GetBluredDirShadowAtlasId();
+    }
+    public int GetAtlasSize()
+    {
+        return m_shadows.GetAtlasSize();
+    }
+        void SetDirectionLight(int index,ref VisibleLight visibleLight)
     {
         //       UnityEngine.Light light = RenderSettings.sun;
         //m_buffer.SetGlobalVector(m_dirLightColorId, visibleLight.finalColor);
