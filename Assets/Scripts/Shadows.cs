@@ -142,10 +142,14 @@ public class Shadows
         }
         else if(convolutionShadowMap.IsActive && m_shadowSettings.directional.softshadow == ShadowSettings.Directional.SoftShodowType.CSM)
         {
-            for(int i = 0; i < FourierBufferDataId.Length; i++)
+            for (int i = 0; i < FourierBufferDataId.Length; i++)
             {
-                buffer.GetTemporaryRT(FourierBufferDataId[i], atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
+                if(i == 0)
+                    buffer.GetTemporaryRT(FourierBufferDataId[i], atlasSize, atlasSize, 32, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
+                else
+                    buffer.GetTemporaryRT(FourierBufferDataId[i], atlasSize, atlasSize, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
             }
+            ExecuteBuffer();
             convolutionShadowMap.Render(dirShadowAtlasId, FourierBufferDataId, (int)m_shadowSettings.directional.atlasSize);
         }
     }

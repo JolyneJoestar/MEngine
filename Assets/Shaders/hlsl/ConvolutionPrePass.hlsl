@@ -43,10 +43,27 @@ Varyings DefaultPassVertex(uint vertexID : SV_VertexID)
 FourierOutput FourierGenPassFragment(Varyings input)
 {
     FourierOutput output;
-    output.FourierOutputOne = float4(GetSource(input.screenUV), 0, 0, 1);
-    output.FourierOutputTwo = float4(0.3, GetSource(input.screenUV), 0.3, 1);
-    output.FourierOutputThree = float4(0.5, 0.5, GetSource(input.screenUV), 1);
-    output.FourierOutputFour = float4(0.8, 0.8, GetSource(input.screenUV), 1);
+    float z = GetSource(input.screenUV);
+    float sinFactor1 = sin(PI * (2 * 1 - 1) * z);
+    float cosFactor1 = cos(PI * (2 * 1 - 1) * z);
+    float sinFactor2 = sin(PI * (2 * 2 - 1) * z);
+    float cosFactor2 = cos(PI * (2 * 2 - 1) * z);
+    output.FourierOutputOne = float4(sinFactor1, cosFactor1, sinFactor2, cosFactor2);
+    sinFactor1 = sin(PI * (2 * 3 - 1) * z);
+    cosFactor1 = cos(PI * (2 * 3 - 1) * z);
+    sinFactor2 = sin(PI * (2 * 4 - 1) * z);
+    cosFactor2 = cos(PI * (2 * 4 - 1) * z);
+    output.FourierOutputTwo = float4(sinFactor1, cosFactor1, sinFactor2, cosFactor2);
+    sinFactor1 = sin(PI * (2 * 5 - 1) * z);
+    cosFactor1 = cos(PI * (2 * 5 - 1) * z);
+    sinFactor2 = sin(PI * (2 * 6 - 1) * z);
+    cosFactor2 = cos(PI * (2 * 6 - 1) * z);
+    output.FourierOutputThree = float4(sinFactor1, cosFactor1, sinFactor2, cosFactor2);
+    sinFactor1 = sin(PI * (2 * 7 - 1) * z);
+    cosFactor1 = cos(PI * (2 * 7 - 1) * z);
+    sinFactor2 = sin(PI * (2 * 8 - 1) * z);
+    cosFactor2 = cos(PI * (2 * 8 - 1) * z);
+    output.FourierOutputFour = float4(sinFactor1, cosFactor1, sinFactor2, cosFactor2);
     return output;
 }
 #endif //CONVOLUTION_PRE_PASS_INCLUDED

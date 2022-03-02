@@ -44,8 +44,8 @@ public class ConvolutionShadowMap
     )
     {
         buffer.SetGlobalTexture(shadowBlurSourceId, from);
-        buffer.SetRenderTarget(to, BuiltinRenderTextureType.Depth);
-        buffer.ClearRenderTarget(true, false, Color.clear);
+        buffer.SetRenderTarget(to, to[0]);
+        buffer.ClearRenderTarget(true, false, Color.white);
         buffer.SetGlobalInt(texSize, size);
         buffer.DrawProcedural(
             Matrix4x4.identity, settings.Material, (int)pass,
