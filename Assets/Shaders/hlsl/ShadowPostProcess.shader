@@ -32,5 +32,17 @@ Shader "Hidden/Custom RP/Shadow Post Process" {
 				#include "ConvolutionPrePass.hlsl"
 			ENDHLSL
 		}
+
+		Pass {
+			Name "CSM_BLUR"
+
+			HLSLPROGRAM
+				#pragma target 3.5
+				#pragma vertex DefaultPassVertex
+				#pragma fragment FourierBlurPassFragment
+
+				#include "ConvolutionBlurPass.hlsl"
+			ENDHLSL
+		}
 	}
 }

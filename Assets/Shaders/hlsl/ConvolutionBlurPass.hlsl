@@ -23,8 +23,8 @@ TEXTURE2D(_FourierBlurSourceTwo);
 SAMPLER(sampler_FourierBlurSourceTwo);
 TEXTURE2D(_FourierBlurSourceThree);
 SAMPLER(sampler_FourierBlurSourceThree);
-TEXTURE2D(_FourierBlurSourceThree);
-SAMPLER(sampler_FourierBlurSourceThree);
+TEXTURE2D(_FourierBlurSourceFour);
+SAMPLER(sampler_FourierBlurSourceFour);
 
 Varyings DefaultPassVertex(uint vertexID : SV_VertexID)
 {
@@ -41,7 +41,7 @@ Varyings DefaultPassVertex(uint vertexID : SV_VertexID)
     return output;
 }
 
-FourierOutput FourierGenPassFragment(Varyings input)
+FourierOutput FourierBlurPassFragment(Varyings input)
 {
     FourierOutput output;
     float offsets[] =
@@ -59,11 +59,11 @@ FourierOutput FourierGenPassFragment(Varyings input)
     float4 color4 = float4(0.0, 0.0, 0.0, 0.0);
     for (int i = 0; i < 9; i++)
     {
-        float offset = offsets[i] * GetSourceTexelSize().y;
-        color1 += SAMPLE_TEXTURE2D(_FourierBlurSourceOne, sampler_FourierBlurSourceOne, screenUV).rgba * weights[i];
-        color2 += SAMPLE_TEXTURE2D(_FourierBlurSourceTwo, sampler_FourierBlurSourceTwo, screenUV).rgba * weights[i];
-        color3 += SAMPLE_TEXTURE2D(_FourierBlurSourceThree, sampler_FourierBlurSourceThree, screenUV).rgba * weights[i];
-        color4 += SAMPLE_TEXTURE2D(_FourierBlurSourceFour, sampler_FourierBlurSourceFour, screenUV).rgba * weights[i];
+        float offset = offsets[i] * 2048;
+        color1 += SAMPLE_TEXTURE2D(_FourierBlurSourceOne, sampler_FourierBlurSourceOne, input.screenUV).rgba * weights[i];
+        color2 += SAMPLE_TEXTURE2D(_FourierBlurSourceTwo, sampler_FourierBlurSourceTwo, input.screenUV).rgba * weights[i];
+        color3 += SAMPLE_TEXTURE2D(_FourierBlurSourceThree, sampler_FourierBlurSourceThree, input.screenUV).rgba * weights[i];
+        color4 += SAMPLE_TEXTURE2D(_FourierBlurSourceFour, sampler_FourierBlurSourceFour, input.screenUV).rgba * weights[i];
     }
     output.FourierOutputOne = color1;
     output.FourierOutputTwo = color2;

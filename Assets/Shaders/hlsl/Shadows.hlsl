@@ -184,7 +184,7 @@ float FilterDirectionalShadow(float3 positionSTS)
                 b += 2 * sin(ck * d) * preFourier.w / ck * exp(8.0 * 8.0 / 8.0 /8.0);
                 
                 shadow += (a - b);
-                return abs(d - z) < 0.001 ? 1 : saturate(1.0 - 2 * shadow);
+                return abs(d - z) < 0.01 ? 1 : saturate(1.0 - 2 * shadow);
     #else
                  return SamplerDirectionalShadowAtlas(positionSTS);
     #endif
