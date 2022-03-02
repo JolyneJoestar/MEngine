@@ -18,6 +18,14 @@ public class ConvolutionShadowMap
     ShadowPostSettings settings;
     int shadowBlurSourceId = Shader.PropertyToID("_ShadowBlurSource");
     int texSize = Shader.PropertyToID("_TexSize");
+
+    static int[] fourierBlurSourceDataId = 
+    {
+        Shader.PropertyToID("_FourierBlurSourceOne"),
+        Shader.PropertyToID("_FourierBlurSourceTwo"),
+        Shader.PropertyToID("_FourierBlurSourceThree"),
+        Shader.PropertyToID("_FourierBlurSourceFour")
+    };
     RenderTargetIdentifier[] targets = new RenderTargetIdentifier[MAX_FOURIEPRETEXTURE];
     public bool IsActive => settings != null;
     public void Setup(
@@ -52,5 +60,10 @@ public class ConvolutionShadowMap
             MeshTopology.Triangles, 3
         );
         buffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
+    }
+
+    void DrawBlur()
+    {
+
     }
 }

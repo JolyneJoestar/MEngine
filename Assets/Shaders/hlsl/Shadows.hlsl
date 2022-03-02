@@ -148,34 +148,43 @@ float FilterDirectionalShadow(float3 positionSTS)
                 }
     #elif defined(_CSM)
                 float shadow = 0.5;
-                //float d = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas, positionSTS.xy).r;
+                float z = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas, positionSTS.xy).r;
                 float d = positionSTS.z;
-
+                float a = 0.0, b = 0.0;
                 float ck = PI * (2 * 1 - 1);
                 float4 preFourier =  SAMPLE_TEXTURE2D(_FourierBufferOneId, sampler_FourierBufferOneId, positionSTS.xy);
-                shadow += (2 * cos(ck * d) * preFourier.x / ck - 2 * sin(ck * d) * preFourier.y / ck);
+                a += 2 * cos(ck * d) * preFourier.x / ck * exp(1.0 / 8.0 /8.0);
+                b += 2 * sin(ck * d) * preFourier.y / ck * exp(1.0 / 8.0 /8.0);
                 ck = PI * (2 * 2 - 1);
-                shadow += (2 * cos(ck * d) * preFourier.z / ck - 2 * sin(ck * d) * preFourier.w / ck);
+                a += 2 * cos(ck * d) * preFourier.z / ck * exp(2.0 * 2.0 / 8.0 /8.0);
+                b += 2 * sin(ck * d) * preFourier.w / ck * exp(2.0 * 2.0 / 8.0 /8.0);
     
                 preFourier = SAMPLE_TEXTURE2D(_FourierBufferTwoId, sampler_FourierBufferTwoId, positionSTS.xy);
                 ck = PI * (2 * 3 - 1);
-                shadow += (2 * cos(ck * d) * preFourier.x / ck - 2 * sin(ck * d) * preFourier.y / ck);
+                a += 2 * cos(ck * d) * preFourier.x / ck * exp(3.0 * 3.0 / 8.0 /8.0);
+                b += 2 * sin(ck * d) * preFourier.y / ck * exp(3.0 * 3.0 / 8.0 /8.0);
                 ck = PI * (2 * 4 - 1);
-                shadow += (2 * cos(ck * d) * preFourier.z / ck - 2 * sin(ck * d) * preFourier.w / ck);
+                a += 2 * cos(ck * d) * preFourier.z / ck * exp(4.0 * 4.0 / 8.0 /8.0);
+                b += 2 * sin(ck * d) * preFourier.w / ck * exp(4.0 * 4.0 / 8.0 /8.0);
     
                 preFourier = SAMPLE_TEXTURE2D(_FourierBufferThreeId, sampler_FourierBufferThreeId, positionSTS.xy);
                 ck = PI * (2 * 5 - 1);
-                shadow += (2 * cos(ck * d) * preFourier.x / ck - 2 * sin(ck * d) * preFourier.y / ck);
+                a += 2 * cos(ck * d) * preFourier.x / ck * exp(5.0 * 5.0 / 8.0 /8.0);
+                b += 2 * sin(ck * d) * preFourier.y / ck * exp(5.0 * 5.0 / 8.0 /8.0);
                 ck = PI * (2 * 6 - 1);
-                shadow += (2 * cos(ck * d) * preFourier.z / ck - 2 * sin(ck * d) * preFourier.w / ck);
+                a += 2 * cos(ck * d) * preFourier.z / ck * exp(6.0 * 6.0 / 8.0 /8.0);
+                b += 2 * sin(ck * d) * preFourier.w / ck * exp(6.0 * 6.0 / 8.0 /8.0);
     
                 preFourier = SAMPLE_TEXTURE2D(_FourierBufferFourId, sampler_FourierBufferFourId, positionSTS.xy);
                 ck = PI * (2 * 7 - 1);
-                shadow += (2 * cos(ck * d) * preFourier.x / ck - 2 * sin(ck * d) * preFourier.y / ck);
+                a += 2 * cos(ck * d) * preFourier.x / ck * exp(7.0 * 7.0 / 8.0 /8.0);
+                b += 2 * sin(ck * d) * preFourier.y / ck * exp(7.0 * 7.0 / 8.0 /8.0);
                 ck = PI * (2 * 8 - 1);
-                shadow += (2 * cos(ck * d) * preFourier.z / ck - 2 * sin(ck * d) * preFourier.w / ck);
-    
-                return saturate(2 * shadow);
+                a += 2 * cos(ck * d) * preFourier.z / ck * exp(8.0 * 8.0 / 8.0 /8.0);
+                b += 2 * sin(ck * d) * preFourier.w / ck * exp(8.0 * 8.0 / 8.0 /8.0);
+                
+                shadow += (a - b);
+                return abs(d - z) < 0.001 ? 1 : saturate(1.0 - 2 * shadow);
     #else
                  return SamplerDirectionalShadowAtlas(positionSTS);
     #endif
