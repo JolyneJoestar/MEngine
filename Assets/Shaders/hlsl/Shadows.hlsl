@@ -37,7 +37,14 @@ TEXTURE2D_SHADOW(_DirectionalShadowAtlas);
 SAMPLER_CMP(SHADOW_SAMPLER);
 SAMPLER(sampler_DirectionalShadowAtlas);
 
+float SamplerDirectionalShadowAtlas(float3 positionSTS)
+{
+	return SAMPLE_TEXTURE2D_SHADOW(_DirectionalShadowAtlas, SHADOW_SAMPLER, positionSTS);
+}
 
+#if defined(_PCSS)
+#include "PCSS.hlsl"
+#endif
 
 CBUFFER_START(_CustomShadows)
 int _CascadeCount;
@@ -61,33 +68,6 @@ struct ShadowData
     float strength;
 };
 
-float SamplerDirectionalShadowAtlas(float3 positionSTS)
-{
-	return SAMPLE_TEXTURE2D_SHADOW(_DirectionalShadowAtlas, SHADOW_SAMPLER, positionSTS);
-}
-
-float GetBlockHeight(float2 uv,float height)
-{
-    float block = 0.0;
-    int c = 5;
-    float allP = 0;
-                      
-    for (int x = -c; x <= c; x++)
-    {
-
-        for (int y = -c; y <= c; y++)
-        {
-            float p = 1.0 / max(0.5, pow(length(float2(x, y)), 2));
-            float d = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas,(uv + float2(x, y) / 2048.0)).r;
-            if(d > height)
-            {
-                block += (d - height);
-                allP += p;
-            }
-        }
-    }
-    return block / allP;
-}
 
 float FilterDirectionalShadow(float3 positionSTS)
 {
@@ -112,40 +92,8 @@ float FilterDirectionalShadow(float3 positionSTS)
 		        }
 		        return shadow;
     #elif defined(_PCSS)
-    	        float height = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas, positionSTS.xy).r;
-                float block = GetBlockHeight(positionSTS.xy, height);
-                if(block < 0.2)
-                {
-                    return SamplerDirectionalShadowAtlas(positionSTS);
-                }
-                else if(block < 0.4)
-                {
-                    float weights[9];
-		            float2 positions[9];
-		            float4 size = _ShadowAtlasSize.yyxx;
-		            SampleShadow_ComputeSamples_Tent_5x5(size, positionSTS.xy, weights, positions);
-		            float shadow = 0;
-		            for (int i = 0; i < 9; i++) {
-			            shadow += weights[i] * SamplerDirectionalShadowAtlas(
-				            float3(positions[i].xy, positionSTS.z)
-			            );
-		            }
-		            return shadow;
-                }
-                else
-                {
-                    float weights[16];
-		            float2 positions[16];
-		            float4 size = _ShadowAtlasSize.yyxx;
-		            SampleShadow_ComputeSamples_Tent_7x7(size, positionSTS.xy, weights, positions);
-		            float shadow = 0;
-		            for (int i = 0; i < 16; i++) {
-			            shadow += weights[i] * SamplerDirectionalShadowAtlas(
-				            float3(positions[i].xy, positionSTS.z)
-			            );
-		            }
-		            return shadow;
-                }
+				float shadow = PCSS_Shadow_Calculate(positionSTS, 0.0, 1.0, 1.0);
+				return shadow;
     #elif defined(_CSM)
                 float shadow = 0.5;
                 float z = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas, positionSTS.xy).r;
