@@ -37,6 +37,9 @@ TEXTURE2D_SHADOW(_DirectionalShadowAtlas);
 SAMPLER_CMP(SHADOW_SAMPLER);
 SAMPLER(sampler_DirectionalShadowAtlas);
 
+TEXTURE2D(MNoiseTexture);
+SAMPLER(samplerMNoiseTexture);
+
 float SamplerDirectionalShadowAtlas(float3 positionSTS)
 {
 	return SAMPLE_TEXTURE2D_SHADOW(_DirectionalShadowAtlas, SHADOW_SAMPLER, positionSTS);
@@ -92,8 +95,10 @@ float FilterDirectionalShadow(float3 positionSTS)
 		        }
 		        return shadow;
     #elif defined(_PCSS)
-				float shadow = PCSS_Shadow_Calculate(positionSTS, 0.0, 1.0, 1.0);
-				return shadow;
+				float noise = SAMPLE_TEXTURE2D(MNoiseTexture, samplerMNoiseTexture, positionSTS.xy).a;
+				//float depth = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas, positionSTS.xy).r;
+				float shadow = PCSS_Shadow_Calculate(positionSTS, 0.0, noise, 1.0);
+				return shadow;// +depth;
     #elif defined(_CSM)
                 float shadow = 0.5;
                 float z = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas, positionSTS.xy).r;

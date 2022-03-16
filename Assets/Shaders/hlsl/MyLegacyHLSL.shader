@@ -10,6 +10,7 @@ Shader "MyPipeline/LegacyHLSL"
 	{
 		MTint("Tint",Color) = (1,1,1,1)
 		MTexture("Texture",2D) = "white"{}
+		MNoiseTexture("NoiseTexture", 2D) = "white"{}
 		MMetallic("Metallic",Range(0,1)) = 0.5
 		MSmoothness("Smoothness",Range(0,1)) = 0.5
 		MCutoff("Alpha Cutoff", Range(0.0, 1.0)) = 0.5
