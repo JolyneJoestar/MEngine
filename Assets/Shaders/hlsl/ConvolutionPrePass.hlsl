@@ -43,7 +43,10 @@ Varyings DefaultPassVertex(uint vertexID : SV_VertexID)
 FourierOutput FourierGenPassFragment(Varyings input)
 {
     FourierOutput output;
-    float z = GetSource(input.screenUV);
+	float z = GetSource(input.screenUV);
+#if defined(UNITY_REVERSED_Z)
+	z = 1.0 - z;
+#endif
     float sinFactor1 = sin(PI * (2 * 1 - 1) * z);
     float cosFactor1 = cos(PI * (2 * 1 - 1) * z);
     float sinFactor2 = sin(PI * (2 * 2 - 1) * z);

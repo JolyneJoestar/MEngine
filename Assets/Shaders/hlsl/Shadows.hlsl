@@ -96,6 +96,7 @@ float FilterDirectionalShadow(float3 positionSTS)
 		        return shadow;
     #elif defined(_PCSS)
 				float noise = SAMPLE_TEXTURE2D(MNoiseTexture, samplerMNoiseTexture, positionSTS.xy).a;
+				noise = mad(noise, 2.0, -1.0);
 				//float depth = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas, positionSTS.xy).r;
 				float shadow = PCSS_Shadow_Calculate(positionSTS, 0.0, noise, 1.0);
 				return shadow;// +depth;
@@ -103,6 +104,10 @@ float FilterDirectionalShadow(float3 positionSTS)
                 float shadow = 0.5;
                 float z = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas, positionSTS.xy).r;
                 float d = positionSTS.z;
+#if defined(UNITY_REVERSED_Z)
+				z = 1.0 - z;
+				d = 1.0 - d;
+#endif
                 float a = 0.0, b = 0.0;
                 float ck = PI * (2 * 1 - 1);
                 float4 preFourier =  SAMPLE_TEXTURE2D(_FourierBufferOneId, sampler_FourierBufferOneId, positionSTS.xy);
@@ -137,7 +142,7 @@ float FilterDirectionalShadow(float3 positionSTS)
                 b += 2 * sin(ck * d) * preFourier.w / ck * exp(8.0 * 8.0 / 8.0 /8.0);
                 
                 shadow += (a - b);
-                return (d - z) < 0.03 ? 0 : saturate(2 * shadow);
+                return d + 0.032 < z ? 1 : saturate(2 * shadow);
     #else
                  return SamplerDirectionalShadowAtlas(positionSTS);
     #endif
