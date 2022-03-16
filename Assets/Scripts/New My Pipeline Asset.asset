@@ -19,7 +19,7 @@ MonoBehaviour:
     maxDistance: 100
     distanceFade: 0.122
     directional:
-      atlasSize: 512
+      atlasSize: 2048
       filter: 3
       cascadeCount: 1
       cascadeRatio1: 0.108
@@ -27,5 +27,5 @@ MonoBehaviour:
       cascadeRatio3: 0.501
       cascadeFade: 0.109
       cascadeBlend: 1
-      softshadow: 3
+      softshadow: 4
   shadowPostSettings: {fileID: 11400000, guid: f4c5f29ea4d85e849af1ade89b76b837, type: 2}
