@@ -72,7 +72,7 @@ struct ShadowData
 };
 
 
-float FilterDirectionalShadow(float3 positionSTS)
+float FilterDirectionalShadow(float3 positionSTS, float3 unBiasedPositionSTS)
 {
 #if defined(DIRECTIONAL_FILTER_SETUP)
     #if defined(_VSM)
@@ -98,7 +98,7 @@ float FilterDirectionalShadow(float3 positionSTS)
 				float noise = SAMPLE_TEXTURE2D(MNoiseTexture, samplerMNoiseTexture, positionSTS.xy).a;
 				noise = mad(noise, 2.0, -1.0);
 				//float depth = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas, positionSTS.xy).r;
-				float shadow = PCSS_Shadow_Calculate(positionSTS, 0.0, noise, 1.0);
+				float shadow = PCSS_Shadow_Calculate(positionSTS, unBiasedPositionSTS, noise, 1.0);
 				return shadow;// +depth;
     #elif defined(_CSM)
                 float shadow = 0.5;
@@ -157,12 +157,13 @@ float GetDirectionalShadowAttenuation(DirectionalShadowData dirData,ShadowData s
 		return 1.0;
     float3 normalBias = surfaceWS.normal * _CascadeData[shadowData.cascadeIndex].y * dirData.normalBias;
     float3 positionSTS = mul(_DirectionalShadowMatrices[dirData.tileIndex], float4(surfaceWS.position + normalBias, 1.0)).xyz;
-    float shadow = FilterDirectionalShadow(positionSTS);
+    float3 unBiasedPositionSTS = mul(_DirectionalShadowMatrices[dirData.tileIndex], float4(surfaceWS.position, 1.0)).xyz;
+    float shadow = FilterDirectionalShadow(positionSTS, unBiasedPositionSTS);
     if (shadowData.cascadeBlend < 1.0)
     {
         normalBias = surfaceWS.normal * _CascadeData[shadowData.cascadeIndex + 1].y * dirData.normalBias;
         positionSTS = mul(_DirectionalShadowMatrices[dirData.tileIndex + 1], float4(surfaceWS.position + normalBias, 1.0)).xyz;
-        shadow = lerp(FilterDirectionalShadow(positionSTS), shadow, shadowData.cascadeBlend);
+        shadow = lerp(FilterDirectionalShadow(positionSTS, unBiasedPositionSTS), shadow, shadowData.cascadeBlend);
     }
     return lerp(1.0, shadow, dirData.strength);
 }

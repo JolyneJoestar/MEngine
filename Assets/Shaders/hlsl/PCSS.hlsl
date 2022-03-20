@@ -132,7 +132,7 @@ inline float2 Rotate(float2 pos, float2 rotationTrig)
 	return float2(pos.x * rotationTrig.x - pos.y * rotationTrig.y,  pos.y * rotationTrig.x + pos.x * rotationTrig.y);
 }
 
-float2 FindBlocker(float2 uv, float depth, float scale, float searchUV, float2 receiverPlaneDepthBias, float rotationTrig)
+float2 FindBlocker(float2 uv, float depth, float scale, float searchUV, float3 unBiasedPositionSTS, float rotationTrig)
 {
 	float avgBlockerDepth = 0.0;
 	float numBlockers = 0.0;
@@ -144,9 +144,9 @@ float2 FindBlocker(float2 uv, float depth, float scale, float searchUV, float2 r
 
 		offset = Rotate(offset, rotationTrig);
 
-		float shadowMapDepth = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas, uv + offset).r;
+        float shadowMapDepth = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas, uv + offset).r;
 
-		float biasedDepth = depth;
+        float biasedDepth = depth;
 #if defined(UNITY_REVERSED_Z)
 		if(shadowMapDepth > biasedDepth)
 #else
@@ -167,12 +167,10 @@ float2 FindBlocker(float2 uv, float depth, float scale, float searchUV, float2 r
 	return float2(avgBlockerDepth, numBlockers);
 }
 
-float PCF_Filter(float2 uv, float depth, float scale, float filterRadiusUV, float2 receiverPlaneDepthBias, float penumbra, float2 rotationTrig)
+float PCF_Filter(float2 uv, float depth, float scale, float filterRadiusUV, float penumbra, float2 rotationTrig)
 {
 	float sum = 0.0f;
-#if defined(UNITY_REVERSED_Z)
-	receiverPlaneDepthBias *= -1.0;
-#endif
+
 	for (int i = 0; i < 32; i++)
 	{
 		float2 offset = PoissonOffsets[i] * filterRadiusUV * scale;
@@ -188,7 +186,7 @@ float PCF_Filter(float2 uv, float depth, float scale, float filterRadiusUV, floa
 	return sum;
 }
 
-float PCSS_Shadow_Calculate(float3 coords, float2 receiverPlaneDepthBias, float random, float scale)
+float PCSS_Shadow_Calculate(float3 coords, float3 unBiasedPositionSTS, float random, float scale)
 {
 	float2 uv = coords.xy;
 	float depth = coords.z;
@@ -200,12 +198,8 @@ float PCSS_Shadow_Calculate(float3 coords, float2 receiverPlaneDepthBias, float 
 	float rotationAngle = random * 3.1415926;
 	float rotationTrig = float2(cos(rotationAngle), sin(rotationAngle));
 
-#if defined(UNITY_REVERSED_Z)
-	receiverPlaneDepthBias *= -1.0;
-#endif
-
-	float searchSize = 0.004 * saturate(zAwareDepth - .02) / zAwareDepth;
-	float2 blockerInfo = FindBlocker(uv, depth, scale, searchSize, receiverPlaneDepthBias, rotationTrig);
+	float searchSize = 0.003 * saturate(zAwareDepth - .02) / zAwareDepth;
+    float2 blockerInfo = FindBlocker(uv, depth, scale, searchSize, unBiasedPositionSTS, rotationTrig);
 
 	if (blockerInfo.y < 1)
 	{
@@ -213,9 +207,9 @@ float PCSS_Shadow_Calculate(float3 coords, float2 receiverPlaneDepthBias, float 
 	}
 
 	float penumbra = zAwareDepth - blockerInfo.x;
-	float filterRadiusUV = penumbra * 0.1;
+    float filterRadiusUV = penumbra * 0.05;
 
-	float shadow = PCF_Filter(uv, depth, scale, filterRadiusUV, receiverPlaneDepthBias, penumbra, rotationTrig);
+	float shadow = PCF_Filter(uv, depth, scale, filterRadiusUV, penumbra, rotationTrig);
 	return shadow;
 }
 

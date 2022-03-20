@@ -37,6 +37,7 @@ public partial class CameraRender {
             //            Debug.Log(m_visibleLightColor[i]);
         }
     }
+
     public void Render(ScriptableRenderContext context, Camera camera,bool useDynamicBatching, bool useGPUInstancing, ShadowSettings shadowSettings, ShadowPostSettings shadowPostSettings)
     {
         this.m_context = context;
