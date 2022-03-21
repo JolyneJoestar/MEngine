@@ -1,10 +1,14 @@
-#ifndef CUSTOM_GEN_IRRADIANCE_INCLUDED
-#define CUSTOM_GEN_IRRADIANCE_INCLUDED
+#ifndef CUSTOM_GEN_IRRADIANCE2_INCLUDED
+#define CUSTOM_GEN_IRRADIANCE2_INCLUDED
 
 #include "../Common.hlsl"
 
-TEXTURECUBE(_MainTex);
-SAMPLER(sampler_ManiTex);
+float4 _RandomVector;
+
+TEXTURECUBE(_CubeTex);
+SAMPLER(sampler_CubeTex);
+TEXTURE2D(_MainTex);
+SAMPLER(sampler_MainTex);
 
 struct appdata
 {
@@ -47,16 +51,9 @@ float2 normal2uv(float3 normal)
     return result;
 }
 
-float4 frag(v2f i) : SV_Target
-{
-    float4 col = texCube(_MainTex, uv2normal(i.uv));
-                // just invert the colors
-    return col;
-}
-
 float4 frag_tex2tex(v2f i) : SV_Target
 {
-    float4 col = tex2D(_MainTex, i.uv);
+    float4 col = SAMPLE_TEXTURE2D(_MainTex,sampler_MainTex, i.uv);
     float3 n = uv2normal(i.uv);
     float3 t;
     if (n.y > 0.99)
@@ -68,7 +65,7 @@ float4 frag_tex2tex(v2f i) : SV_Target
     _RandomVector.xyz = normalize(_RandomVector.xyz);
     float3 offsetN = t * _RandomVector.x + b * _RandomVector.z + n * _RandomVector.y;
     offsetN = normalize(offsetN);
-    float4 offsetCol = texCUBE(_CubeTex, offsetN);
+    float4 offsetCol = SAMPLE_TEXTURECUBE(_CubeTex, sampler_CubeTex, offsetN);
     col.rgb = (1 - _RandomVector.w) * col.rgb + _RandomVector.w * offsetCol.rgb;
     return col;
 }

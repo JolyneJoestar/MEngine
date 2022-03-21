@@ -7,7 +7,7 @@ public class PreProccessRender
 {
 
 
-    Shader shader = Shader.Find("Custom/PreProcess");
+    Shader shader = Shader.Find("MyPipeline/PreProccess");
 
     RenderTexture rt0 = null;
     RenderTexture rt1 = null;

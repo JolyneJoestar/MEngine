@@ -14,9 +14,9 @@ Shader "MyPipeline/PreProccess"
             HLSLPROGRAM
 
             #pragma vertex vert
-            #pragma fragment frag
+            #pragma fragment frag_cube2tex
 
-            #include "GenIrradiance.hlsl"
+            #include "GenIrradiance1.hlsl"
             
             ENDHLSL
         }
@@ -28,10 +28,7 @@ Shader "MyPipeline/PreProccess"
             #pragma vertex vert
             #pragma fragment frag_tex2tex
 
-            sampler2D _MainTex;
-            samplerCUBE _CubeTex;
-            float4 _RandomVector;
-            #include "GenIrradiance.hlsl"
+            #include "GenIrradiance2.hlsl"
 
             ENDHLSL
         }
