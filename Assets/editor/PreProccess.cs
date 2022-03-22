@@ -4,14 +4,14 @@ using UnityEditor;
 public class PreProccess
 {
 
-    [MenuItem("Menu/test")]
-    public static void test()
+    [MenuItem("PreProcessMenu/GenIrradiance")]
+    public static void GenIrradiance()
     {
         PreProccessRender preproccesRendering = new PreProccessRender();
-        preproccesRendering.GendIrradiance();
+        preproccesRendering.GenIrradiance();
         Debug.Log("Test");
     }
-    [MenuItem("Menu/GenBRDFLUT")]
+    [MenuItem("PreProcessMenu/GenBRDFLUT")]
     public static void GenBRDFLUT()
     {
         PreProccessRender preProccessRendering = new PreProccessRender();

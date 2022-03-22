@@ -19,7 +19,7 @@ public class PreProccessRender
 
     private Material m_material = null;
 
-    public void GendIrradiance()
+    public void GenIrradiance()
     {
         if(shader != null)
         {
