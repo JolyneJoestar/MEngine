@@ -32,5 +32,14 @@ Shader "MyPipeline/PreProccess"
 
             ENDHLSL
         }
+		Pass
+		{
+			HLSLPROGRAM
+			#pragma vertex vert
+			#pragma fragment frag_GenLUT
+
+			#include "CalCulateLUT.hlsl"
+			ENDHLSL
+		}
     }
 }
