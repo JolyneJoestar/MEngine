@@ -5,14 +5,16 @@ public class MyPipline : RenderPipeline
 {
     CameraRender m_render = new CameraRender();
     bool m_useDynamicBatching, m_useGPUIstancing;
+    bool m_useDeferredRendering;
     ShadowSettings m_shadowSettings;
     ShadowPostSettings m_postFXSettings;
-    public MyPipline(bool useDynamicBatching,bool useGPUInstancing, bool useSPRBatcher, ShadowSettings shadowSettings, ShadowPostSettings postFXSettings)
+    public MyPipline(bool useDynamicBatching,bool useGPUInstancing, bool useSPRBatcher, bool useDeferredRendering, ShadowSettings shadowSettings, ShadowPostSettings postFXSettings)
     {
         this.m_useDynamicBatching = useDynamicBatching;
         this.m_useGPUIstancing = useGPUInstancing;
         this.m_shadowSettings = shadowSettings;
         this.m_postFXSettings = postFXSettings;
+        this.m_useDeferredRendering = useDeferredRendering;
         GraphicsSettings.useScriptableRenderPipelineBatching = useSPRBatcher;
     }
 
