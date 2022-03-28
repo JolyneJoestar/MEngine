@@ -48,13 +48,14 @@ float4 deferredLightingFragPass(v2f vert) : SV_TARGET
     surface.depth = -TransformWorldToView(surface.position).z;
 	surface.color = SAMPLE_TEXTURE2D(_GAlbedo, sampler_GAlbedo, vert.uv).rgb;
 	surface.alpha = 1.0;
-	float3 material = SAMPLE_TEXTURE2D(_GMaterial, sampler_GMaterial, vert.uv).rgb;
+	float4 material = SAMPLE_TEXTURE2D(_GMaterial, sampler_GMaterial, vert.uv).rgba;
     surface.metallic = material.x;
     surface.smoothness = material.y;
-    surface.dither = material.z;
+    surface.dither = 1.0;
+	float2 lightuv = material.zw;//float2(material.z, material.w);
 	BRDF brdf = GetBRDF(surface);
 
-    GI gi = GetGI(GI_FRAGMENT_DATA(vert), surface);
+    GI gi = GetGI(lightuv, surface);
     return float4(GetLighting(surface, brdf, gi), surface.alpha);
 }
 

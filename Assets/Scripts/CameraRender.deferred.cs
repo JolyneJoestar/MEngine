@@ -40,12 +40,16 @@ partial class CameraRender
         {
             m_renderTarget[i] = geometricTextureId[i];
         }
-        m_buffer.SetRenderTarget(m_renderTarget, m_renderTarget[0]);
-        ExecuteBuffer();
+
     }
 
     partial void deferredRenderGBufferPass(bool useDynamicBatching, bool useGPUInstancing)
     {
+        m_buffer.SetRenderTarget(m_renderTarget[2]);
+        ExecuteBuffer();
+        m_context.DrawSkybox(m_camera);
+        m_buffer.SetRenderTarget(m_renderTarget, m_renderTarget[0]);
+        ExecuteBuffer();
         var sortingSettings = new SortingSettings(m_camera) { criteria = SortingCriteria.CommonOpaque };
         var drawingSettings = new DrawingSettings(m_gBufferPassId, sortingSettings)
         {

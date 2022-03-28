@@ -31,7 +31,7 @@ struct MFragOut {
 	float3 position : SV_TARGET0;
 	float3 normal : SV_TARGET1;
 	float3 albedo : SV_TARGET2;
-	float3 material: SV_TARGET3;
+	float4 material: SV_TARGET3;
 };
 
 MVertexOut DeferredGeometricVertex(MVertexIn inVert)
@@ -59,7 +59,8 @@ MFragOut DeferredGeometricFragment(MVertexOut vert)
 	fragOut.position = vert.positionWS;
 	fragOut.normal = normalize(vert.normal);
 	fragOut.albedo = texColor.rgb;
-	fragOut.material = float3(GetMetallic(), GetSmoothness(), 1.0);
+	float2 uv = GI_FRAGMENT_DATA(vert);
+	fragOut.material = float4(GetMetallic(), GetSmoothness(),uv.x, uv.y);
 
 	return fragOut;
 }
