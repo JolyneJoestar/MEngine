@@ -4,6 +4,11 @@
 #define MIN_REFLECTIVITY 0.04
 
 #include "GI.hlsl"
+#include "PreProccessShader/PreProccessHelper.hlsl"
+
+TEXTURE2D(_IrradianceMap)
+SAMPLER(sampler_IrradianceMap)
+
 
 struct BRDF
 {
@@ -65,44 +70,50 @@ float fresnelSchlick(float cosTheta, float3 F0)
 
 float3 GetLighting(Surface surface,BRDF brdf, Light light)
 {
-    float3 N = surface.normal;
-    float3 V = surface.viewDirection;
     float3 albedo = surface.color;
-
     float3 F0 = float3(0.04);
     F0 = mix(F0, albedo, surface.metallic);
 
-    float3 Lo = float3(0.0);
-
-    float3 L = normalize(light.direction);
-    float3 H = normalize(V + L);
+    float3 H = normalize(surface.viewDirection + light.direction);
     float distance = 1.0;
     float attenuation = 1.0;
     float3 radiance;
 
-    float NDF = DistributionGGX(N, H, brdf.roughness);
-    float G = GeometrySmith(N, V, L, brdf.roughness);
-    float3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
+    float NDF = DistributionGGX(surface.normal, H, brdf.roughness);
+    float G = GeometrySmith(surface.normal, surface.viewDirection, light.direction, brdf.roughness);
+    float3 F = fresnelSchlick(max(dot(H, surface.viewDirection), 0.0), F0);
 
     float3 numerator = NDF * G * F;
-    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
+    float denominator = 4.0 * max(dot(surface.normal, surface.viewDirection), 0.0) * max(dot(surface.normal, light.direction), 0.0) + 0.0001;
     float3 specular = numerator / denominator;
 
     float3 kS = F;
     float kD = float3(1.0) - kS;
     kD *= 1.0 - surface.metallic;
 
-    float NdotL = max(dot(N, L), 0.0);
+    float NdotL = max(dot(surface.normal, light.direction), 0.0);
+	return (kD * albedo / PI + specular) * radiance + NdotL;
 }
 
 float3 GetLighting(Surface surface,BRDF brdf, GI gi)
 {
     ShadowData shadowData = GetShadowData(surface);
-    float3 color = gi.diffuse * brdf.diffuse;
+    float3 Lo = float3(0.0);
     for (int i = 0; i < GetDirectionLightCount(); i++)
     {
-        color += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData));
+		Lo += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData));
     }
+	float3 kS = fresnelSchlick(max(dot(surface.normal, light.direction), 0.0), F0);
+	float3 kD = 1.0 - kS;
+	kD *= 1.0 - surface.metallic;
+	float3 irradiance = SAMPLE_TEXTURE2D(_IrradianceMap, sampler_IrradianceMap, normal2uv(surface.normal)).rgb;
+	float3 diffuse = irradiance * surface.color;
+	float3 ambient = (kD * diffuse) * ao;
+	float3 color = ambiant + Lo;
+
+	color = color / (color + float3(1.0));
+	color = pow(color, float3(1.0 / 2.0));
+
     return color;
 }
 

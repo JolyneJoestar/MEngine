@@ -63,8 +63,8 @@ float4 LegacyFragment(MVertexOut vert) : SV_TARGET
     surface.depth = -TransformWorldToView(vert.positionWS).z;
 	surface.color = texColor.rgb;
 	surface.alpha = texColor.a;
-    surface.metallic = GetMetallic(vert.uv);
-    surface.smoothness = GetSmoothness(vert.uv);
+    surface.metallic = GetMetallic();
+    surface.smoothness = GetSmoothness();
     surface.dither = InterleavedGradientNoise(vert.positionCS.xy, 0);
 
 	BRDF brdf = GetBRDF(surface);

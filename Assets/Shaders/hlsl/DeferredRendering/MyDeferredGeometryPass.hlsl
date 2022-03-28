@@ -28,10 +28,10 @@ struct MVertexOut {
 };
 
 struct MFragOut {
-	float4 position : SV_TARGET0;
-	float2 normal : SV_TARGET1;
-	float4 Albedo : SV_TARGET2;
-	float4 Specular: SV_TARGET3;
+	float3 position : SV_TARGET0;
+	float3 normal : SV_TARGET1;
+	float3 Albedo : SV_TARGET2;
+	float3 material: SV_TARGET3;
 };
 
 MVertexOut DeferredGeometricVertex(MVertexIn inVert)
@@ -55,23 +55,13 @@ MFragOut DeferredGeometricFragment(MVertexOut vert)
 	UNITY_SETUP_INSTANCE_ID(vert);
 	MFragOut fragOut;
 
-
     float4 texColor = GetBase(vert.uv);
-	Surface surface;
-	surface.position = vert.positionWS;
-	surface.normal = normalize(vert.normal);
-	surface.viewDirection = normalize(_WorldSpaceCameraPos - vert.positionWS);
-    surface.depth = -TransformWorldToView(vert.positionWS).z;
-	surface.color = texColor.rgb;
-	surface.alpha = texColor.a;
-    surface.metallic = GetMetallic(vert.uv);
-    surface.smoothness = GetSmoothness(vert.uv);
-    surface.dither = InterleavedGradientNoise(vert.positionCS.xy, 0);
+	fragOut.positon = vert.positionWS;
+	fragOut.normal = normalize(vert.normal);
+	fragOut.albedo = texColor.rgb;
+	fragOut.material = float3(metallic, smoothness, dither);
 
-	BRDF brdf = GetBRDF(surface);
-//    return texColor;
-    GI gi = GetGI(GI_FRAGMENT_DATA(vert), surface);
-    return float4(GetLighting(surface, brdf, gi), surface.alpha);
+    return 
 }
 
 #endif //MY_LEGACY_LIGHT_PASS_INCLUDE

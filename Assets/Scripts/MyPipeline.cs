@@ -24,6 +24,5 @@ public class MyPipline : RenderPipeline
         {
             m_render.Render(context, camera,m_useDynamicBatching,m_useGPUIstancing,m_shadowSettings, m_postFXSettings);
         }
-
     }
 }

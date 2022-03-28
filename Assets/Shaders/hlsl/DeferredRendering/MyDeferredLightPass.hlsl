@@ -9,63 +9,48 @@
 #include "MyLegacyBRDF.hlsl"
 #include "LitInput.hlsl"
 
+TEXTURE2D(_GPosition)
+SAMPLER(sampler_GPosition)
+TEXTURE2D(_GNormal)
+SAMPLER(sampler_GNormal)
+TEXTURE2D(_GAlbedo)
+SAMPLER(sampler_GAlbedo)
+TEXTURE2D(_GMaterial)
+SAMPLER(sampler_GMaterial)
 
-struct MVertexIn {
-	float3 positionOS : POSITION;
-	float3 normalOS : NORMAL;
+struct appdata
+{
+	float4 vertex : POSITION;
 	float2 uv : TEXCOORD0;
-    GI_ATTRIBUTE_DATA
-	UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
-struct MVertexOut {
-	float4 positionCS : SV_POSITION;
-	float3 positionWS : VAR_POSITION;
-	float3 normal : VAR_NORMAL;
-	float2 uv : VAR_BASE_UV;
-    GI_VARYINGS_DATA
-	UNITY_VERTEX_INPUT_INSTANCE_ID
+struct v2f
+{
+	float2 uv : TEXCOORD0;
+	float4 vertex : SV_POSITION;
 };
 
-float3 CalculateDiffuseFactor(int index, float3 normal)
+v2f vert(appdata v)
 {
-	float3 diffuseLight = MVisibleLightColors[index].rgb;
-	float3 direction = MVisibleLightDirecitons[index].xyz;
-	return saturate(dot(normalize(direction), normalize(normal))) * diffuseLight;
+	v2f o;
+	o.vertex = TransformObjectToHClip(v.vertex);
+	o.uv = v.uv;
+	return o;
 }
 
-
-MVertexOut LegacyVertex(MVertexIn inVert)
-{
-
-	MVertexOut vert;
-	UNITY_SETUP_INSTANCE_ID(inVert);
-	UNITY_TRANSFER_INSTANCE_ID(inVert, vert);
-    TRANSFER_GI_DATA(inVert, vert);
-	vert.positionWS = TransformObjectToWorld(inVert.positionOS);
-	vert.positionCS = TransformWorldToHClip(vert.positionWS);
-
-	float4 baseST = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, MTexture_ST);
-	vert.uv = inVert.uv * baseST.xy + baseST.zw;
-	vert.normal = TransformObjectToWorldNormal(inVert.normalOS);
-	return vert;
-}
-
-float4 LegacyFragment(MVertexOut vert) : SV_TARGET
-{
-	UNITY_SETUP_INSTANCE_ID(vert);
-    
-    float4 texColor = GetBase(vert.uv);
+float4 deferredLightingFragPass(v2f vert) : SV_TARGET
+{   
 	Surface surface;
-	surface.position = vert.positionWS;
-	surface.normal = normalize(vert.normal);
+	surface.position = SAMPLE_TEXTURE2D(_GPosition, sampler_GPostion, vert.uv).rgb;
+	surface.normal = SAMPLER_TEXTURE2D(_GNormal, sampler_GNormal, vert.uv).rgb;
 	surface.viewDirection = normalize(_WorldSpaceCameraPos - vert.positionWS);
-    surface.depth = -TransformWorldToView(vert.positionWS).z;
-	surface.color = texColor.rgb;
-	surface.alpha = texColor.a;
-    surface.metallic = GetMetallic(vert.uv);
-    surface.smoothness = GetSmoothness(vert.uv);
-    surface.dither = InterleavedGradientNoise(vert.positionCS.xy, 0);
+    surface.depth = -TransformWorldToView(surface.position).z;
+	surface.color = SAMPLE_TEXTURE2D(_GAlbedo, sampler_GAlbedo, vert.uv).rgb;
+	surface.alpha = 1.0;
+	float3 material = SAMPLE_TEXTURE2D(_GMaterial, sampler_Gmaterial, vert.uv).rgb
+    surface.metallic = material.x;
+    surface.smoothness = material.y;
+    surface.dither = material.z;
 
 	BRDF brdf = GetBRDF(surface);
 //    return texColor;
