@@ -56,12 +56,11 @@ partial class CameraRender
         var filteringSettings = new FilteringSettings(RenderQueueRange.all);
         drawingSettings.SetShaderPassName(1, m_gBufferPassId);
         m_context.DrawRenderers(m_cullResult, ref drawingSettings, ref filteringSettings);
-        m_context.DrawSkybox(m_camera);
     }
 
     partial void deferredRenderLightingPass()
     {
-        m_buffer.SetRenderTarget(defaultColorBuffer, defaultDepthBuffer);
+        m_buffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
         for (int i = 0; i < m_renderTarget.Length; i++)
         {
             m_buffer.SetGlobalTexture(geometricTextureId[i], m_renderTarget[i]);
