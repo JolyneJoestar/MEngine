@@ -1,13 +1,13 @@
 #ifndef MY_LEGACY_LIGHT_PASS_INCLUDE
 #define MY_LEGACY_LIGHT_PASS_INCLUDE
 
-#include "Common.hlsl"					
-#include "MyLegacySurface.hlsl"
-#include "Shadows.hlsl"
-#include "GI.hlsl"
-#include "MyLegacyLight.hlsl"
-#include "MyLegacyBRDF.hlsl"
-#include "LitInput.hlsl"
+#include "../Common.hlsl"					
+#include "../MyLegacySurface.hlsl"
+#include "../Shadows.hlsl"
+#include "../GI.hlsl"
+#include "../MyLegacyLight.hlsl"
+#include "../MyLegacyBRDF.hlsl"
+#include "../LitInput.hlsl"
 
 
 struct MVertexIn {
@@ -30,7 +30,7 @@ struct MVertexOut {
 struct MFragOut {
 	float3 position : SV_TARGET0;
 	float3 normal : SV_TARGET1;
-	float3 Albedo : SV_TARGET2;
+	float3 albedo : SV_TARGET2;
 	float3 material: SV_TARGET3;
 };
 
@@ -56,12 +56,12 @@ MFragOut DeferredGeometricFragment(MVertexOut vert)
 	MFragOut fragOut;
 
     float4 texColor = GetBase(vert.uv);
-	fragOut.positon = vert.positionWS;
+	fragOut.position = vert.positionWS;
 	fragOut.normal = normalize(vert.normal);
 	fragOut.albedo = texColor.rgb;
-	fragOut.material = float3(metallic, smoothness, dither);
+	fragOut.material = float3(GetMetallic(), GetSmoothness(), 1.0);
 
-    return 
+	return fragOut;
 }
 
 #endif //MY_LEGACY_LIGHT_PASS_INCLUDE

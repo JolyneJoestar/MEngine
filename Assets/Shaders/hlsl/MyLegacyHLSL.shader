@@ -45,6 +45,24 @@ Shader "MyPipeline/LegacyHLSL"
 				ENDHLSL
 			}
 
+			Pass
+			{
+				Blend[MSrcBlend][MDstBlend]
+				ZWrite[MZWrite]
+
+				Tags { "LightMode" = "gBufferPass" }
+
+				HLSLPROGRAM
+
+				#pragma multi_compile_instancing
+				#pragma vertex DeferredGeometricVertex
+				#pragma fragment DeferredGeometricFragment
+
+				#include "DeferredRendering/MyDeferredGeometryPass.hlsl"
+
+				ENDHLSL
+			}
+
 			Pass{
 				Tags{
 					"LightMode" = "ShadowCaster"

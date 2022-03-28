@@ -38,7 +38,7 @@ public partial class CameraRender {
         }
     }
 
-    public void Render(ScriptableRenderContext context, Camera camera,bool useDynamicBatching, bool useGPUInstancing, ShadowSettings shadowSettings, ShadowPostSettings shadowPostSettings)
+    public void Render(ScriptableRenderContext context, Camera camera,bool useDynamicBatching, bool useGPUInstancing, bool m_useDeferredRendering , ShadowSettings shadowSettings, ShadowPostSettings shadowPostSettings)
     {
         this.m_context = context;
         this.m_camera = camera;
@@ -57,8 +57,15 @@ public partial class CameraRender {
 
         //Regular Pass
         Setup();
+        if(m_useDeferredRendering)
+        {
+            DrawDeferred(useDynamicBatching, useGPUInstancing);
+        }
+        else
+        {
+            DrawVisibaleGeometry(useDynamicBatching, useGPUInstancing);
+        }
         DrawUnsupportedShaders();
-        DrawVisibaleGeometry(useDynamicBatching,useGPUInstancing);
         DrawGizmos();
         Cleanup();
         Submit();
