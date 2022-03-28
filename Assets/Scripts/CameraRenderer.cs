@@ -33,8 +33,8 @@ public partial class CameraRender {
             dir.y = -dir.y;
             dir.z = -dir.z;
             m_visibleLightDirection[i] = dir;
-            //           Debug.Log(dir);
-            //            Debug.Log(m_visibleLightColor[i]);
+            //       Debug.Log(dir);
+            //       Debug.Log(m_visibleLightColor[i]);
         }
     }
 
@@ -47,7 +47,7 @@ public partial class CameraRender {
         PrepareForSceneWindow();
         if (!Cull(shadowSettings.maxDistance))
             return;
-
+        
         //Shadow Pass
         m_buffer.BeginSample(SampleName);
         ExecuteBuffer();
