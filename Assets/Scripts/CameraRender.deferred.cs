@@ -45,6 +45,9 @@ partial class CameraRender
 
     partial void deferredRenderGBufferPass(bool useDynamicBatching, bool useGPUInstancing)
     {
+        m_buffer.SetRenderTarget(m_renderTarget, m_renderTarget[0]);
+        m_buffer.ClearRenderTarget(true, true, Color.white);
+        ExecuteBuffer();
         m_buffer.SetRenderTarget(m_renderTarget[2]);
         ExecuteBuffer();
         m_context.DrawSkybox(m_camera);
