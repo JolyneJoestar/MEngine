@@ -18,4 +18,9 @@ public class PreProccess
         preProccessRendering.GenLut();
         Debug.Log("GenBRDFLUT Successed!!");
     }
+    [MenuItem("PreProcessMenu/GenVirtualTexture")]
+    public static void GenVirtualTexture()
+    {
+
+    }
 }
