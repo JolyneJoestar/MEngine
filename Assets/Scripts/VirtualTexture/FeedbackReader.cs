@@ -74,11 +74,52 @@ public class FeedbackReader : MonoBehaviour, IFeedbackReader
         
         if(m_readbackScale != ScaleFactor.One)
         {
-            if(m_downScaleTexture == null || m_downScaleTexture)
+            if(m_downScaleTexture == null || m_downScaleTexture.width != width || m_downScaleTexture.height != height)
             {
                 m_downScaleTexture = new RenderTexture(width, height, 0);
             }
+            m_downScaleTexture.DiscardContents();
+            Graphics.Blit(texture, m_downScaleTexture, m_downScaleMaterial, m_downScaleMaterialPass);
+            texture = m_downScaleTexture;
         }
 
+        if(m_readbackTexture == null || m_readbackTexture.width != width || m_readbackTexture.height != height)
+        {
+            m_readbackTexture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            m_readbackTexture.filterMode = FilterMode.Point;
+            m_readbackTexture.wrapMode = TextureWrapMode.Clamp;
+
+          
+        }
+
+        var request = AsyncGPUReadback.Request(texture);
+        m_readbackRequests.Enqueue(request);
+    }
+
+    private void UpdateRequest()
+    {
+        bool complete = false;
+        while(m_readbackRequests.Count > 0)
+        {
+            var req = m_readbackRequests.Peek();
+            if(req.hasError)
+            {
+                m_readbackRequests.Dequeue();
+            }
+            else if(req.done)
+            {
+                m_readbackTexture.GetRawTextureData<Color32>().CopyFrom(req.GetData<Color32>());
+                complete = true;
+                m_readbackRequests.Dequeue();
+            }
+            else
+            {
+                break;
+            }
+        }
+        if(complete)
+        {
+            OnFeedbackReaderComplete?.Invoke(m_readbackTexture);
+        }
     }
 }
