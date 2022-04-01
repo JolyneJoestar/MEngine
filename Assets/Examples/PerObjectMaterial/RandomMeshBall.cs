@@ -5,7 +5,8 @@ public class RandomMeshBall:MonoBehaviour
 {
     static int m_baseColorId = Shader.PropertyToID("MTint"),
         m_metalicId = Shader.PropertyToID("MMetalic"),
-        m_smoothnessId = Shader.PropertyToID("MSmoothness");
+        m_smoothnessId = Shader.PropertyToID("MSmoothness"),
+        m_textureId = Shader.PropertyToID("MTexture");
 
     [SerializeField]
     Mesh m_mesh = default;
@@ -17,6 +18,7 @@ public class RandomMeshBall:MonoBehaviour
     Vector4[] m_colors = new Vector4[1023];
     float[] m_metalic = new float[1023],
            m_smoothness = new float[1023];
+    Texture2D[] m_textures = new Texture2D[1023];
 
     MaterialPropertyBlock m_block;
 
@@ -28,6 +30,7 @@ public class RandomMeshBall:MonoBehaviour
             m_colors[i] = new Vector4(Random.value, Random.value, Random.value, 1.0f);
             m_metalic[i] = Random.value;
             m_smoothness[i] = Random.value;
+ //           m_textures[i] = new Texture2D();
         }
     }
 
