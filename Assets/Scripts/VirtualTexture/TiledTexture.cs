@@ -115,7 +115,7 @@ public class TiledTexture : MonoBehaviour, ITiledTexture
         mat.m23 = -l;
         mat.m33 = l;
 
-        m_drawTextureMaterial.SetMatrix();
+        //m_drawTextureMaterial.SetMatrix();
         target.DiscardContents();
         Graphics.Blit(source, target, m_drawTextureMaterial);
     }

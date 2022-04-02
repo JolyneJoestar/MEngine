@@ -50,7 +50,7 @@ public class FeedBackRender : MonoBehaviour, IFeedBackRender
             m_feedbackCamera.targetTexture = TargetTexture;
 
             var tileTexture = GetComponent(typeof(ITiledTexture)) as ITiledTexture;
-            var virtualTable = GetComponent()
+            //var virtualTable = GetComponent()
         }
     }
 }
