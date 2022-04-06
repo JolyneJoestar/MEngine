@@ -10,59 +10,63 @@
 #include "../LitInput.hlsl"
 
 
-struct MVertexIn {
-	float3 positionOS : POSITION;
-	float3 normalOS : NORMAL;
-	float2 uv : TEXCOORD0;
-    GI_ATTRIBUTE_DATA
-	UNITY_VERTEX_INPUT_INSTANCE_ID
-};
+TEXTURE2D(_GPosition);
+SAMPLER(sampler_GPostion);
+TEXTURE2D(_GNormal);
+SAMPLER(sampler_GNormal);
+TEXTURE2D(_Noise);
+SAMPLER(sampler_Noise);
 
-struct MVertexOut {
-	float4 positionCS : SV_POSITION;
-	float3 positionWS : VAR_POSITION;
-	float3 normal : VAR_NORMAL;
-	float2 uv : VAR_BASE_UV;
-    GI_VARYINGS_DATA
-	UNITY_VERTEX_INPUT_INSTANCE_ID
-};
 
-struct MFragOut {
-	float3 position : SV_TARGET0;
-	float3 normal : SV_TARGET1;
-	float3 albedo : SV_TARGET2;
-	float4 material: SV_TARGET3;
-};
-
-MVertexOut DeferredGeometricVertex(MVertexIn inVert)
+struct v2f
 {
+	float2 uv : TEXCOORD0;
+	float4 vertex : SV_POSITION;
+};
 
-	MVertexOut vert;
-	UNITY_SETUP_INSTANCE_ID(inVert);
-	UNITY_TRANSFER_INSTANCE_ID(inVert, vert);
-    TRANSFER_GI_DATA(inVert, vert);
-	vert.positionWS = TransformObjectToWorld(inVert.positionOS);
-	vert.positionCS = TransformWorldToHClip(vert.positionWS);
-
-	float4 baseST = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, MTexture_ST);
-	vert.uv = inVert.uv * baseST.xy + baseST.zw;
-	vert.normal = TransformObjectToWorldNormal(inVert.normalOS);
-	return vert;
+v2f vert(uint vertexID : SV_VertexID)
+{
+	v2f o;
+	o.vertex = float4(
+		vertexID <= 1 ? -1.0 : 3.0,
+		vertexID == 1 ? -3.0 : 1.0,
+		0.0, 1.0
+		);
+	o.uv = float2(
+		vertexID <= 1 ? 0.0 : 2.0,
+		vertexID == 1 ? 2.0 : 0.0
+		);
+	return o;
 }
 
-MFragOut DeferredGeometricFragment(MVertexOut vert)
+float SSAOFragment(v2f vert): SV_TARGET
 {
-	UNITY_SETUP_INSTANCE_ID(vert);
-	MFragOut fragOut;
+	float3 frgPos = SAMPLE(_GPosition, sampler_GPosition, vert.uv).xyz;
+	float3 normal = normalize(SAMPLE(_GNormal, sampler_GNormal, vert.uv).xyz);
+	float3 randomVec = normalize(SAMPLE(_Noise, sampler_Noise, vert.uv * noiseScale).xyz);
+	float3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
+	float3 bitangent = cross(normal, tangent);
+	float3x3 TBN = float3x3(tangent, bitangent, normal);
+	float occlusion = 0.0;
+	for (int i = 0; i < kernelSize; i++)
+	{
+		float3 samplePos = TBN * samples[i];
+		samplePos = fragPos + samplePos * radius;
 
-    float4 texColor = GetBase(vert.uv);
-	fragOut.position = vert.positionWS;
-	fragOut.normal = normalize(vert.normal);
-	fragOut.albedo = texColor.rgb;
-	float2 uv = GI_FRAGMENT_DATA(vert);
-	fragOut.material = float4(GetMetallic(), GetSmoothness(),uv.x, uv.y);
+		float4 offset = float4(samplePos, 1.0);
+		offset = projection * offset;
+		offset.xyz /= offset.w;
+		offset.xyz = offset.xyz * 0.5 + 0.5;
 
-	return fragOut;
+		float smapleDepth = SAMPLE(_GPosition, smapler_GPosition, offset.xy).z;
+
+		float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDepth));
+		occlusion += (sampleDepth >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
+	}
+	occlusion = 1.0 - (occlusion / kernelSize);
+
+	return occlusion;
+
 }
 
 #endif //SSAO_PASS_INCLUDE

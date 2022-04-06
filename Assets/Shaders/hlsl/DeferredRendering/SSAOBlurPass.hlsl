@@ -10,26 +10,22 @@
 #include "../LitInput.hlsl"
 
 
-TEXTURE2D(_SPosition);
-SAMPLER(sampler_SPosition);
-TEXTURE2D(_SNormal);
-SAMPLER(sampler_SNormal);
-TEXTURE2D(_SNoise);
-SAMPLER(sampler_SNoise);
+TEXTURE2D(_SSAOInput);
+SAMPLER(sampler_SSAOInput);
 
-MFragOut DeferredGeometricFragment(MVertexOut vert)
+float SSAOBlurFragment(v2f vert) : SV_TARGET
 {
-	UNITY_SETUP_INSTANCE_ID(vert);
-	MFragOut fragOut;
-
-    float4 texColor = GetBase(vert.uv);
-	fragOut.position = vert.positionWS;
-	fragOut.normal = normalize(vert.normal);
-	fragOut.albedo = texColor.rgb;
-	float2 uv = GI_FRAGMENT_DATA(vert);
-	fragOut.material = float4(GetMetallic(), GetSmoothness(),uv.x, uv.y);
-
-	return fragOut;
+	float2 texelSize = 1.0 / float2();
+	float result = 0.0;
+	for (int i = -2; i < 2; i++)
+	{
+		for (int j = -2; j < 2; j++)
+		{
+			float2 offset = float2(float(i), float(j)) * texelSize;
+			result += SAMPLE(_SSAOInput, sampler_SSAOInput, vert.uv + offset).r;
+		}
+	}
+	return result / (4.0 * 4.0);
 }
 
 #endif //SSAO_Blur_Pass_INCLUDE
