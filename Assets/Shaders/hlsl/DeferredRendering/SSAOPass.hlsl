@@ -66,7 +66,6 @@ float SSAOFragment(v2f vert): SV_TARGET
 	occlusion = 1.0 - (occlusion / kernelSize);
 
 	return occlusion;
-
 }
 
 #endif //SSAO_PASS_INCLUDE
