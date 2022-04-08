@@ -21,12 +21,12 @@ MonoBehaviour:
     directional:
       atlasSize: 2048
       filter: 3
-      cascadeCount: 1
+      cascadeCount: 4
       cascadeRatio1: 0.108
       cascadeRatio2: 0.294
       cascadeRatio3: 0.501
       cascadeFade: 0.109
       cascadeBlend: 1
-      softshadow: 3
+      softshadow: 0
   shadowPostSettings: {fileID: 11400000, guid: 413d5d50b9e280b45a612146214b71e2, type: 2}
-  useDeferredRendering: 1
+  useDeferredRendering: 0

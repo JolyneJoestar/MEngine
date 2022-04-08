@@ -34,7 +34,7 @@ v2f vert(uint vertexID : SV_VertexID)
 		);
 	o.uv = float2(
 		vertexID <= 1 ? 0.0 : 2.0,
-		vertexID == 1 ? 2.0 : 0.0
+		vertexID == 1 ? 0.0 : 2.0
 		);
 	return o;
 }
