@@ -65,7 +65,7 @@ public partial class CameraRender {
         {
             DrawVisibaleGeometry(useDynamicBatching, useGPUInstancing);
         }
-//        m_context.DrawSkybox(m_camera);
+        m_context.DrawSkybox(m_camera);
         DrawUnsupportedShaders();
         DrawGizmos();
         Cleanup();
@@ -115,6 +115,7 @@ public partial class CameraRender {
     void Cleanup()
     {
         m_lighting.Cleanup();
+        Cleanupdr();
     }
     void ExecuteBuffer()
     {

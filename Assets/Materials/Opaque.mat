@@ -66,10 +66,10 @@ Material:
     m_Floats:
     - MClipping: 0
     - MCutoff: 0.585
-    - MDstBlend: 10
+    - MDstBlend: 0
     - MMetallic: 0.086
-    - MSmoothness: 0.805
-    - MSrcBlend: 5
+    - MSmoothness: 0.667
+    - MSrcBlend: 1
     - MZWrite: 1
     - _BumpScale: 1
     - _Cutoff: 0.5

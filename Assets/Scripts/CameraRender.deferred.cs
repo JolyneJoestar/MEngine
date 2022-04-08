@@ -8,6 +8,7 @@ partial class CameraRender
     partial void deferredRenderLightingPass();
     partial void DrawDeferred(bool useDynamicBatching, bool useGPUInstancings);
     partial void deferredRenderAOPass();
+    partial void Cleanupdr();
 
     static Shader m_shader = Shader.Find("MyPipeline/DeferredRender");
     Material m_deferredRenderingMaterial = new Material(m_shader);
@@ -20,47 +21,49 @@ partial class CameraRender
         Shader.PropertyToID("_GMaterial")
     };
     RenderTargetIdentifier[] m_renderTarget;
-    RenderTexture[] m_renderTexture;
+
     const string m_gbufferName = "GBufferPass";
     RenderBuffer defaultColorBuffer;
     RenderBuffer defaultDepthBuffer;
 
  //   RenderTexture 
-    int width = 2048;
+    int width = 2018;
     int height = 2048;
 
     partial void initGBuffer()
     {
-        m_buffer.BeginSample("deferred geometry");
-        defaultColorBuffer = Graphics.activeColorBuffer;
-        defaultDepthBuffer = Graphics.activeDepthBuffer;
-        m_renderTexture[0] = new RenderTexture(width, height, 32, RenderTextureFormat.ARGBFloat);
-        m_renderTexture[1] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGBFloat);
-        m_renderTexture[2] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32);
-        m_renderTexture[3] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32);
-        //m_buffer.GetTemporaryRT(geometricTextureId[0], width, height, 32, FilterMode.Bilinear, RenderTextureFormat.ARGBFloat);
-        //m_buffer.GetTemporaryRT(geometricTextureId[1], width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGBFloat);
-        //m_buffer.GetTemporaryRT(geometricTextureId[2], width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
-        //m_buffer.GetTemporaryRT(geometricTextureId[3], width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
+        //if(width != m_camera.pixelWidth || height != m_camera.pixelHeight)
+        //{
+        width = m_camera.pixelWidth;
+        height = m_camera.pixelHeight;
+        //for(int i = 0; i < geometricTextureId.Length; i++)
+        //{
+        //    m_buffer.ReleaseTemporaryRT(geometricTextureId[i]);
+        //}
+        ExecuteBuffer();
+        m_buffer.GetTemporaryRT(geometricTextureId[0], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
+        m_buffer.GetTemporaryRT(geometricTextureId[1], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
+        m_buffer.GetTemporaryRT(geometricTextureId[2], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(geometricTextureId[3], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
         ExecuteBuffer();
         m_renderTarget = new RenderTargetIdentifier[geometricTextureId.Length];
-        for (int i = 0; i < m_renderTarget.Length; i++)
+        for (int i = 0; i < geometricTextureId.Length; i++)
         {
             //m_renderTarget[i] = geometricTextureId[i];
-            m_renderTarget[i] = m_renderTexture[i];
+            m_renderTarget[i] = geometricTextureId[i];
         }
-
+        //}
+        defaultColorBuffer = Graphics.activeColorBuffer;
+        defaultDepthBuffer = Graphics.activeDepthBuffer;
     }
 
     partial void deferredRenderGBufferPass(bool useDynamicBatching, bool useGPUInstancing)
     {
-        m_buffer.SetRenderTarget(m_renderTarget, m_renderTarget[0]);
+        m_buffer.SetRenderTarget(m_renderTarget, defaultDepthBuffer);
         m_buffer.ClearRenderTarget(true, true, Color.white);
         ExecuteBuffer();
-        m_buffer.SetRenderTarget(m_renderTarget[2]);
-        ExecuteBuffer();
         m_context.DrawSkybox(m_camera);
-        m_buffer.SetRenderTarget(m_renderTarget, m_renderTarget[0]);
+        m_buffer.SetRenderTarget(m_renderTarget, defaultDepthBuffer);
         ExecuteBuffer();
         var sortingSettings = new SortingSettings(m_camera) { criteria = SortingCriteria.CommonOpaque };
         var drawingSettings = new DrawingSettings(m_gBufferPassId, sortingSettings)
@@ -72,7 +75,6 @@ partial class CameraRender
         var filteringSettings = new FilteringSettings(RenderQueueRange.all);
         drawingSettings.SetShaderPassName(1, m_gBufferPassId);
         m_context.DrawRenderers(m_cullResult, ref drawingSettings, ref filteringSettings);
-        m_buffer.EndSample("deferred geometry");
         ExecuteBuffer();
     }
 
@@ -84,10 +86,18 @@ partial class CameraRender
         
     }
 
+    partial void Cleanupdr()
+    {
+        for (int i = 0; i < geometricTextureId.Length; i++)
+        {
+            m_buffer.ReleaseTemporaryRT(geometricTextureId[i]);
+        }
+        ExecuteBuffer();
+    }
     partial void deferredRenderLightingPass()
     {
         m_buffer.BeginSample("deferred lighting pass");
-        m_buffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
+        m_buffer.SetRenderTarget(defaultColorBuffer,defaultDepthBuffer);
         for (int i = 0; i < m_renderTarget.Length; i++)
         {
             m_buffer.SetGlobalTexture(geometricTextureId[i], m_renderTarget[i]);

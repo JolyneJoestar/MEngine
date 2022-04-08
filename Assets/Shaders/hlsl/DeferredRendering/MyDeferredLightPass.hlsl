@@ -1,5 +1,5 @@
-#ifndef MY_LEGACY_LIGHT_PASS_INCLUDE
-#define MY_LEGACY_LIGHT_PASS_INCLUDE
+#ifndef MY_DEFERRED_LIGHT_PASS_INCLUDE
+#define MY_DEFERRED_LIGHT_PASS_INCLUDE
 
 #include "../Common.hlsl"					
 #include "../MyLegacySurface.hlsl"
@@ -44,7 +44,7 @@ float4 deferredLightingFragPass(v2f vert) : SV_TARGET
 	Surface surface;
 	surface.position = SAMPLE_TEXTURE2D(_GPosition, sampler_GPosition, vert.uv).rgb;
 	surface.normal = SAMPLE_TEXTURE2D(_GNormal, sampler_GNormal, vert.uv).rgb;
- 	surface.viewDirection = normalize(_WorldSpaceCameraPos - vert.vertex);
+    surface.viewDirection = normalize(_WorldSpaceCameraPos - surface.position);
     surface.depth = -TransformWorldToView(surface.position).z;
 	surface.color = SAMPLE_TEXTURE2D(_GAlbedo, sampler_GAlbedo, vert.uv).rgb;
 	surface.alpha = 1.0;
@@ -59,4 +59,4 @@ float4 deferredLightingFragPass(v2f vert) : SV_TARGET
     return float4(GetLighting(surface, brdf, gi), surface.alpha);
 }
 
-#endif //MY_LEGACY_LIGHT_PASS_INCLUDE
+#endif //MY_DEFERRED_LIGHT_PASS_INCLUDE
