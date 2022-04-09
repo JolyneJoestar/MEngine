@@ -11,7 +11,7 @@
 
 
 TEXTURE2D(_GPosition);
-SAMPLER(sampler_GPostion);
+SAMPLER(sampler_GPosition);
 TEXTURE2D(_GNormal);
 SAMPLER(sampler_GNormal);
 TEXTURE2D(_Noise);
@@ -38,28 +38,33 @@ v2f vert(uint vertexID : SV_VertexID)
 		);
 	return o;
 }
+float4 samples[64];
 
+float noiseScale;
+#define kernelSize  64
+#define radius  0.5
+#define bias  0.025
 float SSAOFragment(v2f vert): SV_TARGET
 {
-	float3 frgPos = SAMPLE(_GPosition, sampler_GPosition, vert.uv).xyz;
-	float3 normal = normalize(SAMPLE(_GNormal, sampler_GNormal, vert.uv).xyz);
-	float3 randomVec = normalize(SAMPLE(_Noise, sampler_Noise, vert.uv * noiseScale).xyz);
+    float3 fragPos = SAMPLE_TEXTURE2D(_GPosition, sampler_GPosition, vert.uv).xyz;
+    float3 normal = normalize(SAMPLE_TEXTURE2D(_GNormal, sampler_GNormal, vert.uv).xyz);
+    float3 randomVec = normalize(SAMPLE_TEXTURE2D(_Noise, sampler_Noise, vert.uv ).xyz);
 	float3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
 	float3 bitangent = cross(normal, tangent);
 	float3x3 TBN = float3x3(tangent, bitangent, normal);
 	float occlusion = 0.0;
 	for (int i = 0; i < kernelSize; i++)
 	{
-		float3 samplePos = TBN * samples[i];
+        float3 samplePos = mul(TBN , samples[i].xyz);
 		samplePos = fragPos + samplePos * radius;
 
 		float4 offset = float4(samplePos, 1.0);
-		offset = projection * offset;
+        offset = mul(UNITY_MATRIX_P, offset);
 		offset.xyz /= offset.w;
 		offset.xyz = offset.xyz * 0.5 + 0.5;
 
-		float smapleDepth = SAMPLE(_GPosition, smapler_GPosition, offset.xy).z;
-
+        float sampleDepth = SAMPLE_TEXTURE2D(_GPosition, sampler_GPosition, offset.xy).z;
+        return offset.x;
 		float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDepth));
 		occlusion += (sampleDepth >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
 	}
