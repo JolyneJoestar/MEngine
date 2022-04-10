@@ -58,7 +58,7 @@ float4 deferredLightingFragPass(v2f vert) : SV_TARGET
 	BRDF brdf = GetBRDF(surface);
 
     GI gi = GetGI(lightuv, surface);
-    float ao = SAMPLE_TEXTURE2D(_AoTexture, sampler_AoTexture, vert.uv);
+    float ao = SAMPLE_TEXTURE2D(_AoTexture, sampler_AoTexture, vert.uv).r;
     return float4(GetLighting(surface, brdf, gi, ao), surface.alpha);
 }
 

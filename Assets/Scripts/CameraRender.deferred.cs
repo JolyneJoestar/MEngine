@@ -119,7 +119,7 @@ partial class CameraRender
     partial void deferredRenderAOPass()
     {
         m_buffer.BeginSample("aogen");
-        m_buffer.GetTemporaryRT(aoTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.R8);
+        m_buffer.GetTemporaryRT(aoTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
         m_buffer.SetRenderTarget(aoTextureId);
         for (int i = 0; i < 2; i++)
         {

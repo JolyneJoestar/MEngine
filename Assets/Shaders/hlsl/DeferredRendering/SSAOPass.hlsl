@@ -34,7 +34,7 @@ v2f vert(uint vertexID : SV_VertexID)
 		);
 	o.uv = float2(
 		vertexID <= 1 ? 0.0 : 2.0,
-		vertexID == 1 ? 0.0 : 2.0
+		vertexID == 1 ? 2.0 : 0.0
 		);
 	return o;
 }
@@ -44,31 +44,42 @@ float noiseScale;
 #define kernelSize  64
 #define radius  0.5
 #define bias  0.025
-float SSAOFragment(v2f vert): SV_TARGET
+float4 SSAOFragment(v2f vert): SV_TARGET
 {
-    float3 fragPos = SAMPLE_TEXTURE2D(_GPosition, sampler_GPosition, vert.uv).xyz;
+    float3 worldPos = SAMPLE_TEXTURE2D(_GPosition, sampler_GPosition, vert.uv).xyz;
+    float3 viewPos = TransformWorldToView(worldPos);
+
     float3 normal = normalize(SAMPLE_TEXTURE2D(_GNormal, sampler_GNormal, vert.uv).xyz);
-    float3 randomVec = normalize(SAMPLE_TEXTURE2D(_Noise, sampler_Noise, vert.uv ).xyz);
+    float3 randomVec = normalize(SAMPLE_TEXTURE2D(_Noise, sampler_Noise, vert.uv * 200.0 ).xyz);
 	float3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
 	float3 bitangent = cross(normal, tangent);
 	float3x3 TBN = float3x3(tangent, bitangent, normal);
 	float occlusion = 0.0;
+
 	for (int i = 0; i < kernelSize; i++)
 	{
         float3 samplePos = mul(TBN , samples[i].xyz);
-		samplePos = fragPos + samplePos * radius;
+        samplePos = viewPos.xyz + samplePos * radius;
 
-		float4 offset = float4(samplePos, 1.0);
-        offset = mul(UNITY_MATRIX_P, offset);
+        float4 offset = float4(samplePos, 1.0);
+        offset = TransformWViewToHClip(offset);
 		offset.xyz /= offset.w;
-		offset.xyz = offset.xyz * 0.5 + 0.5;
+        offset.y = -offset.y;
+        offset.xyz = offset.xyz * 0.5 + 0.5;
 
-        float sampleDepth = SAMPLE_TEXTURE2D(_GPosition, sampler_GPosition, offset.xy).z;
-        return offset.x;
-		float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDepth));
-		occlusion += (sampleDepth >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
-	}
-	occlusion = 1.0 - (occlusion / kernelSize);
+        float3 sampleWPos = SAMPLE_TEXTURE2D(_GPosition, sampler_GPosition, offset.xy).xyz;
+        float3 sampleVpos = TransformWorldToView(sampleWPos);
+
+        float rangeCheck = smoothstep(0.0, 1.0, radius / abs(viewPos.z - sampleVpos.z));
+#if defined(UNITY_REVERSED_Z)
+        occlusion += (sampleVpos.z <= samplePos.z - bias ? 1.0 : 0.0) * rangeCheck;
+#else
+        occlusion += (sampleVpos.z >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
+#endif
+    }
+
+	occlusion = (occlusion / kernelSize);
+
 
 	return occlusion;
 }

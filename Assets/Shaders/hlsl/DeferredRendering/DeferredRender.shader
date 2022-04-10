@@ -32,5 +32,15 @@ Shader "MyPipeline/DeferredRender"
 
             ENDHLSL
         }
+
+        Pass
+        {
+            HLSLPROGRAM
+            #pragma vertex vert
+            #pragma fragment SSAOFragment
+            #include "SSAOBlurPass.hlsl"
+
+            ENDHLSL
+        }
     }
 }
