@@ -21,7 +21,8 @@ partial class CameraRender
         Shader.PropertyToID("_GMaterial")
     };
     static int aoTextureId = Shader.PropertyToID("_AoTexture"),
-        samplesId = Shader.PropertyToID("samples");
+        samplesId = Shader.PropertyToID("samples"),
+        noiseId = Shader.PropertyToID("_Noise");
     RenderTargetIdentifier[] m_renderTarget;
     static Vector4[] m_aosample;
     const string m_gbufferName = "GBufferPass";
@@ -78,10 +79,10 @@ partial class CameraRender
         //{
         //    m_buffer.ReleaseTemporaryRT(geometricTextureId[i]);
         //}
-        m_buffer.GetTemporaryRT(geometricTextureId[0], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
-        m_buffer.GetTemporaryRT(geometricTextureId[1], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
-        m_buffer.GetTemporaryRT(geometricTextureId[2], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
-        m_buffer.GetTemporaryRT(geometricTextureId[3], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(geometricTextureId[0], width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGBFloat);
+        m_buffer.GetTemporaryRT(geometricTextureId[1], width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGBFloat);
+        m_buffer.GetTemporaryRT(geometricTextureId[2], width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(geometricTextureId[3], width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
         ExecuteBuffer();
         m_renderTarget = new RenderTargetIdentifier[geometricTextureId.Length];
         for (int i = 0; i < geometricTextureId.Length; i++)
@@ -125,6 +126,7 @@ partial class CameraRender
         {
             m_buffer.SetGlobalTexture(geometricTextureId[i], m_renderTarget[i]);
         }
+        m_buffer.SetGlobalTexture(noiseId, m_noiseTexture);
         m_buffer.ClearRenderTarget(false, true, Color.white);
         m_buffer.SetGlobalVectorArray(samplesId, m_aosample);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 1, MeshTopology.Triangles, 3);

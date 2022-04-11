@@ -8,6 +8,7 @@
 #include "../MyLegacyLight.hlsl"
 #include "../MyLegacyBRDF.hlsl"
 #include "../LitInput.hlsl"
+#include "../FilterKernel"
 
 
 TEXTURE2D(_SSAOInput);

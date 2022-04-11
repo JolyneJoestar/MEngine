@@ -49,16 +49,22 @@ float4 SSAOFragment(v2f vert): SV_TARGET
     float3 worldPos = SAMPLE_TEXTURE2D(_GPosition, sampler_GPosition, vert.uv).xyz;
     float3 viewPos = TransformWorldToView(worldPos);
 
-    float3 normal = normalize(SAMPLE_TEXTURE2D(_GNormal, sampler_GNormal, vert.uv).xyz);
-    float3 randomVec = normalize(SAMPLE_TEXTURE2D(_Noise, sampler_Noise, vert.uv * 200.0 ).xyz);
+    float3 normal = TransformWorldToViewDir(SAMPLE_TEXTURE2D(_GNormal, sampler_GNormal, vert.uv).xyz, true);
+
+    float3 randomVec = normalize(float3(SAMPLE_TEXTURE2D(_Noise, sampler_Noise, vert.uv * 10.0 ).x, SAMPLE_TEXTURE2D(_Noise, sampler_Noise, vert.uv * 20.0).y, 0.0));
 	float3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
 	float3 bitangent = cross(normal, tangent);
 	float3x3 TBN = float3x3(tangent, bitangent, normal);
 	float occlusion = 0.0;
-
+	float kxk = 0.0;
 	for (int i = 0; i < kernelSize; i++)
 	{
-        float3 samplePos = mul(TBN , samples[i].xyz);
+		float3 samples_i = samples[i].xyz;
+//#if defined(UNITY_REVERSED_Z)
+//		samples_i.z = -samples_i.z;
+//#endif
+        float3 samplePos = mul(TBN , samples_i);
+
         samplePos = viewPos.xyz + samplePos * radius;
 
         float4 offset = float4(samplePos, 1.0);
@@ -66,21 +72,24 @@ float4 SSAOFragment(v2f vert): SV_TARGET
 		offset.xyz /= offset.w;
         offset.y = -offset.y;
         offset.xyz = offset.xyz * 0.5 + 0.5;
-
+		//if (samplePos.z > viewPos.z)
+		//	kxk += 1.0;
         float3 sampleWPos = SAMPLE_TEXTURE2D(_GPosition, sampler_GPosition, offset.xy).xyz;
+		return abs(offset.y - vert.uv.y);
         float3 sampleVpos = TransformWorldToView(sampleWPos);
 
         float rangeCheck = smoothstep(0.0, 1.0, radius / abs(viewPos.z - sampleVpos.z));
-#if defined(UNITY_REVERSED_Z)
-        occlusion += (sampleVpos.z <= samplePos.z - bias ? 1.0 : 0.0) * rangeCheck;
-#else
-        occlusion += (sampleVpos.z >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
-#endif
+//#if defined(UNITY_REVERSED_Z)
+//        occlusion += (sampleVpos.z <= samplePos.z - bias ? 1.0 : 0.0) * rangeCheck;
+//#else
+        occlusion += (sampleVpos.z >= samplePos.z - bias ? 1.0 : 0.0) * rangeCheck;
+		if (samplePos.z > sampleVpos.z)
+			kxk += 1.0;
+//#endif
     }
 
-	occlusion = (occlusion / kernelSize);
-
-
+	occlusion = 1.0 - (occlusion / kernelSize);
+	return kxk / kernelSize ;
 	return occlusion;
 }
 

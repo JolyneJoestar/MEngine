@@ -213,4 +213,4 @@ float PCSS_Shadow_Calculate(float3 coords, float3 unBiasedPositionSTS, float ran
 	return shadow;
 }
 
-#endif //BLUR_PASS_INCLUDED
+#endif //PCSS_INCLUDED
