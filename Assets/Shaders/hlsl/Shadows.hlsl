@@ -168,4 +168,20 @@ float GetDirectionalShadowAttenuation(DirectionalShadowData dirData,ShadowData s
     return lerp(1.0, shadow, dirData.strength);
 }
 
+float GetLightAttenuation(DirectionalShadowData dirData, ShadowData shadowData, float3 posWS)
+{
+	if (dirData.strength <= 0.0)
+		return 1.0;
+
+	float3 positionSTS = mul(_DirectionalShadowMatrices[dirData.tileIndex], float4(posWS, 1.0)).xyz;
+	float3 unBiasedPositionSTS = mul(_DirectionalShadowMatrices[dirData.tileIndex], float4(posWS, 1.0)).xyz;
+	float shadow = FilterDirectionalShadow(positionSTS, unBiasedPositionSTS);
+	if (shadowData.cascadeBlend < 1.0)
+	{
+		positionSTS = mul(_DirectionalShadowMatrices[dirData.tileIndex + 1], float4(posWS, 1.0)).xyz;
+		shadow = lerp(FilterDirectionalShadow(positionSTS, unBiasedPositionSTS), shadow, shadowData.cascadeBlend);
+	}
+	return lerp(1.0, shadow, dirData.strength);
+}
+
 #endif //CUSTOM_SHADOWS_INCLUDED

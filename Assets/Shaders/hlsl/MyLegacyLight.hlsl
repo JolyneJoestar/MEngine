@@ -17,6 +17,12 @@ struct Light
 	float attenuation;
 };
 
+struct SimpleLight
+{
+	float3 color;
+	float attenuation;
+};
+
 float SquareDistance(float3 A, float3 B)
 {
     return dot(B - A, B - A);
@@ -89,6 +95,15 @@ Light GetDirectionLight(int index, Surface surfaceWS, ShadowData shadowdata)
     light.attenuation = GetDirectionalShadowAttenuation(dirShadowData, shadowdata, surfaceWS);
 //  light.attenuation = shadowdata.cascadeIndex * 0.25;
     return light;
+}
+
+SimpleLight GetSimpleLight(int index, float3 posWS, ShadowData shadowData)
+{
+	SimpleLight sLight;
+	sLight.color = MVisibleLightColors[index].xyz;
+	DirectionalShadowData dirShadowData = GetDirectionalShadowData(index, shadowData);
+	sLight.attenuation = GetLightAttenuation(dirShadowData, shadowData, posWS);
+	return sLight;
 }
 
 float3 IncomingLight(Surface surface,Light light)

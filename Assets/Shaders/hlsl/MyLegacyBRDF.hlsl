@@ -4,6 +4,7 @@
 #define MIN_REFLECTIVITY 0.04
 
 #include "GI.hlsl"
+#include "DeferredRendering/LightVolume.hlsl"
 
 struct BRDF
 {
@@ -81,7 +82,7 @@ float3 GetLighting(Surface surface, BRDF brdf, GI gi, float ao)
     float3 color = 0.5 * brdf.diffuse * ao;
     for (int i = 0; i < GetDirectionLightCount(); i++)
     {
-        color += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData));
+        color += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData)) + CalculateLightVolume(i, surface.position, shadowData);
     }
     return color;
 }
