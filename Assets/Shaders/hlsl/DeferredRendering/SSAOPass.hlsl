@@ -75,21 +75,22 @@ float4 SSAOFragment(v2f vert): SV_TARGET
 		//if (samplePos.z > viewPos.z)
 		//	kxk += 1.0;
         float3 sampleWPos = SAMPLE_TEXTURE2D(_GPosition, sampler_GPosition, offset.xy).xyz;
-		return abs(offset.y - vert.uv.y);
+		//return abs(offset.y - vert.uv.y);
         float3 sampleVpos = TransformWorldToView(sampleWPos);
-
+//        return radius / abs(viewPos.z - sampleVpos.z);
         float rangeCheck = smoothstep(0.0, 1.0, radius / abs(viewPos.z - sampleVpos.z));
-//#if defined(UNITY_REVERSED_Z)
-//        occlusion += (sampleVpos.z <= samplePos.z - bias ? 1.0 : 0.0) * rangeCheck;
-//#else
-        occlusion += (sampleVpos.z >= samplePos.z - bias ? 1.0 : 0.0) * rangeCheck;
-		if (samplePos.z > sampleVpos.z)
-			kxk += 1.0;
-//#endif
+        kxk += rangeCheck;
+#if defined(UNITY_REVERSED_Z)
+        occlusion += (sampleVpos.z >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
+#else
+        occlusion += (sampleVpos.z >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
+		//if (samplePos.z > sampleVpos.z)
+		//	kxk += 1.0;
+#endif
     }
 
 	occlusion = 1.0 - (occlusion / kernelSize);
-	return kxk / kernelSize ;
+    return kxk / kernelSize;
 	return occlusion;
 }
 

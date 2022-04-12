@@ -79,10 +79,10 @@ partial class CameraRender
         //{
         //    m_buffer.ReleaseTemporaryRT(geometricTextureId[i]);
         //}
-        m_buffer.GetTemporaryRT(geometricTextureId[0], width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGBFloat);
-        m_buffer.GetTemporaryRT(geometricTextureId[1], width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGBFloat);
-        m_buffer.GetTemporaryRT(geometricTextureId[2], width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
-        m_buffer.GetTemporaryRT(geometricTextureId[3], width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(geometricTextureId[0], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
+        m_buffer.GetTemporaryRT(geometricTextureId[1], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
+        m_buffer.GetTemporaryRT(geometricTextureId[2], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(geometricTextureId[3], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
         ExecuteBuffer();
         m_renderTarget = new RenderTargetIdentifier[geometricTextureId.Length];
         for (int i = 0; i < geometricTextureId.Length; i++)
@@ -120,7 +120,7 @@ partial class CameraRender
     partial void deferredRenderAOPass()
     {
         m_buffer.BeginSample("aogen");
-        m_buffer.GetTemporaryRT(aoTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(aoTextureId, width, height, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
         m_buffer.SetRenderTarget(aoTextureId);
         for (int i = 0; i < 2; i++)
         {

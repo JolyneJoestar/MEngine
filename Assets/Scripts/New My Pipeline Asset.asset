@@ -21,7 +21,7 @@ MonoBehaviour:
     directional:
       atlasSize: 2048
       filter: 3
-      cascadeCount: 4
+      cascadeCount: 1
       cascadeRatio1: 0.108
       cascadeRatio2: 0.294
       cascadeRatio3: 0.501

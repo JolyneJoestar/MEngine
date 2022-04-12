@@ -1,5 +1,5 @@
-#ifndef SSAO_PASS_INCLUDE
-#define SSAO_PASS_INCLUDE
+#ifndef LIGHT_VOLUME_INCLUDE
+#define LIGHT_VOLUME_INCLUDE
 
 #ifndef SAMPLE_COUNT
 #define SAMPLE_COUNT 64
@@ -19,8 +19,7 @@ float3 CalculateLightVolume(int index, float3 posWS, ShadowData shadowData)
 		color += slight.attenuation * slight.color;
 	}
 	color /= (SAMPLE_COUNT * 3.0);
-	return color;
-	
+	return color;	
 }
 
-#endif //SSAO_PASS_INCLUDE
+#endif //LIGHT_VOLUME_INCLUDE
