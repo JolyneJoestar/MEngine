@@ -38,6 +38,23 @@ float SpecularStrength(Surface surface, BRDF brdf, Light light)
     return r2 / (d2 * max(0.1, lh2) * normalization);
 }
 
+float3 CalculateLightVolume(int index, float3 posWS, ShadowData shadowData)
+{
+    float3 viewDir = _WorldSpaceCameraPos - posWS;
+    float step = length(viewDir) / SAMPLE_COUNT;
+    viewDir = normalize(viewDir);
+    float3 color = 0.0;
+    SimpleLight slight;
+    for (int i = 0; i < SAMPLE_COUNT; i++)
+    {
+        float3 tempPos = posWS + i * step * viewDir;
+        slight = GetSimpleLight(index, tempPos, shadowData);
+        color += slight.attenuation * slight.color;
+    }
+    color /= (SAMPLE_COUNT * 2.0);
+    return color;
+
+}
 //float PerceptualSmoothnessToPerceptualRoughness(float perceptualSmoothness)
 //{
 //    return 1 - perceptualSmoothness;
@@ -74,25 +91,19 @@ float3 GetLighting(Surface surface,BRDF brdf, GI gi)
     float3 color = 0.5 * brdf.diffuse;
     for (int i = 0; i < GetDirectionLightCount(); i++)
     {
-        color += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData));
+        color += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData)) + CalculateLightVolume(i, surface.position, shadowData);
     }
     return color;
 }
 
-float3 CalculateLightVolume(int index, float3 posWS, ShadowData shadowData)
+float3 GetLightVolume(float3 posWS)
 {
-    float3 viewDir = _WorldSpaceCameraPos - posWS;
-    float step = length(viewDir) / SAMPLE_COUNT;
-    viewDir = normalize(viewDir);
-    float3 color = 0.0;
-    SimpleLight slight;
-    for (int i = 0; i < SAMPLE_COUNT; i++)
+    ShadowData shadowData = GetShadowData(posWS);
+    float3 color =  0.0;
+    for (int i = 0; i < GetDirectionLightCount(); i++)
     {
-        float3 tempPos = posWS + i * step * viewDir;
-        slight = GetSimpleLight(index, tempPos, shadowData);
-        color += slight.attenuation * slight.color;
+        color += CalculateLightVolume(i, posWS, shadowData);
     }
-    color /= (SAMPLE_COUNT * 2.0);
     return color;
 }
 
@@ -102,7 +113,7 @@ float3 GetLighting(Surface surface, BRDF brdf, GI gi, float ao)
     float3 color = 0.5 * brdf.diffuse;// * ao;
     for (int i = 0; i < GetDirectionLightCount(); i++)
     {
-        color += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData)) + CalculateLightVolume(i, surface.position, shadowData);
+        color += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData)); // + CalculateLightVolume(i, surface.position, shadowData);
     }
     return color;
 }
