@@ -37,7 +37,7 @@ Shader "MyPipeline/DeferredRender"
         {
             HLSLPROGRAM
             #pragma vertex vert
-            #pragma fragment SSAOFragment
+            #pragma fragment SSAOBlurFragment
             #include "SSAOBlurPass.hlsl"
 
             ENDHLSL

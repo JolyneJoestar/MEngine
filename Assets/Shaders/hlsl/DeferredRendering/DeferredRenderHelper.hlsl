@@ -1,23 +1,6 @@
 #ifndef DEFERRED_RENDER_HELPER_INCLUDE
 #define DEFERRED_RENDER_HELPER_INCLUDE
 
-#include "../Common.hlsl"					
-#include "../MyLegacySurface.hlsl"
-#include "../Shadows.hlsl"
-#include "../GI.hlsl"
-#include "../MyLegacyLight.hlsl"
-#include "../MyLegacyBRDF.hlsl"
-#include "../LitInput.hlsl"
-
-
-TEXTURE2D(_GPosition);
-SAMPLER(sampler_GPostion);
-TEXTURE2D(_GNormal);
-SAMPLER(sampler_GNormal);
-TEXTURE2D(_Noise);
-SAMPLER(sampler_Noise);
-
-
 struct v2f
 {
 	float2 uv : TEXCOORD0;
@@ -34,7 +17,7 @@ v2f vert(uint vertexID : SV_VertexID)
 		);
 	o.uv = float2(
 		vertexID <= 1 ? 0.0 : 2.0,
-		vertexID == 1 ? 0.0 : 2.0
+		vertexID == 1 ? 2.0 : 0.0
 		);
 	return o;
 }

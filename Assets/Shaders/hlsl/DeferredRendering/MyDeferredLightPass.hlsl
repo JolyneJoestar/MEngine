@@ -17,8 +17,8 @@ TEXTURE2D(_GAlbedo);
 SAMPLER(sampler_GAlbedo);
 TEXTURE2D(_GMaterial);
 SAMPLER(sampler_GMaterial);
-TEXTURE2D(_AoTexture);
-SAMPLER(sampler_AoTexture);
+TEXTURE2D(_BluredAoTexture);
+SAMPLER(sampler_BluredAoTexture);
 TEXTURE2D(_LightVolume);
 SAMPLER(sampler_LightVolume);
 
@@ -60,7 +60,7 @@ float4 deferredLightingFragPass(v2f vert) : SV_TARGET
 	BRDF brdf = GetBRDF(surface);
 
     GI gi = GetGI(lightuv, surface);
-    float ao = SAMPLE_TEXTURE2D(_AoTexture, sampler_AoTexture, vert.uv).r;
+    float ao = SAMPLE_TEXTURE2D(_BluredAoTexture, sampler_BluredAoTexture, vert.uv).r;
     return float4(GetLighting(surface, brdf, gi, ao) + SAMPLE_TEXTURE2D(_LightVolume, sampler_LightVolume, vert.uv).rgb, surface.alpha);
 }
 

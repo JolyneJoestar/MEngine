@@ -8,25 +8,26 @@
 #include "../MyLegacyLight.hlsl"
 #include "../MyLegacyBRDF.hlsl"
 #include "../LitInput.hlsl"
-#include "../FilterKernel"
+#include "DeferredRenderHelper.hlsl"
 
 
-TEXTURE2D(_SSAOInput);
-SAMPLER(sampler_SSAOInput);
+TEXTURE2D(_AoTextureId);
+SAMPLER(sampler_AoTextureId);
 
 float SSAOBlurFragment(v2f vert) : SV_TARGET
 {
-	float2 texelSize = 1.0 / float2();
+	float2 texelSize = 1.0 / float2(1024.0, 720.0);
 	float result = 0.0;
-	for (int i = -2; i < 2; i++)
+	int radius = 4;
+	for (int i = -radius; i < radius; i++)
 	{
-		for (int j = -2; j < 2; j++)
+		for (int j = -radius; j < radius; j++)
 		{
 			float2 offset = float2(float(i), float(j)) * texelSize;
-			result += SAMPLE(_SSAOInput, sampler_SSAOInput, vert.uv + offset).r;
+			result += SAMPLE_TEXTURE2D(_AoTextureId, sampler_AoTextureId, vert.uv + offset).r;
 		}
 	}
-	return result / (4.0 * 4.0);
+	return result / float(radius * radius * 4);
 }
 
 #endif //SSAO_Blur_Pass_INCLUDE
