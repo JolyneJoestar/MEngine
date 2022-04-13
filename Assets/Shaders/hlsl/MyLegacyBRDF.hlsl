@@ -110,10 +110,10 @@ float3 GetLightVolume(float3 posWS)
 float3 GetLighting(Surface surface, BRDF brdf, GI gi, float ao)
 {
     ShadowData shadowData = GetShadowData(surface);
-    float3 color = 0.5 * brdf.diffuse;// * ao;
+    float3 color = 0.5 * brdf.diffuse * ao;
     for (int i = 0; i < GetDirectionLightCount(); i++)
     {
-        color += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData)); // + CalculateLightVolume(i, surface.position, shadowData);
+        color += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData));
     }
     return color;
 }
