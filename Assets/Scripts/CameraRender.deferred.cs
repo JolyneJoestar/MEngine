@@ -122,7 +122,7 @@ partial class CameraRender
 
     partial void deferredRenderAOGenPass()
     {
-        m_buffer.BeginSample("aogen");
+        m_buffer.BeginSample("ao gen");
         m_buffer.GetTemporaryRT(aoTextureId, width / 2, height / 2, 0, FilterMode.Trilinear, RenderTextureFormat.R16);
         m_buffer.SetRenderTarget(aoTextureId);
         for (int i = 0; i < 2; i++)
@@ -133,7 +133,7 @@ partial class CameraRender
         m_buffer.ClearRenderTarget(false, true, Color.white);
         m_buffer.SetGlobalVectorArray(samplesId, m_aosample);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 1, MeshTopology.Triangles, 3);
-        m_buffer.EndSample("aogen");
+        m_buffer.EndSample("ao gen");
         ExecuteBuffer();
     }
 
@@ -177,32 +177,32 @@ partial class CameraRender
 
     partial void deferredRenderAOBlurPass()
     {
-        m_buffer.BeginSample("AoTexBlur");
+        m_buffer.BeginSample("ao blur");
         m_buffer.GetTemporaryRT(bluredAoTextureId, width / 2, height / 2, 0, FilterMode.Trilinear, RenderTextureFormat.R16);
         m_buffer.SetRenderTarget(bluredAoTextureId);
         m_buffer.SetGlobalTexture(aoTextureId, aoTextureId);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 2, MeshTopology.Triangles, 3);
-        m_buffer.EndSample("AoTexBlur");
+        m_buffer.EndSample("ao blur");
         ExecuteBuffer();
     }
 
     partial void deferredLightVolumeGenPass()
     {
-        m_buffer.BeginSample("LightVolumeGen");
+        m_buffer.BeginSample("lightVolume gen");
         m_buffer.GetTemporaryRT(lightVolumeId, width / 4, height / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
         m_buffer.SetRenderTarget(lightVolumeId);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 3, MeshTopology.Triangles, 3);
-        m_buffer.EndSample("LightVolumeGen");
+        m_buffer.EndSample("lightVolume gen");
         ExecuteBuffer();
     }
 
     partial void deferredLightVolumeBlurPass()
     {
-        m_buffer.BeginSample("LightVolumeBlur");
+        m_buffer.BeginSample("lightVolume blur");
         m_buffer.GetTemporaryRT(bluredLightVolumeId, width / 4, height / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
         m_buffer.SetRenderTarget(bluredLightVolumeId);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 4, MeshTopology.Triangles, 3);
-        m_buffer.EndSample("LightVolumeBlur");
+        m_buffer.EndSample("lightVolume blur");
         ExecuteBuffer();
     }
 }
