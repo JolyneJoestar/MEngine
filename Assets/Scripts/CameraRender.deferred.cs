@@ -7,9 +7,10 @@ partial class CameraRender
     partial void deferredRenderGBufferPass(bool useDynamicBatching, bool useGPUInstancing);
     partial void deferredRenderLightingPass();
     partial void DrawDeferred(bool useDynamicBatching, bool useGPUInstancings);
-    partial void deferredRenderAOPass();
+    partial void deferredRenderAOGenPass();
     partial void deferredRenderAOBlurPass();
-    partial void deferredLightVolumePass();
+    partial void deferredLightVolumeGenPass();
+    partial void deferredLightVolumeBlurPass();
     partial void Cleanupdr();
 
     static Shader m_shader = Shader.Find("MyPipeline/DeferredRender");
@@ -23,10 +24,11 @@ partial class CameraRender
         Shader.PropertyToID("_GMaterial")
     };
     static int bluredAoTextureId = Shader.PropertyToID("_BluredAoTexture"),
-        aoTextureId = Shader.PropertyToID("_AoTextureId"),
+        aoTextureId = Shader.PropertyToID("_AoTexture"),
         samplesId = Shader.PropertyToID("samples"),
         noiseId = Shader.PropertyToID("_Noise"),
-        lightVolumeId = Shader.PropertyToID("_LightVolume");
+        lightVolumeId = Shader.PropertyToID("_LightVolume"),
+        bluredLightVolumeId = Shader.PropertyToID("_BluredLightVolume");
     RenderTargetIdentifier[] m_renderTarget;
     static Vector4[] m_aosample;
     const string m_gbufferName = "GBufferPass";
@@ -118,7 +120,7 @@ partial class CameraRender
         ExecuteBuffer();
     }
 
-    partial void deferredRenderAOPass()
+    partial void deferredRenderAOGenPass()
     {
         m_buffer.BeginSample("aogen");
         m_buffer.GetTemporaryRT(aoTextureId, width / 2, height / 2, 0, FilterMode.Trilinear, RenderTextureFormat.R16);
@@ -144,6 +146,7 @@ partial class CameraRender
         m_buffer.ReleaseTemporaryRT(bluredAoTextureId);
         m_buffer.ReleaseTemporaryRT(lightVolumeId);
         m_buffer.ReleaseTemporaryRT(aoTextureId);
+        m_buffer.ReleaseTemporaryRT(bluredLightVolumeId);
         ExecuteBuffer();
     }
     partial void deferredRenderLightingPass()
@@ -154,7 +157,7 @@ partial class CameraRender
         {
             m_buffer.SetGlobalTexture(geometricTextureId[i], m_renderTarget[i]);
         }
-        m_buffer.SetGlobalTexture(lightVolumeId, lightVolumeId);
+        m_buffer.SetGlobalTexture(bluredLightVolumeId, bluredLightVolumeId);
         m_buffer.SetGlobalTexture(bluredAoTextureId, bluredAoTextureId);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 0, MeshTopology.Triangles, 3);
         m_buffer.EndSample("deferred lighting pass");
@@ -165,8 +168,9 @@ partial class CameraRender
     {
         initGBuffer();
         deferredRenderGBufferPass(useDynamicBatching, useGPUInstancing);
-        deferredLightVolumePass();
-        deferredRenderAOPass();
+        deferredLightVolumeGenPass();
+        deferredLightVolumeBlurPass();
+        deferredRenderAOGenPass();
         deferredRenderAOBlurPass();
         deferredRenderLightingPass();
     }
@@ -182,13 +186,23 @@ partial class CameraRender
         ExecuteBuffer();
     }
 
-    partial void deferredLightVolumePass()
+    partial void deferredLightVolumeGenPass()
     {
         m_buffer.BeginSample("LightVolumeGen");
         m_buffer.GetTemporaryRT(lightVolumeId, width / 4, height / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
         m_buffer.SetRenderTarget(lightVolumeId);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 3, MeshTopology.Triangles, 3);
         m_buffer.EndSample("LightVolumeGen");
+        ExecuteBuffer();
+    }
+
+    partial void deferredLightVolumeBlurPass()
+    {
+        m_buffer.BeginSample("LightVolumeBlur");
+        m_buffer.GetTemporaryRT(bluredLightVolumeId, width / 4, height / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
+        m_buffer.SetRenderTarget(bluredLightVolumeId);
+        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 4, MeshTopology.Triangles, 3);
+        m_buffer.EndSample("LightVolumeBlur");
         ExecuteBuffer();
     }
 }

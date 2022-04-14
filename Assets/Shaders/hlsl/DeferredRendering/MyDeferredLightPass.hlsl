@@ -19,8 +19,8 @@ TEXTURE2D(_GMaterial);
 SAMPLER(sampler_GMaterial);
 TEXTURE2D(_BluredAoTexture);
 SAMPLER(sampler_BluredAoTexture);
-TEXTURE2D(_LightVolume);
-SAMPLER(sampler_LightVolume);
+TEXTURE2D(_BluredLightVolume);
+SAMPLER(sampler_BluredLightVolume);
 
 struct v2f
 {
@@ -61,7 +61,7 @@ float4 deferredLightingFragPass(v2f vert) : SV_TARGET
 
     GI gi = GetGI(lightuv, surface);
     float ao = SAMPLE_TEXTURE2D(_BluredAoTexture, sampler_BluredAoTexture, vert.uv).r;
-    return float4(GetLighting(surface, brdf, gi, ao) + SAMPLE_TEXTURE2D(_LightVolume, sampler_LightVolume, vert.uv).rgb, surface.alpha);
+    return float4(GetLighting(surface, brdf, gi, ao) + SAMPLE_TEXTURE2D(_BluredLightVolume, sampler_BluredLightVolume, vert.uv).rgb, surface.alpha);
 }
 
 #endif //MY_DEFERRED_LIGHT_PASS_INCLUDE

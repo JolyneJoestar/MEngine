@@ -11,8 +11,8 @@
 #include "DeferredRenderHelper.hlsl"
 
 
-TEXTURE2D(_AoTextureId);
-SAMPLER(sampler_AoTextureId);
+TEXTURE2D(_AoTexture);
+SAMPLER(sampler_AoTexture);
 
 float SSAOBlurFragment(v2f vert) : SV_TARGET
 {
@@ -24,7 +24,7 @@ float SSAOBlurFragment(v2f vert) : SV_TARGET
 		for (int j = -radius; j < radius; j++)
 		{
 			float2 offset = float2(float(i), float(j)) * texelSize;
-			result += SAMPLE_TEXTURE2D(_AoTextureId, sampler_AoTextureId, vert.uv + offset).r;
+			result += SAMPLE_TEXTURE2D(_AoTexture, sampler_AoTexture, vert.uv + offset).r;
 		}
 	}
 	return result / float(radius * radius * 4);

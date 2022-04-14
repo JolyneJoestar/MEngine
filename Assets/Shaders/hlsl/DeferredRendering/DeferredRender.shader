@@ -52,5 +52,15 @@ Shader "MyPipeline/DeferredRender"
 
             ENDHLSL
         }
+
+		Pass
+		{
+			HLSLPROGRAM
+			#pragma vertex vert
+			#pragma fragment lightVolumeBlurFragment
+			#include "LightVolumeBlurPass.hlsl"
+
+			ENDHLSL
+		}
     }
 }
