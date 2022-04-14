@@ -20,12 +20,34 @@
 TEXTURE2D(_BluredDirShadowAtlasId);
 SAMPLER(sampler_BluredDirShadowAtlasId);
 #endif
+
+#if defined(_CSM)
+TEXTURE2D(_FourierBufferOneId);
+SAMPLER(sampler_FourierBufferOneId);
+TEXTURE2D(_FourierBufferTwoId);
+SAMPLER(sampler_FourierBufferTwoId);
+TEXTURE2D(_FourierBufferThreeId);
+SAMPLER(sampler_FourierBufferThreeId);
+TEXTURE2D(_FourierBufferFourId);
+SAMPLER(sampler_FourierBufferFourId);
+#endif
+
 TEXTURE2D_SHADOW(_DirectionalShadowAtlas);
 #define SHADOW_SAMPLER sampler_linear_clamp_compare
 SAMPLER_CMP(SHADOW_SAMPLER);
 SAMPLER(sampler_DirectionalShadowAtlas);
 
+TEXTURE2D(MNoiseTexture);
+SAMPLER(samplerMNoiseTexture);
 
+float SamplerDirectionalShadowAtlas(float3 positionSTS)
+{
+	return SAMPLE_TEXTURE2D_SHADOW(_DirectionalShadowAtlas, SHADOW_SAMPLER, positionSTS);
+}
+
+#if defined(_PCSS)
+#include "PCSS.hlsl"
+#endif
 
 CBUFFER_START(_CustomShadows)
 int _CascadeCount;
@@ -49,35 +71,8 @@ struct ShadowData
     float strength;
 };
 
-float SamplerDirectionalShadowAtlas(float3 positionSTS)
-{
-	return SAMPLE_TEXTURE2D_SHADOW(_DirectionalShadowAtlas, SHADOW_SAMPLER, positionSTS);
-}
 
-float GetBlockHeight(float2 uv,float height)
-{
-    float block = 0.0;
-    int c = 5;
-    float allP = 0;
-                      
-    for (int x = -c; x <= c; x++)
-    {
-
-        for (int y = -c; y <= c; y++)
-        {
-            float p = 1.0 / max(0.5, pow(length(float2(x, y)), 2));
-            float d = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas,(uv + float2(x, y) / 2048.0)).r;
-            if(d > height)
-            {
-                block += (d - height);
-                allP += p;
-            }
-        }
-    }
-    return block / allP;
-}
-
-float FilterDirectionalShadow(float3 positionSTS)
+float FilterDirectionalShadow(float3 positionSTS, float3 unBiasedPositionSTS)
 {
 #if defined(DIRECTIONAL_FILTER_SETUP)
     #if defined(_VSM)
@@ -99,41 +94,57 @@ float FilterDirectionalShadow(float3 positionSTS)
 			        );
 		        }
 		        return shadow;
+    #elif defined(_PCSS)
+				float noise = SAMPLE_TEXTURE2D(MNoiseTexture, samplerMNoiseTexture, positionSTS.xy).a;
+				noise = mad(noise, 2.0, -1.0);
+				//float depth = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas, positionSTS.xy).r;
+				float shadow = PCSS_Shadow_Calculate(positionSTS, unBiasedPositionSTS, noise, 1.0);
+				return shadow;// +depth;
+    #elif defined(_CSM)
+                float shadow = 0.5;
+                float z = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas, positionSTS.xy).r;
+                float d = positionSTS.z;
+#if defined(UNITY_REVERSED_Z)
+				z = 1.0 - z;
+				d = 1.0 - d;
+#endif
+                float a = 0.0, b = 0.0;
+                float ck = PI * (2 * 1 - 1);
+                float4 preFourier =  SAMPLE_TEXTURE2D(_FourierBufferOneId, sampler_FourierBufferOneId, positionSTS.xy);
+                a += 2 * cos(ck * d) * preFourier.x / ck * exp(1.0 / 8.0 /8.0);
+                b += 2 * sin(ck * d) * preFourier.y / ck * exp(1.0 / 8.0 /8.0);
+                ck = PI * (2 * 2 - 1);
+                a += 2 * cos(ck * d) * preFourier.z / ck * exp(2.0 * 2.0 / 8.0 /8.0);
+                b += 2 * sin(ck * d) * preFourier.w / ck * exp(2.0 * 2.0 / 8.0 /8.0);
+    
+                preFourier = SAMPLE_TEXTURE2D(_FourierBufferTwoId, sampler_FourierBufferTwoId, positionSTS.xy);
+                ck = PI * (2 * 3 - 1);
+                a += 2 * cos(ck * d) * preFourier.x / ck * exp(3.0 * 3.0 / 8.0 /8.0);
+                b += 2 * sin(ck * d) * preFourier.y / ck * exp(3.0 * 3.0 / 8.0 /8.0);
+                ck = PI * (2 * 4 - 1);
+                a += 2 * cos(ck * d) * preFourier.z / ck * exp(4.0 * 4.0 / 8.0 /8.0);
+                b += 2 * sin(ck * d) * preFourier.w / ck * exp(4.0 * 4.0 / 8.0 /8.0);
+    
+                preFourier = SAMPLE_TEXTURE2D(_FourierBufferThreeId, sampler_FourierBufferThreeId, positionSTS.xy);
+                ck = PI * (2 * 5 - 1);
+                a += 2 * cos(ck * d) * preFourier.x / ck * exp(5.0 * 5.0 / 8.0 /8.0);
+                b += 2 * sin(ck * d) * preFourier.y / ck * exp(5.0 * 5.0 / 8.0 /8.0);
+                ck = PI * (2 * 6 - 1);
+                a += 2 * cos(ck * d) * preFourier.z / ck * exp(6.0 * 6.0 / 8.0 /8.0);
+                b += 2 * sin(ck * d) * preFourier.w / ck * exp(6.0 * 6.0 / 8.0 /8.0);
+    
+                preFourier = SAMPLE_TEXTURE2D(_FourierBufferFourId, sampler_FourierBufferFourId, positionSTS.xy);
+                ck = PI * (2 * 7 - 1);
+                a += 2 * cos(ck * d) * preFourier.x / ck * exp(7.0 * 7.0 / 8.0 /8.0);
+                b += 2 * sin(ck * d) * preFourier.y / ck * exp(7.0 * 7.0 / 8.0 /8.0);
+                ck = PI * (2 * 8 - 1);
+                a += 2 * cos(ck * d) * preFourier.z / ck * exp(8.0 * 8.0 / 8.0 /8.0);
+                b += 2 * sin(ck * d) * preFourier.w / ck * exp(8.0 * 8.0 / 8.0 /8.0);
+                
+                shadow += (a - b);
+                return d + 0.032 < z ? 1 : saturate(2 * shadow);
     #else
-    	        float height = SAMPLE_TEXTURE2D(_DirectionalShadowAtlas, sampler_DirectionalShadowAtlas, positionSTS.xy).r;
-                float block = GetBlockHeight(positionSTS.xy, height);
-                if(block < 0.2)
-                {
-                    return SamplerDirectionalShadowAtlas(positionSTS);
-                }
-                else if(block < 0.4)
-                {
-                    float weights[9];
-		            float2 positions[9];
-		            float4 size = _ShadowAtlasSize.yyxx;
-		            SampleShadow_ComputeSamples_Tent_5x5(size, positionSTS.xy, weights, positions);
-		            float shadow = 0;
-		            for (int i = 0; i < 9; i++) {
-			            shadow += weights[i] * SamplerDirectionalShadowAtlas(
-				            float3(positions[i].xy, positionSTS.z)
-			            );
-		            }
-		            return shadow;
-                }
-                else
-                {
-                    float weights[16];
-		            float2 positions[16];
-		            float4 size = _ShadowAtlasSize.yyxx;
-		            SampleShadow_ComputeSamples_Tent_7x7(size, positionSTS.xy, weights, positions);
-		            float shadow = 0;
-		            for (int i = 0; i < 16; i++) {
-			            shadow += weights[i] * SamplerDirectionalShadowAtlas(
-				            float3(positions[i].xy, positionSTS.z)
-			            );
-		            }
-		            return shadow;
-                }
+                 return SamplerDirectionalShadowAtlas(positionSTS);
     #endif
 #else
     return SamplerDirectionalShadowAtlas(positionSTS);
@@ -146,14 +157,31 @@ float GetDirectionalShadowAttenuation(DirectionalShadowData dirData,ShadowData s
 		return 1.0;
     float3 normalBias = surfaceWS.normal * _CascadeData[shadowData.cascadeIndex].y * dirData.normalBias;
     float3 positionSTS = mul(_DirectionalShadowMatrices[dirData.tileIndex], float4(surfaceWS.position + normalBias, 1.0)).xyz;
-    float shadow = FilterDirectionalShadow(positionSTS);
+    float3 unBiasedPositionSTS = mul(_DirectionalShadowMatrices[dirData.tileIndex], float4(surfaceWS.position, 1.0)).xyz;
+    float shadow = FilterDirectionalShadow(positionSTS, unBiasedPositionSTS);
     if (shadowData.cascadeBlend < 1.0)
     {
         normalBias = surfaceWS.normal * _CascadeData[shadowData.cascadeIndex + 1].y * dirData.normalBias;
         positionSTS = mul(_DirectionalShadowMatrices[dirData.tileIndex + 1], float4(surfaceWS.position + normalBias, 1.0)).xyz;
-        shadow = lerp(FilterDirectionalShadow(positionSTS), shadow, shadowData.cascadeBlend);
+        shadow = lerp(FilterDirectionalShadow(positionSTS, unBiasedPositionSTS), shadow, shadowData.cascadeBlend);
     }
     return lerp(1.0, shadow, dirData.strength);
+}
+
+float GetLightAttenuation(DirectionalShadowData dirData, ShadowData shadowData, float3 posWS)
+{
+	if (dirData.strength <= 0.0)
+		return 1.0;
+
+	float3 positionSTS = mul(_DirectionalShadowMatrices[dirData.tileIndex], float4(posWS, 1.0)).xyz;
+	float3 unBiasedPositionSTS = mul(_DirectionalShadowMatrices[dirData.tileIndex], float4(posWS, 1.0)).xyz;
+	float shadow = FilterDirectionalShadow(positionSTS, unBiasedPositionSTS);
+	if (shadowData.cascadeBlend < 1.0)
+	{
+		positionSTS = mul(_DirectionalShadowMatrices[dirData.tileIndex + 1], float4(posWS, 1.0)).xyz;
+		shadow = lerp(FilterDirectionalShadow(positionSTS, unBiasedPositionSTS), shadow, shadowData.cascadeBlend);
+	}
+	return lerp(1.0, shadow, dirData.strength);
 }
 
 #endif //CUSTOM_SHADOWS_INCLUDED

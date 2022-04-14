@@ -17,6 +17,12 @@ struct Light
 	float attenuation;
 };
 
+struct SimpleLight
+{
+	float3 color;
+	float attenuation;
+};
+
 float SquareDistance(float3 A, float3 B)
 {
     return dot(B - A, B - A);
@@ -66,6 +72,41 @@ ShadowData GetShadowData(Surface surfaceWS)
     return data;
 }
 
+ShadowData GetShadowData(float3 posWS)
+{
+    ShadowData data;
+    data.strength = FadedShadowStrength(-TransformWorldToView(posWS).z, _ShadowDistanceFade.x, _ShadowDistanceFade.y);
+    data.cascadeBlend = 1.0;
+    int i;
+    for (i = 0; i < _CascadeCount; i++)
+    {
+        float4 sphere = _CascadeCullingSphere[i];
+        float distanceSqr = SquareDistance(posWS, sphere.xyz);
+        if (distanceSqr < sphere.w)
+        {
+            float fade = FadedShadowStrength(distanceSqr, _CascadeData[i].x, _ShadowDistanceFade.z);
+            if (i == _CascadeCount - 1)
+            {
+                data.strength *= fade;
+            }
+            else
+            {
+                data.cascadeBlend = fade;
+            }
+            break;
+        }
+    }
+    if (i == _CascadeCount)
+    {
+        data.strength = 0.0;
+    }
+#if !defined(_CASCADE_BLEND_SOFT)
+    data.cascadeBlend = 1.0;
+#endif
+    data.cascadeIndex = i;
+    return data;
+}
+
 DirectionalShadowData GetDirectionalShadowData(int lightIndex, ShadowData shadowData)
 {
     DirectionalShadowData data;
@@ -89,6 +130,15 @@ Light GetDirectionLight(int index, Surface surfaceWS, ShadowData shadowdata)
     light.attenuation = GetDirectionalShadowAttenuation(dirShadowData, shadowdata, surfaceWS);
 //  light.attenuation = shadowdata.cascadeIndex * 0.25;
     return light;
+}
+
+SimpleLight GetSimpleLight(int index, float3 posWS, ShadowData shadowData)
+{
+	SimpleLight sLight;
+	sLight.color = MVisibleLightColors[index].xyz;
+	DirectionalShadowData dirShadowData = GetDirectionalShadowData(index, shadowData);
+	sLight.attenuation = GetLightAttenuation(dirShadowData, shadowData, posWS);
+	return sLight;
 }
 
 float3 IncomingLight(Surface surface,Light light)

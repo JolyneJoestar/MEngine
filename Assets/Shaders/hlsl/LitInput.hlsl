@@ -24,12 +24,12 @@ float4 GetBase(float2 baseUV)
     return map * color;
 }
 
-float GetMetallic(float2 baseUV)
+float GetMetallic()
 {
     return UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, MMetallic);
 }
 
-float GetSmoothness(float2 baseUV)
+float GetSmoothness()
 {
     return UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, MSmoothness);
 }

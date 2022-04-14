@@ -59,4 +59,24 @@ public class ShadowSettings
         softshadow = Directional.SoftShodowType.PCF
     };
     
+    [System.Serializable]
+    public struct PCSS
+    {
+        public Vector2 reciverPlanBias;
+        [Range(0.0f, 1.0f)]
+        public float reciverPlanBias_x;
+        [Range(0.0f, 1.0f)]
+        public float reciverPlanBias_y;
+        [Range(0.0f, 2.0f)]
+        public float soft;
+    }
+
+    [System.Serializable]
+    public struct CSM
+    {
+        [Range(0.0f, 3.0f)]
+        public float enlarge;
+        [Range(0.0f, 1.0f)]
+        public float bias;
+    }
 }

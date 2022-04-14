@@ -19,6 +19,10 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - MNoiseTexture:
+        m_Texture: {fileID: 2800000, guid: cf018948bde0df94bb92537563b05e49, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - MTexture:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -64,7 +68,7 @@ Material:
     - MCutoff: 0.5
     - MDstBlend: 0
     - MMetallic: 0.079
-    - MSmoothness: 0.746
+    - MSmoothness: 0.383
     - MSrcBlend: 1
     - MZWrite: 1
     - _BumpScale: 1

@@ -33,11 +33,12 @@ public partial class CameraRender {
             dir.y = -dir.y;
             dir.z = -dir.z;
             m_visibleLightDirection[i] = dir;
-            //           Debug.Log(dir);
-            //            Debug.Log(m_visibleLightColor[i]);
+            //       Debug.Log(dir);
+            //       Debug.Log(m_visibleLightColor[i]);
         }
     }
-    public void Render(ScriptableRenderContext context, Camera camera,bool useDynamicBatching, bool useGPUInstancing, ShadowSettings shadowSettings, ShadowPostSettings shadowPostSettings)
+
+    public void Render(ScriptableRenderContext context, Camera camera,bool useDynamicBatching, bool useGPUInstancing, bool m_useDeferredRendering , ShadowSettings shadowSettings, ShadowPostSettings shadowPostSettings)
     {
         this.m_context = context;
         this.m_camera = camera;
@@ -46,7 +47,7 @@ public partial class CameraRender {
         PrepareForSceneWindow();
         if (!Cull(shadowSettings.maxDistance))
             return;
-
+        
         //Shadow Pass
         m_buffer.BeginSample(SampleName);
         ExecuteBuffer();
@@ -56,12 +57,21 @@ public partial class CameraRender {
 
         //Regular Pass
         Setup();
+        if(m_useDeferredRendering)
+        {
+            DrawDeferred(useDynamicBatching, useGPUInstancing);
+        }
+        else
+        {
+            DrawVisibaleGeometry(useDynamicBatching, useGPUInstancing);
+        }
+        m_context.DrawSkybox(m_camera);
         DrawUnsupportedShaders();
-        DrawVisibaleGeometry(useDynamicBatching,useGPUInstancing);
         DrawGizmos();
         Cleanup();
         Submit();
     }
+
     void DrawVisibaleGeometry(bool useDynamicBatching, bool useGPUInstancing)
     {
         var sortingSettings = new SortingSettings(m_camera) { criteria = SortingCriteria.CommonOpaque };
@@ -71,7 +81,7 @@ public partial class CameraRender {
             perObjectData = PerObjectData.Lightmaps | PerObjectData.LightProbe | PerObjectData.LightProbeProxyVolume
         };
         var filteringSettings = new FilteringSettings(RenderQueueRange.all);
-        drawingSettings.SetShaderPassName(1, m_customShaderTagId);
+        drawingSettings.SetShaderPassName(0, m_customShaderTagId);
         m_context.DrawRenderers(m_cullResult, ref drawingSettings, ref filteringSettings);
         m_context.DrawSkybox(m_camera);
     }
@@ -105,6 +115,7 @@ public partial class CameraRender {
     void Cleanup()
     {
         m_lighting.Cleanup();
+        Cleanupdr();
     }
     void ExecuteBuffer()
     {

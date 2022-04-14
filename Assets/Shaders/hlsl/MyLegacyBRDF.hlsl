@@ -5,6 +5,10 @@
 
 #include "GI.hlsl"
 
+#ifndef SAMPLE_COUNT
+#define SAMPLE_COUNT 64
+#endif
+
 struct BRDF
 {
     float3 diffuse;
@@ -34,6 +38,23 @@ float SpecularStrength(Surface surface, BRDF brdf, Light light)
     return r2 / (d2 * max(0.1, lh2) * normalization);
 }
 
+float3 CalculateLightVolume(int index, float3 posWS, ShadowData shadowData)
+{
+    float3 viewDir = _WorldSpaceCameraPos - posWS;
+    float step = length(viewDir) / SAMPLE_COUNT;
+    viewDir = normalize(viewDir);
+    float3 color = 0.0;
+    SimpleLight slight;
+    for (int i = 0; i < SAMPLE_COUNT; i++)
+    {
+        float3 tempPos = posWS + i * step * viewDir;
+        slight = GetSimpleLight(index, tempPos, shadowData);
+        color += slight.attenuation * slight.color;
+    }
+    color /= (SAMPLE_COUNT * 2.0);
+    return color;
+
+}
 //float PerceptualSmoothnessToPerceptualRoughness(float perceptualSmoothness)
 //{
 //    return 1 - perceptualSmoothness;
@@ -67,12 +88,33 @@ float3 GetLighting(Surface surface,BRDF brdf, Light light)
 float3 GetLighting(Surface surface,BRDF brdf, GI gi)
 {
     ShadowData shadowData = GetShadowData(surface);
-    float3 color = gi.diffuse * brdf.diffuse;
+    float3 color = 0.5 * brdf.diffuse;
+    for (int i = 0; i < GetDirectionLightCount(); i++)
+    {
+        color += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData)) + CalculateLightVolume(i, surface.position, shadowData);
+    }
+    return color;
+}
+
+float3 GetLightVolume(float3 posWS)
+{
+    ShadowData shadowData = GetShadowData(posWS);
+    float3 color =  0.0;
+    for (int i = 0; i < GetDirectionLightCount(); i++)
+    {
+        color += CalculateLightVolume(i, posWS, shadowData);
+    }
+    return color;
+}
+
+float3 GetLighting(Surface surface, BRDF brdf, GI gi, float ao)
+{
+    ShadowData shadowData = GetShadowData(surface);
+    float3 color = 0.5 * brdf.diffuse * ao;
     for (int i = 0; i < GetDirectionLightCount(); i++)
     {
         color += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData));
     }
     return color;
 }
-
 #endif //MY_LEGACY_LIGHT_INCLUDE
