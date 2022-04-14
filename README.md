@@ -1,5 +1,9 @@
 This project is used for learning Unity Scriptable Render Pipeline, and following functions have been realized until now。
 
+- Preprocess functions
+  - [x] Gen brdf LUT
+  - [x] Gen irradiance map
+
 - Functions realized in both forward render pipeline & deferred render pipeline：
   - [ ] Shadows
     - [x] Cascaded shadow map
@@ -10,7 +14,6 @@ This project is used for learning Unity Scriptable Render Pipeline, and followin
     - [x] PCF
   - [x] PBR
   - [x] Volume Light
-
 - Forward render pipline 
 
 
