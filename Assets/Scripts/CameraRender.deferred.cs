@@ -28,7 +28,8 @@ partial class CameraRender
         samplesId = Shader.PropertyToID("samples"),
         noiseId = Shader.PropertyToID("_Noise"),
         lightVolumeId = Shader.PropertyToID("_LightVolume"),
-        bluredLightVolumeId = Shader.PropertyToID("_BluredLightVolume");
+        bluredLightVolumeId = Shader.PropertyToID("_BluredLightVolume"),
+        ditherId = Shader.PropertyToID("_Dither");
     RenderTargetIdentifier[] m_renderTarget;
     static Vector4[] m_aosample;
     const string m_gbufferName = "GBufferPass";
@@ -200,6 +201,7 @@ partial class CameraRender
     {
         m_buffer.BeginSample("lightVolume blur");
         m_buffer.GetTemporaryRT(bluredLightVolumeId, width / 4, height / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
+        m_buffer.SetGlobalMatrix(ditherId, dither);
         m_buffer.SetRenderTarget(bluredLightVolumeId);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 4, MeshTopology.Triangles, 3);
         m_buffer.EndSample("lightVolume blur");
