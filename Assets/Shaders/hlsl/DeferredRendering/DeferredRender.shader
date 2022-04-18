@@ -62,5 +62,15 @@ Shader "MyPipeline/DeferredRender"
 
 			ENDHLSL
 		}
+
+		Pass
+		{
+			HLSLPROGRAM
+			#pragma vertex vert
+			#pragma fragment SSRGenPass
+			#include "SSR.hlsl"
+
+			ENDHLSL
+		}
     }
 }
