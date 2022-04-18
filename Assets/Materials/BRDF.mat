@@ -67,8 +67,8 @@ Material:
     - MClipping: 0
     - MCutoff: 0.5
     - MDstBlend: 0
-    - MMetallic: 0.079
-    - MSmoothness: 0.383
+    - MMetallic: 0.036
+    - MSmoothness: 0.991
     - MSrcBlend: 1
     - MZWrite: 1
     - _BumpScale: 1

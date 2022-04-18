@@ -2,12 +2,6 @@
 #define SSR_PASS_INCLUDE
 
 #include "../Common.hlsl"					
-#include "../MyLegacySurface.hlsl"
-#include "../Shadows.hlsl"
-#include "../GI.hlsl"
-#include "../MyLegacyLight.hlsl"
-#include "../MyLegacyBRDF.hlsl"
-#include "../LitInput.hlsl"
 #include "DeferredRenderHelper.hlsl"
 
 
@@ -21,7 +15,7 @@ TEXTURE2D(_GMaterial);
 SAMPLER(sampler_GMaterial);
 
 #ifndef STEP_COUNT
-#define STEP_COUNT 64
+#define STEP_COUNT 32
 #endif
 
 float4 SSRGenPass(v2f vert) :SV_TARGET
@@ -40,13 +34,13 @@ float4 SSRGenPass(v2f vert) :SV_TARGET
 	//viewOutHCS.xyz = viewOutHCS.xyz * 0.5 + 0.5;
 	//float ratio = min(step.x / viewOutHCS.x, step.y / viewOutHCS.y);
 	
-	viewOut *= 0.2;
+	//viewOut *= 0.05;
 
 	float3 stepPosScr = pos;
-	float3 stepDir = viewOut;
+	float stepRatio = 0.2;
 	for (int i = 0; i < STEP_COUNT; i++)
 	{
-		float3 stepPos = stepPosScr + stepDir;
+		float3 stepPos = stepPosScr + viewOut * stepRatio;
 		float srcDepth = TransformWorldToView(stepPos).z;
 		float4 stepPosHCS = TransformWorldToHClip(stepPos);
 		stepPosHCS.xyz /= stepPosHCS.w;
@@ -55,31 +49,35 @@ float4 SSRGenPass(v2f vert) :SV_TARGET
 		
 		if (stepUV.x > 1.0 || stepUV.x < 0.0)
 		{
-			stepDir /= 2.0;
+			stepRatio /= 2.0;
 			continue;
 		}
 		if (stepUV.y > 1.0 || stepUV.y < 0.0)
 		{
-			stepDir /= 2.0;
+			stepRatio /= 2.0;
 			continue;
 		}
 		float sampleDepth = TransformWorldToView(SAMPLE_TEXTURE2D(_GPosition, sampler_GPosition, stepUV).xyz).z;
+		
 #if defined(UNITY_REVERSED_Z)
 		if (srcDepth < sampleDepth)			
 #else
-		if (srcDepth < sampleDepth)
+		if (srcDepth > sampleDepth)
 #endif
 		{
 			//return float4(stepUV, 0.0, 1.0);
 			//return float4(abs(stepUV - uvPos), 0.0, 1.0);
-			if(abs(srcDepth - sampleDepth) < 0.1)
+			if(abs(srcDepth - sampleDepth) < 0.025 || i == STEP_COUNT - 1)
 				return float4(SAMPLE_TEXTURE2D(_DFColorBuffer, sampler_DFColorBuffer, stepUV).rgb, 1.0);
-			stepDir /= 2.0;
+			stepRatio /= 4.0;
 		}
 		else
 		{
-			stepPosScr = stepPos;
-			stepDir *= 2.0;
+			if(abs(srcDepth - sampleDepth) < 0.025)
+				return float4(SAMPLE_TEXTURE2D(_DFColorBuffer, sampler_DFColorBuffer, stepUV).rgb, 1.0);
+			if (stepRatio < 1.0)
+				stepRatio *= 2.0;
+			stepPosScr = stepPos;			
 		}
 	}
 	//return float4(1.0, 0.0, 0.0, 1.0);
