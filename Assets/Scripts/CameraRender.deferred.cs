@@ -6,13 +6,14 @@ partial class CameraRender
     partial void initGBuffer();
     partial void deferredRenderGBufferPass(bool useDynamicBatching, bool useGPUInstancing);
     partial void deferredRenderLightingPass();
-    partial void DrawDeferred(bool useDynamicBatching, bool useGPUInstancings);
     partial void deferredRenderAOGenPass();
     partial void deferredRenderAOBlurPass();
     partial void deferredLightVolumeGenPass();
     partial void deferredLightVolumeBlurPass();
     partial void deferredSSRPass();
+    partial void BloomGetInput();
     partial void BloomPass();
+    partial void DrawDeferred(bool useDynamicBatching, bool useGPUInstancings);
     partial void Cleanupdr();
 
     static Shader m_shader = Shader.Find("MyPipeline/DeferredRender");
@@ -33,7 +34,8 @@ partial class CameraRender
         bluredLightVolumeId = Shader.PropertyToID("_BluredLightVolume"),
         ditherId = Shader.PropertyToID("_Dither"),
         DFColorBufferId = Shader.PropertyToID("_DFColorBuffer"),
-        highlightColorBufferId = Shader.PropertyToID("_HighlightColorBufferId");
+        highlightColorBufferId = Shader.PropertyToID("_HighlightColorBufferId"),
+        bloomInput = Shader.PropertyToID("_BloomInput");
         
 
     RenderTargetIdentifier[] m_renderTarget = new RenderTargetIdentifier[geometricTextureId.Length];
@@ -102,6 +104,7 @@ partial class CameraRender
             m_renderTarget[i] = geometricTextureId[i];
         }
         m_buffer.GetTemporaryRT(DFColorBufferId, width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(bloomInput, width / 4, height / 4, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
         //m_buffer.GetTemporaryRT(highlightColorBufferId, width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
 
         //m_postProcessSrcTex[0] = DFColorBufferId;
@@ -165,7 +168,7 @@ partial class CameraRender
     partial void deferredRenderLightingPass()
     {
         m_buffer.BeginSample("deferred lighting pass");
-        m_buffer.SetRenderTarget(DFColorBufferId, defaultDepthBuffer);
+        m_buffer.SetRenderTarget(defaultColorBuffer, defaultDepthBuffer);
         for (int i = 0; i < m_renderTarget.Length; i++)
         {
             m_buffer.SetGlobalTexture(geometricTextureId[i], m_renderTarget[i]);
@@ -175,18 +178,6 @@ partial class CameraRender
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 0, MeshTopology.Triangles, 3);
         m_buffer.EndSample("deferred lighting pass");
         ExecuteBuffer();
-    }
-
-    partial void DrawDeferred(bool useDynamicBatching, bool useGPUInstancing)
-    {
-        initGBuffer();
-        deferredRenderGBufferPass(useDynamicBatching, useGPUInstancing);
-        deferredLightVolumeGenPass();
-        deferredLightVolumeBlurPass();
-        deferredRenderAOGenPass();
-        deferredRenderAOBlurPass();
-        deferredRenderLightingPass();
-        deferredSSRPass();
     }
 
     partial void deferredRenderAOBlurPass()
@@ -231,9 +222,37 @@ partial class CameraRender
         ExecuteBuffer();
     }
 
-    partial void BloomPass()
+    partial void BloomGetInput()
     {
-
+        m_buffer.BeginSample("bloom input");
+        m_buffer.SetRenderTarget(bloomInput);
+        m_buffer.SetGlobalTexture(DFColorBufferId, defaultColorBuffer);
+        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 6, MeshTopology.Triangles, 3);
+        m_buffer.EndSample("bloom input");
+        ExecuteBuffer();
     }
 
+    partial void BloomPass()
+    {
+        m_buffer.BeginSample("bloom");
+        m_buffer.SetRenderTarget(DFColorBufferId);
+        m_buffer.SetGlobalTexture(bloomInput, bloomInput);
+        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 7, MeshTopology.Triangles, 3);
+        m_buffer.EndSample("bloom");
+        ExecuteBuffer();
+    }
+
+
+
+    partial void DrawDeferred(bool useDynamicBatching, bool useGPUInstancing)
+    {
+        initGBuffer();
+        deferredRenderGBufferPass(useDynamicBatching, useGPUInstancing);
+        deferredLightVolumeGenPass();
+        deferredLightVolumeBlurPass();
+        deferredRenderAOGenPass();
+        deferredRenderAOBlurPass();
+        deferredRenderLightingPass();
+        deferredSSRPass();
+    }
 }

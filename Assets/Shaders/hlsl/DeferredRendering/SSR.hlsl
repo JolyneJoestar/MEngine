@@ -75,7 +75,7 @@ float4 SSRGenPass(v2f vert) :SV_TARGET
 		{
 			if(abs(srcDepth - sampleDepth) < 0.025)
 				return float4(SAMPLE_TEXTURE2D(_DFColorBuffer, sampler_DFColorBuffer, stepUV).rgb, 1.0);
-			if (stepRatio < 1.0)
+			if (stepRatio < 0.5)
 				stepRatio *= 2.0;
 			stepPosScr = stepPos;			
 		}

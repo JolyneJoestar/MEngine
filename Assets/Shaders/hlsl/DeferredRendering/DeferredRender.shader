@@ -72,5 +72,25 @@ Shader "MyPipeline/DeferredRender"
 
 			ENDHLSL
 		}
+
+		Pass
+		{
+			HLSLPROGRAM
+			#pragma vertex vert
+			#pragma fragment BloomGenPass
+			#include "BloomInput.hlsl"
+
+			ENDHLSL
+		}
+
+		Pass
+		{
+			HLSLPROGRAM
+			#pragma vertex vert
+			#pragma fragment BloomGenPass
+			#include "Bloom.hlsl"
+
+			ENDHLSL
+		}
     }
 }
