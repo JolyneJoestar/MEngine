@@ -13,6 +13,7 @@ partial class CameraRender
     partial void deferredSSRPass();
     partial void BloomGetInput();
     partial void BloomPass();
+    partial void TAAPass();
     partial void DrawDeferred(bool useDynamicBatching, bool useGPUInstancings);
     partial void Cleanupdr();
 
@@ -35,7 +36,8 @@ partial class CameraRender
         ditherId = Shader.PropertyToID("_Dither"),
         DFColorBufferId = Shader.PropertyToID("_DFColorBuffer"),
         highlightColorBufferId = Shader.PropertyToID("_HighlightColorBufferId"),
-        bloomInput = Shader.PropertyToID("_BloomInput");
+        bloomInput = Shader.PropertyToID("_BloomInput"),
+        baseColorBuffer = Shader.PropertyToID("_BaseColorBuffer");
         
 
     RenderTargetIdentifier[] m_renderTarget = new RenderTargetIdentifier[geometricTextureId.Length];
@@ -104,7 +106,8 @@ partial class CameraRender
             m_renderTarget[i] = geometricTextureId[i];
         }
         m_buffer.GetTemporaryRT(DFColorBufferId, width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
-        m_buffer.GetTemporaryRT(bloomInput, width / 4, height / 4, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(baseColorBuffer, width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(bloomInput, width / 4, height / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
         //m_buffer.GetTemporaryRT(highlightColorBufferId, width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
 
         //m_postProcessSrcTex[0] = DFColorBufferId;
@@ -163,12 +166,15 @@ partial class CameraRender
         m_buffer.ReleaseTemporaryRT(lightVolumeId);
         m_buffer.ReleaseTemporaryRT(aoTextureId);
         m_buffer.ReleaseTemporaryRT(bluredLightVolumeId);
+        m_buffer.ReleaseTemporaryRT(DFColorBufferId);
+        m_buffer.ReleaseTemporaryRT(bloomInput);
+        m_buffer.ReleaseTemporaryRT(baseColorBuffer);
         ExecuteBuffer();
     }
     partial void deferredRenderLightingPass()
     {
         m_buffer.BeginSample("deferred lighting pass");
-        m_buffer.SetRenderTarget(defaultColorBuffer, defaultDepthBuffer);
+        m_buffer.SetRenderTarget(baseColorBuffer, defaultDepthBuffer);
         for (int i = 0; i < m_renderTarget.Length; i++)
         {
             m_buffer.SetGlobalTexture(geometricTextureId[i], m_renderTarget[i]);
@@ -226,7 +232,7 @@ partial class CameraRender
     {
         m_buffer.BeginSample("bloom input");
         m_buffer.SetRenderTarget(bloomInput);
-        m_buffer.SetGlobalTexture(DFColorBufferId, defaultColorBuffer);
+        m_buffer.SetGlobalTexture(baseColorBuffer, baseColorBuffer);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 6, MeshTopology.Triangles, 3);
         m_buffer.EndSample("bloom input");
         ExecuteBuffer();
@@ -253,6 +259,8 @@ partial class CameraRender
         deferredRenderAOGenPass();
         deferredRenderAOBlurPass();
         deferredRenderLightingPass();
+        BloomGetInput();
+        BloomPass();
         deferredSSRPass();
     }
 }

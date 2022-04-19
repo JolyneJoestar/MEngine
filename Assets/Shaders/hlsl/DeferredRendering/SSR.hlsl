@@ -67,15 +67,15 @@ float4 SSRGenPass(v2f vert) :SV_TARGET
 		{
 			//return float4(stepUV, 0.0, 1.0);
 			//return float4(abs(stepUV - uvPos), 0.0, 1.0);
-			if(abs(srcDepth - sampleDepth) < 0.025 || i == STEP_COUNT - 1)
+			if(abs(srcDepth - sampleDepth) < 0.05)
 				return float4(SAMPLE_TEXTURE2D(_DFColorBuffer, sampler_DFColorBuffer, stepUV).rgb, 1.0);
 			stepRatio /= 4.0;
 		}
 		else
 		{
-			if(abs(srcDepth - sampleDepth) < 0.025)
+			if(abs(srcDepth - sampleDepth) < 0.05)
 				return float4(SAMPLE_TEXTURE2D(_DFColorBuffer, sampler_DFColorBuffer, stepUV).rgb, 1.0);
-			if (stepRatio < 0.5)
+			if (stepRatio < 1.0)
 				stepRatio *= 2.0;
 			stepPosScr = stepPos;			
 		}

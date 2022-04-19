@@ -77,7 +77,7 @@ Shader "MyPipeline/DeferredRender"
 		{
 			HLSLPROGRAM
 			#pragma vertex vert
-			#pragma fragment BloomGenPass
+			#pragma fragment BloomGetSource
 			#include "BloomInput.hlsl"
 
 			ENDHLSL
