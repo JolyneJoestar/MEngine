@@ -44,9 +44,15 @@ partial class CameraRender
     RenderTargetIdentifier[] m_postProcessSrcTex = new RenderTargetIdentifier[2];
     static Vector4[] m_aosample;
     const string m_gbufferName = "GBufferPass";
-    RenderBuffer defaultColorBuffer;
-    RenderBuffer defaultDepthBuffer;
+    RenderTargetIdentifier defaultColorBuffer;
+    RenderTargetIdentifier defaultDepthBuffer;
     Texture2D m_noiseTexture = Resources.Load<Texture2D>("Blue_Noise");
+
+    //taa properties
+    Matrix4x4 m_preVP;
+    RenderTargetIdentifier[] m_preTexture = new RenderTargetIdentifier[2];
+    int m_aaPingpongFlag;
+        
  //   RenderTexture 
     int width = 2018;
     int height = 2048;
@@ -73,27 +79,38 @@ partial class CameraRender
         //    Debug.Log("3");
         //}
         //else
-        if (m_camera.activeTexture != null)
-        {
-            defaultColorBuffer = m_camera.activeTexture.colorBuffer;
-            defaultDepthBuffer = m_camera.activeTexture.depthBuffer;
+        //if (m_camera.activeTexture != null)
+        //{
+        //    defaultColorBuffer = m_camera.activeTexture.colorBuffer;
+        //    defaultDepthBuffer = m_camera.activeTexture.depthBuffer;
 
-            width = m_camera.activeTexture.width;
-            height = m_camera.activeTexture.height;
-        }
-        else
-        {
-            defaultColorBuffer = Graphics.activeColorBuffer;
-            defaultDepthBuffer = Graphics.activeDepthBuffer;
-            width = m_camera.pixelWidth;
-            height = m_camera.pixelHeight;
-        }
+        //    width = m_camera.scaledPixelWidth;
+        //    height = m_camera.scaledPixelHeight;
+        //    //width = m_camera.activeTexture.width;
+        //    //height = m_camera.activeTexture.height;
+        //}
+        //else
+        //{
+        //    defaultColorBuffer = Graphics.activeColorBuffer;
+        //    defaultDepthBuffer = Graphics.activeDepthBuffer;
+        //    width = m_camera.scaledPixelWidth;
+        //    height = m_camera.scaledPixelHeight;
+        //    //width = m_camera.pixelWidth;
+        //    //height = m_camera.pixelHeight;
+        //}
+
+        defaultColorBuffer = new RenderTargetIdentifier("_CameraColorTexture");
+        defaultDepthBuffer = new RenderTargetIdentifier("_CameraDepthTexture");
+
+        width = m_camera.scaledPixelWidth;
+        height = m_camera.scaledPixelHeight;
         //Debug.Log(width);
         //Debug.Log(height);
         //for(int i = 0; i < geometricTextureId.Length; i++)
         //{
         //    m_buffer.ReleaseTemporaryRT(geometricTextureId[i]);
         //}
+
         m_buffer.GetTemporaryRT(geometricTextureId[0], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
         m_buffer.GetTemporaryRT(geometricTextureId[1], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
         m_buffer.GetTemporaryRT(geometricTextureId[2], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
@@ -108,6 +125,12 @@ partial class CameraRender
         m_buffer.GetTemporaryRT(DFColorBufferId, width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
         m_buffer.GetTemporaryRT(baseColorBuffer, width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
         m_buffer.GetTemporaryRT(bloomInput, width / 4, height / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
+
+        m_preVP = m_camera.previousViewProjectionMatrix;
+
+ //       m_buffer.Blit(defaultColorBuffer, m_preTexture[m_aaPingpongFlag]);
+        m_aaPingpongFlag = 1 - m_aaPingpongFlag;
+
         //m_buffer.GetTemporaryRT(highlightColorBufferId, width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
 
         //m_postProcessSrcTex[0] = DFColorBufferId;
@@ -119,6 +142,7 @@ partial class CameraRender
         //Debug.Log(m_camera.activeTexture.height);
         //Debug.Log(m_camera.targetTexture.width);
         //Debug.Log(m_camera.targetTexture.height);
+        ExecuteBuffer();
     }
 
     partial void deferredRenderGBufferPass(bool useDynamicBatching, bool useGPUInstancing)
