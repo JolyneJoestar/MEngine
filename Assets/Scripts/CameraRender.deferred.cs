@@ -38,14 +38,15 @@ partial class CameraRender
         highlightColorBufferId = Shader.PropertyToID("_HighlightColorBufferId"),
         bloomInput = Shader.PropertyToID("_BloomInput"),
         baseColorBuffer = Shader.PropertyToID("_BaseColorBuffer");
-        
 
+    static int defaultRenderBufferId = Shader.PropertyToID("defaultRenderBufferId");
     RenderTargetIdentifier[] m_renderTarget = new RenderTargetIdentifier[geometricTextureId.Length];
     RenderTargetIdentifier[] m_postProcessSrcTex = new RenderTargetIdentifier[2];
     static Vector4[] m_aosample;
     const string m_gbufferName = "GBufferPass";
-    RenderTargetIdentifier defaultColorBuffer;
-    RenderTargetIdentifier defaultDepthBuffer;
+    RenderBuffer defaultColorBuffer;
+    RenderBuffer defaultDepthBuffer;
+    RenderTexture defaultTexture;
     Texture2D m_noiseTexture = Resources.Load<Texture2D>("Blue_Noise");
 
     //taa properties
@@ -71,18 +72,27 @@ partial class CameraRender
         //{
         //if(m_camera.cameraType == CameraType.Game)
         //{
-        //    defaultColorBuffer = m_camera.targetTexture.colorBuffer;
-        //    defaultDepthBuffer = m_camera.targetTexture.depthBuffer;
+        //defaultColorBuffer = m_camera.targetTexture.colorBuffer;
+        //defaultDepthBuffer = m_camera.targetTexture.depthBuffer;
 
         //    width = m_camera.targetTexture.width;
         //    height = m_camera.targetTexture.height;
         //    Debug.Log("3");
         //}
         //else
+        width = m_camera.scaledPixelWidth;
+        height = m_camera.scaledPixelHeight;
         //if (m_camera.activeTexture != null)
         //{
         //    defaultColorBuffer = m_camera.activeTexture.colorBuffer;
         //    defaultDepthBuffer = m_camera.activeTexture.depthBuffer;
+        //}
+        //else
+        //{
+        //    defaultTexture = RenderTexture.GetTemporary(width, height, 32, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+        //    defaultColorBuffer = defaultTexture.colorBuffer;
+        //    defaultDepthBuffer = defaultTexture.depthBuffer;
+        //}
 
         //    width = m_camera.scaledPixelWidth;
         //    height = m_camera.scaledPixelHeight;
@@ -91,25 +101,23 @@ partial class CameraRender
         //}
         //else
         //{
-        //    defaultColorBuffer = Graphics.activeColorBuffer;
-        //    defaultDepthBuffer = Graphics.activeDepthBuffer;
+        defaultColorBuffer = Graphics.activeColorBuffer;
+        defaultDepthBuffer = Graphics.activeDepthBuffer;
         //    width = m_camera.scaledPixelWidth;
         //    height = m_camera.scaledPixelHeight;
         //    //width = m_camera.pixelWidth;
         //    //height = m_camera.pixelHeight;
         //}
 
-        defaultColorBuffer = new RenderTargetIdentifier("_CameraColorTexture");
-        defaultDepthBuffer = new RenderTargetIdentifier("_CameraDepthTexture");
-
-        width = m_camera.scaledPixelWidth;
-        height = m_camera.scaledPixelHeight;
         //Debug.Log(width);
         //Debug.Log(height);
         //for(int i = 0; i < geometricTextureId.Length; i++)
         //{
         //    m_buffer.ReleaseTemporaryRT(geometricTextureId[i]);
         //}
+        m_buffer.GetTemporaryRT(defaultRenderBufferId, width, height, 32, FilterMode.Point, RenderTextureFormat.ARGB32);
+//        m_buffer.GetTemporaryRT(defaultDepthBufferId, width, height, 0, FilterMode.Point, RenderTextureFormat.RFloat);
+        //defaultColorBuffer = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
 
         m_buffer.GetTemporaryRT(geometricTextureId[0], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
         m_buffer.GetTemporaryRT(geometricTextureId[1], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
@@ -148,7 +156,7 @@ partial class CameraRender
     partial void deferredRenderGBufferPass(bool useDynamicBatching, bool useGPUInstancing)
     {
         m_buffer.SetRenderTarget(m_renderTarget, defaultDepthBuffer);
-        m_buffer.ClearRenderTarget(true, true, Color.white);
+        m_buffer.ClearRenderTarget(true, true, Color.black);
         ExecuteBuffer();
         var sortingSettings = new SortingSettings(m_camera) { criteria = SortingCriteria.CommonOpaque };
         var drawingSettings = new DrawingSettings(m_gBufferPassId, sortingSettings)
@@ -193,6 +201,10 @@ partial class CameraRender
         m_buffer.ReleaseTemporaryRT(DFColorBufferId);
         m_buffer.ReleaseTemporaryRT(bloomInput);
         m_buffer.ReleaseTemporaryRT(baseColorBuffer);
+        m_buffer.ReleaseTemporaryRT(defaultRenderBufferId);
+        //m_buffer.ReleaseTemporaryRT(defaultDepthBufferId);
+        RenderTexture.ReleaseTemporary(defaultTexture);
+        //RenderTexture.ReleaseTemporary(defaultDepthBuffer);
         ExecuteBuffer();
     }
     partial void deferredRenderLightingPass()
@@ -245,7 +257,7 @@ partial class CameraRender
     partial void deferredSSRPass()
     {
         m_buffer.BeginSample("ssr");
-        m_buffer.SetRenderTarget(defaultColorBuffer);
+        m_buffer.SetRenderTarget(defaultColorBuffer,defaultDepthBuffer);
         m_buffer.SetGlobalTexture(DFColorBufferId, DFColorBufferId);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 5, MeshTopology.Triangles, 3);
         m_buffer.EndSample("ssr");
