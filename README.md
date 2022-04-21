@@ -9,7 +9,7 @@ This project is used for learning Unity Scriptable Render Pipeline, and followin
     - [x] Cascaded shadow map
     - [x] Convolution shadow map
     - [x] VSM
-    - [x] PCSS
+    - [x] PCSS (still have some problem)
     - [ ] ESM
     - [x] PCF
   - [x] PBR
@@ -21,8 +21,10 @@ This project is used for learning Unity Scriptable Render Pipeline, and followin
 
 - Deferred render pipline
   - [x] SSAO
-  - [ ] SSR
-
+  - [x] SSR (still have some problem)
+  - [x] Bloom
+  - [x] TAA
+  
   
 
 
