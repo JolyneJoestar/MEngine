@@ -42,7 +42,8 @@ partial class CameraRender
         preColorBuffer = Shader.PropertyToID("_PreColorBuffer"),
         currentColorBuffer = Shader.PropertyToID("_CurrentColorBuffer"),
         preV = Shader.PropertyToID("_PreV"),
-        preP = Shader.PropertyToID("_PreP");
+        preP = Shader.PropertyToID("_PreP"),
+        jitterId = Shader.PropertyToID("_Jitter");
 
     static int defaultRenderBufferId = Shader.PropertyToID("defaultRenderBufferId");
     RenderTargetIdentifier[] m_renderTarget = new RenderTargetIdentifier[geometricTextureId.Length];
@@ -58,6 +59,20 @@ partial class CameraRender
     Matrix4x4[] m_preV = new Matrix4x4[2];
     Matrix4x4[] m_preP = new Matrix4x4[2];
     static RenderTexture[] m_preTexture = new RenderTexture[2];
+
+    private Vector2[] HaltonSequence = new Vector2[]
+    {
+            new Vector2(0.5f, 1.0f / 3),
+            new Vector2(0.25f, 2.0f / 3),
+            new Vector2(0.75f, 1.0f / 9),
+            new Vector2(0.125f, 4.0f / 9),
+            new Vector2(0.625f, 7.0f / 9),
+            new Vector2(0.375f, 2.0f / 9),
+            new Vector2(0.875f, 5.0f / 9),
+            new Vector2(0.0625f, 8.0f / 9),
+    };
+    private Vector2 jitter;
+    int frameCount = 0;
     //{
     //    Shader.PropertyToID("_PreColorBuffer"),
     //    Shader.PropertyToID("_CurrentColorBuffer")
@@ -103,7 +118,9 @@ partial class CameraRender
             //m_buffer.GetTemporaryRT(m_preTexture[1], width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
             //ExecuteBuffer();
         }
-
+        frameCount++;
+        int index = frameCount % 8;
+        jitter = new Vector2((HaltonSequence[index].x - 0.5f) / width, (HaltonSequence[index].y - 0.5f) / height);
         //if (m_camera.activeTexture != null)
         //{
         //    defaultColorBuffer = m_camera.activeTexture.colorBuffer;
@@ -131,8 +148,6 @@ partial class CameraRender
         //    //width = m_camera.pixelWidth;
         //    //height = m_camera.pixelHeight;
         //}
-        m_preV[m_aaPingpongFlag] = m_camera.worldToCameraMatrix;
-        m_preP[m_aaPingpongFlag] = m_camera.projectionMatrix;
         //Debug.Log(width);
         //Debug.Log(height);
         //for(int i = 0; i < geometricTextureId.Length; i++)
@@ -191,6 +206,8 @@ partial class CameraRender
         var filteringSettings = new FilteringSettings(RenderQueueRange.all);
         drawingSettings.SetShaderPassName(1, m_gBufferPassId);
         m_context.DrawRenderers(m_cullResult, ref drawingSettings, ref filteringSettings);
+        m_preV[m_aaPingpongFlag] = m_camera.worldToCameraMatrix;
+        m_preP[m_aaPingpongFlag] = m_camera.projectionMatrix;
         ExecuteBuffer();
     }
 
@@ -320,6 +337,7 @@ partial class CameraRender
         m_buffer.SetRenderTarget(baseColorBuffer);
         m_buffer.SetGlobalTexture(currentColorBuffer, m_preTexture[1 - m_aaPingpongFlag]);
         m_buffer.SetGlobalTexture(preColorBuffer, m_preTexture[m_aaPingpongFlag]);
+        m_buffer.SetGlobalVector(jitterId, jitter);
         m_buffer.SetGlobalMatrix(preV, m_preV[m_aaPingpongFlag]);
         m_buffer.SetGlobalMatrix(preP, m_preP[m_aaPingpongFlag]);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 8, MeshTopology.Triangles, 3);
