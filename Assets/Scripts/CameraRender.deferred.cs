@@ -13,6 +13,7 @@ partial class CameraRender
     partial void deferredSSRPass();
     partial void BloomGetInput();
     partial void BloomPass();
+    partial void CopyColorBuffer();
     partial void TAAPass();
     partial void DrawDeferred(bool useDynamicBatching, bool useGPUInstancings);
     partial void Cleanupdr();
@@ -37,7 +38,11 @@ partial class CameraRender
         DFColorBufferId = Shader.PropertyToID("_DFColorBuffer"),
         highlightColorBufferId = Shader.PropertyToID("_HighlightColorBufferId"),
         bloomInput = Shader.PropertyToID("_BloomInput"),
-        baseColorBuffer = Shader.PropertyToID("_BaseColorBuffer");
+        baseColorBuffer = Shader.PropertyToID("_BaseColorBuffer"),
+        preColorBuffer = Shader.PropertyToID("_PreColorBuffer"),
+        currentColorBuffer = Shader.PropertyToID("_CurrentColorBuffer"),
+        preV = Shader.PropertyToID("_PreV"),
+        preP = Shader.PropertyToID("_PreP");
 
     static int defaultRenderBufferId = Shader.PropertyToID("defaultRenderBufferId");
     RenderTargetIdentifier[] m_renderTarget = new RenderTargetIdentifier[geometricTextureId.Length];
@@ -50,12 +55,17 @@ partial class CameraRender
     Texture2D m_noiseTexture = Resources.Load<Texture2D>("Blue_Noise");
 
     //taa properties
-    Matrix4x4 m_preVP;
-    RenderTargetIdentifier[] m_preTexture = new RenderTargetIdentifier[2];
-    int m_aaPingpongFlag;
+    Matrix4x4[] m_preV = new Matrix4x4[2];
+    Matrix4x4[] m_preP = new Matrix4x4[2];
+    static RenderTexture[] m_preTexture = new RenderTexture[2];
+    //{
+    //    Shader.PropertyToID("_PreColorBuffer"),
+    //    Shader.PropertyToID("_CurrentColorBuffer")
+    //};
+    int m_aaPingpongFlag = 0;
         
  //   RenderTexture 
-    int width = 2018;
+    int width = 2048;
     int height = 2048;
 
     partial void initGBuffer()
@@ -70,8 +80,8 @@ partial class CameraRender
         }
         //if(width != m_camera.pixelWidth || height != m_camera.pixelHeight)
         //{
-        //if(m_camera.cameraType == CameraType.Game)
-        //{
+        ////if(m_camera.cameraType == CameraType.Game)
+        ////{
         //defaultColorBuffer = m_camera.targetTexture.colorBuffer;
         //defaultDepthBuffer = m_camera.targetTexture.depthBuffer;
 
@@ -80,8 +90,20 @@ partial class CameraRender
         //    Debug.Log("3");
         //}
         //else
-        width = m_camera.scaledPixelWidth;
-        height = m_camera.scaledPixelHeight;
+
+        if (width != m_camera.scaledPixelWidth || height != m_camera.scaledPixelHeight)
+        {
+            width = m_camera.scaledPixelWidth;
+            height = m_camera.scaledPixelHeight;
+            m_preTexture[0] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32);
+            m_preTexture[1] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32);
+            //m_buffer.ReleaseTemporaryRT(m_preTexture[0]);
+            //m_buffer.ReleaseTemporaryRT(m_preTexture[1]);
+            //m_buffer.GetTemporaryRT(m_preTexture[0], width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
+            //m_buffer.GetTemporaryRT(m_preTexture[1], width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
+            //ExecuteBuffer();
+        }
+
         //if (m_camera.activeTexture != null)
         //{
         //    defaultColorBuffer = m_camera.activeTexture.colorBuffer;
@@ -103,12 +125,14 @@ partial class CameraRender
         //{
         defaultColorBuffer = Graphics.activeColorBuffer;
         defaultDepthBuffer = Graphics.activeDepthBuffer;
+
         //    width = m_camera.scaledPixelWidth;
         //    height = m_camera.scaledPixelHeight;
         //    //width = m_camera.pixelWidth;
         //    //height = m_camera.pixelHeight;
         //}
-
+        m_preV[m_aaPingpongFlag] = m_camera.worldToCameraMatrix;
+        m_preP[m_aaPingpongFlag] = m_camera.projectionMatrix;
         //Debug.Log(width);
         //Debug.Log(height);
         //for(int i = 0; i < geometricTextureId.Length; i++)
@@ -124,7 +148,7 @@ partial class CameraRender
         m_buffer.GetTemporaryRT(geometricTextureId[2], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
         m_buffer.GetTemporaryRT(geometricTextureId[3], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
         ExecuteBuffer();
-      
+
         for (int i = 0; i < geometricTextureId.Length; i++)
         {
             //m_renderTarget[i] = geometricTextureId[i];
@@ -134,10 +158,9 @@ partial class CameraRender
         m_buffer.GetTemporaryRT(baseColorBuffer, width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
         m_buffer.GetTemporaryRT(bloomInput, width / 4, height / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
 
-        m_preVP = m_camera.previousViewProjectionMatrix;
+        
 
  //       m_buffer.Blit(defaultColorBuffer, m_preTexture[m_aaPingpongFlag]);
-        m_aaPingpongFlag = 1 - m_aaPingpongFlag;
 
         //m_buffer.GetTemporaryRT(highlightColorBufferId, width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
 
@@ -283,8 +306,26 @@ partial class CameraRender
         m_buffer.EndSample("bloom");
         ExecuteBuffer();
     }
-
-
+    partial void CopyColorBuffer()
+    {
+        m_buffer.BeginSample("copy");
+        m_buffer.Blit(baseColorBuffer, m_preTexture[m_aaPingpongFlag]);
+        m_aaPingpongFlag = 1 - m_aaPingpongFlag;
+        m_buffer.EndSample("copy");
+        ExecuteBuffer();
+    }
+    partial void TAAPass()
+    {
+        m_buffer.BeginSample("TAA pass");
+        m_buffer.SetRenderTarget(baseColorBuffer);
+        m_buffer.SetGlobalTexture(currentColorBuffer, m_preTexture[1 - m_aaPingpongFlag]);
+        m_buffer.SetGlobalTexture(preColorBuffer, m_preTexture[m_aaPingpongFlag]);
+        m_buffer.SetGlobalMatrix(preV, m_preV[m_aaPingpongFlag]);
+        m_buffer.SetGlobalMatrix(preP, m_preP[m_aaPingpongFlag]);
+        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 8, MeshTopology.Triangles, 3);
+        m_buffer.EndSample("TAA pass");
+        ExecuteBuffer();
+    }
 
     partial void DrawDeferred(bool useDynamicBatching, bool useGPUInstancing)
     {
@@ -295,6 +336,8 @@ partial class CameraRender
         deferredRenderAOGenPass();
         deferredRenderAOBlurPass();
         deferredRenderLightingPass();
+        CopyColorBuffer();
+        TAAPass();
         BloomGetInput();
         BloomPass();
         deferredSSRPass();

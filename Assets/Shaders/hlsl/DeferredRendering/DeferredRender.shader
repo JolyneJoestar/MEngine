@@ -92,5 +92,15 @@ Shader "MyPipeline/DeferredRender"
 
 			ENDHLSL
 		}
+
+		Pass
+		{
+			HLSLPROGRAM
+			#pragma vertex vert
+			#pragma fragment TAA
+			#include "TAA.hlsl"
+
+			ENDHLSL
+		}
     }
 }
