@@ -104,6 +104,14 @@ partial class CameraRender
         m_preV[m_aaPingpongFlag] = m_camera.worldToCameraMatrix;
         m_preP[m_aaPingpongFlag] = m_camera.projectionMatrix;
 
+        if (m_preP[1 - m_aaPingpongFlag] == m_camera.projectionMatrix)
+        {
+            int preIndex = (frameCount - 1) % 8;
+            Vector2 preJitter = new Vector2((HaltonSequence[preIndex].x - 0.5f) / width, (HaltonSequence[preIndex].y - 0.5f) / height);
+            m_preP[m_aaPingpongFlag].m02 -= preJitter.x * 2.0f;
+            m_preP[m_aaPingpongFlag].m12 -= preJitter.y * 2.0f;
+        }
+        
         m_preP[m_aaPingpongFlag].m02 += jitter.x * 2.0f;
         m_preP[m_aaPingpongFlag].m12 += jitter.y * 2.0f;
 
@@ -141,7 +149,6 @@ partial class CameraRender
         {
             enableDynamicBatching = useDynamicBatching,
             enableInstancing = useGPUInstancing,
- //           perObjectData = PerObjectData.Lightmaps | PerObjectData.LightProbe | PerObjectData.LightProbeProxyVolume
         };
         var filteringSettings = new FilteringSettings(RenderQueueRange.all);
         drawingSettings.SetShaderPassName(1, m_gBufferPassId);
