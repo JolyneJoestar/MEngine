@@ -20,6 +20,8 @@ This project is used for learning Unity Scriptable Render Pipeline, and followin
   - [x] LightMap
 
     ![](/images/lightMap.png)
+    
+    ![](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/lightMap.png)
 
 - Deferred render pipline
   - [x] SSAO
@@ -31,6 +33,8 @@ This project is used for learning Unity Scriptable Render Pipeline, and followin
   - [x] TAA
   
     ![](/images/ssao.png)
+    
+    ![](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/ssao.png)
   
   
 
