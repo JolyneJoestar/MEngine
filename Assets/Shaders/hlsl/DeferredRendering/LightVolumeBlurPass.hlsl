@@ -2,12 +2,6 @@
 #define LIGHT_VOLUME__BLUR_PASS_INCLUDE
 
 #include "../Common.hlsl"					
-#include "../MyLegacySurface.hlsl"
-#include "../Shadows.hlsl"
-#include "../GI.hlsl"
-#include "../MyLegacyLight.hlsl"
-#include "../MyLegacyBRDF.hlsl"
-#include "../LitInput.hlsl"
 #include "DeferredRenderHelper.hlsl"
 
 

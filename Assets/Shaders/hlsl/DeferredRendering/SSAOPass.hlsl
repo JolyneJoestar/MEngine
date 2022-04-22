@@ -2,13 +2,6 @@
 #define SSAO_PASS_INCLUDE
 
 #include "../Common.hlsl"					
-#include "../MyLegacySurface.hlsl"
-#include "../Shadows.hlsl"
-#include "../GI.hlsl"
-#include "../MyLegacyLight.hlsl"
-#include "../MyLegacyBRDF.hlsl"
-#include "../LitInput.hlsl"
-
 
 TEXTURE2D(_GPosition);
 SAMPLER(sampler_GPosition);

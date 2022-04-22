@@ -107,7 +107,7 @@ float3 GetLightVolume(float3 posWS)
     return color;
 }
 
-float3 GetLighting(Surface surface, BRDF brdf, GI gi, float ao)
+float3 GetLighting(Surface surface, BRDF brdf, float ao)
 {
     ShadowData shadowData = GetShadowData(surface);
     float3 color = 0.5 * brdf.diffuse * ao;

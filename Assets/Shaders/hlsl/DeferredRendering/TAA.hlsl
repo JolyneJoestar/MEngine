@@ -24,10 +24,10 @@ float2 _Jitter;
 #define TIME_RATIO 0.5
 #endif
 
-float3 clip_aabb(float3 aabb_min, float3 aabb_max, float3 avg, float3 input_texel)
+float3 clip_aabb(float3 aabb_min, float3 aabb_max, float3 input_texel)
 {
-	float3 p_clip = avg;
-	float3 e_clip = 0.5 * (aabb_max - aabb_min) + FLT_EPS;
+	float3 p_clip = 0.5 * (aabb_max + aabb_min);
+	float3 e_clip = 0.5 * (aabb_max - aabb_min);
 	float3 v_clip = input_texel - p_clip;
 	float3 v_unit = v_clip / e_clip;
 	float3 a_unit = abs(v_unit);
@@ -61,9 +61,8 @@ float4 TAA(v2f vert) : SV_TARGET
 	float3 colorMin = min(color00, min(color01, min(color02, min(color10, min(color11, min(color12, min(color20, min(color21, color22))))))));
 	float3 colorMax = max(color00, max(color01, max(color02, max(color10, max(color11, max(color12, max(color20, max(color21, color22))))))));
 
-	float3 colorAvg = (color00 + color01 + color02 + color10 + color11 + color12 + color20 + color21 + color22) / 9.0;
 	float3 preColor = SAMPLE_TEXTURE2D(_PreColorBuffer, sampler_PreColorBuffer, preUV).rgb;
-	preColor = clip_aabb(colorMin, colorMax, colorAvg, preColor);
+	preColor = clip_aabb(colorMin, colorMax, preColor);
 	float3 resultColor = lerp(color11, preColor, TIME_RATIO);
 	return float4(resultColor, 1.0);
 }
