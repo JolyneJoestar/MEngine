@@ -29,4 +29,4 @@ MonoBehaviour:
       cascadeBlend: 1
       softshadow: 0
   shadowPostSettings: {fileID: 11400000, guid: 413d5d50b9e280b45a612146214b71e2, type: 2}
-  useDeferredRendering: 1
+  useDeferredRendering: 0

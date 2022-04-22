@@ -142,7 +142,7 @@ partial class CameraRender
     partial void deferredRenderGBufferPass(bool useDynamicBatching, bool useGPUInstancing)
     {
         m_buffer.SetRenderTarget(m_renderTarget, defaultDepthBuffer);
-        m_buffer.ClearRenderTarget(true, true, Color.black);
+        m_buffer.ClearRenderTarget(true, true, Color.white);
         ExecuteBuffer();
         var sortingSettings = new SortingSettings(m_camera) { criteria = SortingCriteria.CommonOpaque };
         var drawingSettings = new DrawingSettings(m_gBufferPassId, sortingSettings)
