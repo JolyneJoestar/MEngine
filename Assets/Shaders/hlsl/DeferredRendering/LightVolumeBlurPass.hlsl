@@ -2,17 +2,12 @@
 #define LIGHT_VOLUME__BLUR_PASS_INCLUDE
 
 #include "../Common.hlsl"					
-#include "../MyLegacySurface.hlsl"
-#include "../Shadows.hlsl"
-#include "../GI.hlsl"
-#include "../MyLegacyLight.hlsl"
-#include "../MyLegacyBRDF.hlsl"
-#include "../LitInput.hlsl"
 #include "DeferredRenderHelper.hlsl"
 
 
 TEXTURE2D(_LightVolume);
 SAMPLER(sampler_LightVolume);
+float4x4 _Dither;
 
 float4 lightVolumeBlurFragment(v2f vert) : SV_TARGET
 {
@@ -27,7 +22,7 @@ float4 lightVolumeBlurFragment(v2f vert) : SV_TARGET
 			result += SAMPLE_TEXTURE2D(_LightVolume, sampler_LightVolume, vert.uv + offset).rgb;
 		}
 	}
-	retur float4(result / float(radius * radius * 4),1.0);
+	return float4(result / float(radius * radius * 4),1.0);
 }
 
 #endif //LIGHT_VOLUME__BLUR_PASS_INCLUDE

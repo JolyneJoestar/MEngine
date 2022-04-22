@@ -56,12 +56,10 @@ float4 deferredLightingFragPass(v2f vert) : SV_TARGET
     surface.metallic = material.x;
     surface.smoothness = material.y;
     surface.dither = 1.0;
-	float2 lightuv = material.zw;//float2(material.z, material.w);
 	BRDF brdf = GetBRDF(surface);
 
-    GI gi = GetGI(lightuv, surface);
     float ao = SAMPLE_TEXTURE2D(_BluredAoTexture, sampler_BluredAoTexture, vert.uv).r;
-    return float4(GetLighting(surface, brdf, gi, ao) + SAMPLE_TEXTURE2D(_BluredLightVolume, sampler_BluredLightVolume, vert.uv).rgb, surface.alpha);
+    return float4(GetLighting(surface, brdf, ao) + SAMPLE_TEXTURE2D(_BluredLightVolume, sampler_BluredLightVolume, vert.uv).rgb, surface.alpha);
 }
 
 #endif //MY_DEFERRED_LIGHT_PASS_INCLUDE

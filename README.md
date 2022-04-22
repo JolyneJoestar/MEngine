@@ -7,22 +7,35 @@ This project is used for learning Unity Scriptable Render Pipeline, and followin
 - Functions realized in both forward render pipeline & deferred render pipeline：
   - [ ] Shadows
     - [x] Cascaded shadow map
-    - [x] Convolution shadow map
+    - [x] Convolution shadow map (still have some problem)
     - [x] VSM
-    - [x] PCSS
+    - [x] PCSS 
     - [ ] ESM
     - [x] PCF
   - [x] PBR
   - [x] Volume Light
+  
 - Forward render pipline 
 
+  - [x] LightMap
 
-
+    ![](/images/lightMap.png)
+    
+    ![](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/lightMap.png)
 
 - Deferred render pipline
   - [x] SSAO
-  - [ ] SSR
-
+  
+  - [x] SSR (still have some problem)
+  
+  - [x] Bloom
+  
+  - [x] TAA
+  
+    ![](/images/ssao.png)
+    
+    ![](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/ssao.png)
+  
   
 
 
