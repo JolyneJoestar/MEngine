@@ -373,7 +373,7 @@ LightProbeProxyVolume:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 154512204}
-  m_Enabled: 1
+  m_Enabled: 0
   m_BoundingBoxMode: 0
   m_ResolutionX: 16
   m_ResolutionY: 2
@@ -1224,7 +1224,7 @@ LightProbeGroup:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 574304080}
-  m_Enabled: 0
+  m_Enabled: 1
   m_SourcePositions:
   - {x: 1, y: 1, z: 1}
   - {x: 1, y: 1, z: -1}
@@ -1598,7 +1598,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 861758649}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 10.37, y: 2.08, z: 12.48}
+  m_LocalPosition: {x: 10.37, y: 2.08, z: 12.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -2022,6 +2022,7 @@ GameObject:
   - component: {fileID: 1196702649}
   - component: {fileID: 1196702648}
   - component: {fileID: 1196702647}
+  - component: {fileID: 1196702652}
   m_Layer: 0
   m_Name: Plane
   m_TagString: Untagged
@@ -2041,7 +2042,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7fd3ee19c9dc45f44bfdd18ff07e2477, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_baseColor: {r: 0, g: 1, b: 0.12173271, a: 1}
+  m_baseColor: {r: 1, g: 1, b: 1, a: 1}
   cutoff: 0.5
 --- !u!64 &1196702648
 MeshCollider:
@@ -2120,6 +2121,24 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!220 &1196702652
+LightProbeGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1196702646}
+  m_Enabled: 1
+  m_SourcePositions:
+  - {x: 1, y: 1, z: 1}
+  - {x: 1, y: 1, z: -1}
+  - {x: 1, y: -1, z: 1}
+  - {x: 1, y: -1, z: -1}
+  - {x: -1, y: 1, z: 1}
+  - {x: -1, y: 1, z: -1}
+  - {x: -1, y: -1, z: 1}
+  - {x: -1, y: -1, z: -1}
+  m_Dering: 1
 --- !u!1 &1226271780
 GameObject:
   m_ObjectHideFlags: 0
@@ -2286,7 +2305,7 @@ Camera:
   serializedVersion: 2
   m_ClearFlags: 1
   m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
-  m_projectionMatrixMode: 1
+  m_projectionMatrixMode: 0
   m_GateFitMode: 2
   m_FOVAxisMode: 0
   m_SensorSize: {x: 36, y: 24}
@@ -2460,6 +2479,64 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 13
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1493970413
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1493970415}
+  - component: {fileID: 1493970414}
+  m_Layer: 0
+  m_Name: Light Probe Group
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!220 &1493970414
+LightProbeGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1493970413}
+  m_Enabled: 1
+  m_SourcePositions:
+  - {x: 1, y: 1, z: 1}
+  - {x: 1, y: 1, z: -1}
+  - {x: 1, y: -1, z: 1}
+  - {x: 1, y: -1, z: -1}
+  - {x: -1, y: 1, z: 1}
+  - {x: -1, y: 1, z: -1}
+  - {x: -1.4333038, y: -1, z: 1}
+  - {x: -1, y: -1, z: -1}
+  - {x: 14.26812, y: 6.4429245, z: -10.250942}
+  - {x: 13.501041, y: 2.3653712, z: -3.755824}
+  - {x: 2.4394932, y: 2.4679313, z: 1}
+  - {x: -13.082138, y: 1.2734293, z: -15.441517}
+  - {x: 0.4204197, y: -0.29159606, z: -3.4930267}
+  - {x: -6.3299847, y: -0.99986994, z: -2.4874754}
+  - {x: 6.3761225, y: 0.0063687563, z: -4.411888}
+  - {x: 9.791304, y: 1.2545246, z: 13.53483}
+  - {x: -3.2164822, y: -1.66, z: -11.637028}
+  m_Dering: 1
+--- !u!4 &1493970415
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1493970413}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3.2164822, y: 1.66, z: 16.61}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 23
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1510517052
 GameObject:
