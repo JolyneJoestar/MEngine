@@ -36,7 +36,6 @@ partial class CameraRender
         bluredLightVolumeId = Shader.PropertyToID("_BluredLightVolume"),
         ditherId = Shader.PropertyToID("_Dither"),
         DFColorBufferId = Shader.PropertyToID("_DFColorBuffer"),
-        highlightColorBufferId = Shader.PropertyToID("_HighlightColorBufferId"),
         bloomInput = Shader.PropertyToID("_BloomInput"),
         baseColorBuffer = Shader.PropertyToID("_BaseColorBuffer"),
         preColorBuffer = Shader.PropertyToID("_PreColorBuffer"),
@@ -47,18 +46,18 @@ partial class CameraRender
 
     static int defaultRenderBufferId = Shader.PropertyToID("defaultRenderBufferId");
     RenderTargetIdentifier[] m_renderTarget = new RenderTargetIdentifier[geometricTextureId.Length];
-    RenderTargetIdentifier[] m_postProcessSrcTex = new RenderTargetIdentifier[2];
     static Vector4[] m_aosample;
     const string m_gbufferName = "GBufferPass";
-    RenderBuffer defaultColorBuffer;
-    RenderBuffer defaultDepthBuffer;
-    RenderTexture defaultTexture;
+
     Texture2D m_noiseTexture = Resources.Load<Texture2D>("Blue_Noise");
 
     //taa properties
     Matrix4x4[] m_preV = new Matrix4x4[2];
     Matrix4x4[] m_preP = new Matrix4x4[2];
-    static RenderTexture[] m_preTexture = new RenderTexture[2];
+    static int[] m_preTexture = {
+            preColorBuffer,
+            currentColorBuffer
+        };
 
     private Vector2[] HaltonSequence = new Vector2[]
     {
@@ -94,31 +93,27 @@ partial class CameraRender
         {
             width = m_camera.scaledPixelWidth;
             height = m_camera.scaledPixelHeight;
-            m_preTexture[0] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32);
-            m_preTexture[1] = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32);
         }
+        m_buffer.GetTemporaryRT(m_preTexture[0], width, height, 32, FilterMode.Point, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(m_preTexture[1], width, height, 32, FilterMode.Point, RenderTextureFormat.ARGB32);
+
         frameCount++;
         int index = frameCount % 8;
         jitter = new Vector2((HaltonSequence[index].x - 0.5f) / width, (HaltonSequence[index].y - 0.5f) / height);
 
         m_preV[m_aaPingpongFlag] = m_camera.worldToCameraMatrix;
         m_preP[m_aaPingpongFlag] = m_camera.projectionMatrix;
+        
 
-        if (m_preP[1 - m_aaPingpongFlag] == m_camera.projectionMatrix)
-        {
-            int preIndex = (frameCount - 1) % 8;
-            Vector2 preJitter = new Vector2((HaltonSequence[preIndex].x - 0.5f) / width, (HaltonSequence[preIndex].y - 0.5f) / height);
-            m_preP[m_aaPingpongFlag].m02 -= preJitter.x * 2.0f;
-            m_preP[m_aaPingpongFlag].m12 -= preJitter.y * 2.0f;
-        }
+        int preIndex = (frameCount - 1) % 8;
+        Vector2 preJitter = new Vector2((HaltonSequence[preIndex].x - 0.5f) / width, (HaltonSequence[preIndex].y - 0.5f) / height);
+        m_preP[m_aaPingpongFlag].m02 -= preJitter.x * 2.0f;
+        m_preP[m_aaPingpongFlag].m12 -= preJitter.y * 2.0f;
         
         m_preP[m_aaPingpongFlag].m02 += jitter.x * 2.0f;
         m_preP[m_aaPingpongFlag].m12 += jitter.y * 2.0f;
 
-        m_camera.projectionMatrix = m_preP[m_aaPingpongFlag];
-
-        defaultColorBuffer = Graphics.activeColorBuffer;
-        defaultDepthBuffer = Graphics.activeDepthBuffer;
+//        m_camera.projectionMatrix = m_preP[m_aaPingpongFlag];
 
         m_buffer.GetTemporaryRT(defaultRenderBufferId, width, height, 32, FilterMode.Point, RenderTextureFormat.ARGB32);
 
@@ -141,7 +136,7 @@ partial class CameraRender
 
     partial void deferredRenderGBufferPass(bool useDynamicBatching, bool useGPUInstancing)
     {
-        m_buffer.SetRenderTarget(m_renderTarget, defaultDepthBuffer);
+        m_buffer.SetRenderTarget(m_renderTarget, BuiltinRenderTextureType.CameraTarget);
         m_buffer.ClearRenderTarget(true, true, Color.white);
         ExecuteBuffer();
         var sortingSettings = new SortingSettings(m_camera) { criteria = SortingCriteria.CommonOpaque };
@@ -179,6 +174,8 @@ partial class CameraRender
         {
             m_buffer.ReleaseTemporaryRT(geometricTextureId[i]);
         }
+        m_buffer.ReleaseTemporaryRT(m_preTexture[0]);
+        m_buffer.ReleaseTemporaryRT(m_preTexture[1]);
         m_buffer.ReleaseTemporaryRT(bluredAoTextureId);
         m_buffer.ReleaseTemporaryRT(lightVolumeId);
         m_buffer.ReleaseTemporaryRT(aoTextureId);
@@ -187,15 +184,16 @@ partial class CameraRender
         m_buffer.ReleaseTemporaryRT(bloomInput);
         m_buffer.ReleaseTemporaryRT(baseColorBuffer);
         m_buffer.ReleaseTemporaryRT(defaultRenderBufferId);
+        
         //m_buffer.ReleaseTemporaryRT(defaultDepthBufferId);
-        RenderTexture.ReleaseTemporary(defaultTexture);
+        //RenderTexture.ReleaseTemporary(defaultTexture);
         //RenderTexture.ReleaseTemporary(defaultDepthBuffer);
         ExecuteBuffer();
     }
     partial void deferredRenderLightingPass()
     {
         m_buffer.BeginSample("deferred lighting pass");
-        m_buffer.SetRenderTarget(baseColorBuffer, defaultDepthBuffer);
+        m_buffer.SetRenderTarget(baseColorBuffer, BuiltinRenderTextureType.CameraTarget);
         for (int i = 0; i < m_renderTarget.Length; i++)
         {
             m_buffer.SetGlobalTexture(geometricTextureId[i], m_renderTarget[i]);
@@ -242,7 +240,7 @@ partial class CameraRender
     partial void deferredSSRPass()
     {
         m_buffer.BeginSample("ssr");
-        m_buffer.SetRenderTarget(defaultColorBuffer,defaultDepthBuffer);
+        m_buffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
         m_buffer.SetGlobalTexture(DFColorBufferId, DFColorBufferId);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 5, MeshTopology.Triangles, 3);
         m_buffer.EndSample("ssr");
