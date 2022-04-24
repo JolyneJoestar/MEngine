@@ -1,120 +1,40 @@
-#ifndef MY_LEGACY_BRDF_INCLUDE
-#define MY_LEGACY_BRDF_INCLUDE
+#ifndef NPR_OUTLINE_INCLUDE
+#define NPR_OUTLINE_INCLUDE
 
-#define MIN_REFLECTIVITY 0.04
+#include "Common.hlsl"
 
-#include "GI.hlsl"
+float OutlineWidth;
+float4 OutlineColor;
 
-#ifndef SAMPLE_COUNT
-#define SAMPLE_COUNT 64
-#endif
-
-struct BRDF
-{
-    float3 diffuse;
-    float3 specular;
-    float roughness;
+struct MVertexIn {
+	float3 positionOS : POSITION;
+	float3 normalOS : NORMAL;
+	UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
-float Square(float v)
+struct MOutlineVertexOut {
+	float4 position : SV_POSITION;
+	UNITY_VERTEX_INPUT_INSTANCE_ID
+};
+
+MOutlineVertexOut OutlineVert(MVertexIn inVert)
 {
-    return v * v;
+	MOutlineVertexOut outVert;
+	UNITY_SETUP_INSTANCE_ID(inVert);
+	UNITY_TRANSFER_INSTANCE_ID(inVert, outVert);
+	outVert.position.xyz = TransformObjectToWorld(inVert.positionOS);
+	outVert.position.xyz = TransformWorldToView(outVert.position.xyz);
+	float3 normal = TransformObjectToWorldNormal(inVert.normalOS);
+	normal = TransformWorldToViewDir(normal);
+	normal.z = -0.5;
+	outVert.position.xyz += normal * OutlineWidth;
+	outVert.position = TransformWViewToHClip(outVert.position.xyz);
+	return outVert;
 }
 
-float OneMinusReflectivity(float metallic)
+float4 OutlineFrag(MOutlineVertexOut vert) : SV_TARGET
 {
-    float range = 1.0 - MIN_REFLECTIVITY;
-    return range - metallic * range;
+	return OutlineColor;
 }
 
-float SpecularStrength(Surface surface, BRDF brdf, Light light)
-{
-    float3 h = SafeNormalize(light.direction + surface.viewDirection);
-    float nh2 = Square(saturate(dot(surface.normal, h)));
-    float lh2 = Square(saturate(dot(light.direction, h)));
-    float r2 = Square(brdf.roughness);
-    float d2 = Square(nh2 * (r2 - 1.0) + 1.00001);
-    float normalization = brdf.roughness * 4.0 + 2.0;
-    return r2 / (d2 * max(0.1, lh2) * normalization);
-}
-
-float3 CalculateLightVolume(int index, float3 posWS, ShadowData shadowData)
-{
-    float3 viewDir = _WorldSpaceCameraPos - posWS;
-    float step = length(viewDir) / SAMPLE_COUNT;
-    viewDir = normalize(viewDir);
-    float3 color = 0.0;
-    SimpleLight slight;
-    for (int i = 0; i < SAMPLE_COUNT; i++)
-    {
-        float3 tempPos = posWS + i * step * viewDir;
-        slight = GetSimpleLight(index, tempPos, shadowData);
-        color += slight.attenuation * slight.color;
-    }
-    color /= (SAMPLE_COUNT * 2.0);
-    return color;
-
-}
-//float PerceptualSmoothnessToPerceptualRoughness(float perceptualSmoothness)
-//{
-//    return 1 - perceptualSmoothness;
-//}
-
-//float PerceptualRoughnessToRoughness(float perceptualRoughness)
-//{
-//    return perceptualRoughness * perceptualRoughness;
-//}
-
-BRDF GetBRDF(Surface surface)
-{
-    BRDF brdf;
-    float perceptualRoughness = PerceptualSmoothnessToPerceptualRoughness(surface.smoothness);
-    brdf.diffuse = surface.color * OneMinusReflectivity(surface.metallic);
-    brdf.specular = lerp(MIN_REFLECTIVITY, surface.color, surface.metallic);
-    brdf.roughness = PerceptualRoughnessToRoughness(perceptualRoughness);
-    return brdf;
-}
-
-float3 DirectBRDF(Surface surface,BRDF brdf,Light light)
-{
-    return SpecularStrength(surface, brdf, light) * brdf.specular + brdf.diffuse;
-}
-
-float3 GetLighting(Surface surface,BRDF brdf, Light light)
-{
-    return IncomingLight(surface, light) * DirectBRDF(surface,brdf,light);
-}
-
-float3 GetLighting(Surface surface,BRDF brdf, GI gi)
-{
-    ShadowData shadowData = GetShadowData(surface);
-    float3 color = 0.5 * brdf.diffuse;
-    for (int i = 0; i < GetDirectionLightCount(); i++)
-    {
-        color += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData)) + CalculateLightVolume(i, surface.position, shadowData);
-    }
-    return color;
-}
-
-float3 GetLightVolume(float3 posWS)
-{
-    ShadowData shadowData = GetShadowData(posWS);
-    float3 color =  0.0;
-    for (int i = 0; i < GetDirectionLightCount(); i++)
-    {
-        color += CalculateLightVolume(i, posWS, shadowData);
-    }
-    return color;
-}
-
-float3 GetLighting(Surface surface, BRDF brdf, float ao)
-{
-    ShadowData shadowData = GetShadowData(surface);
-    float3 color = 0.5 * brdf.diffuse * ao;
-    for (int i = 0; i < GetDirectionLightCount(); i++)
-    {
-        color += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData));
-    }
-    return color;
-}
-#endif //MY_LEGACY_LIGHT_INCLUDE
+#endif //NPR_OUTLINE_INCLUDE

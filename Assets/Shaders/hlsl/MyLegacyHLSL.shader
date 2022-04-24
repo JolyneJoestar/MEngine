@@ -96,5 +96,20 @@ Shader "MyPipeline/LegacyHLSL"
 				#include "MetaPass.hlsl"
 				ENDHLSL
 			}
+
+			Pass {
+				Tags {
+					"LightMode" = "NPROutline"
+				}
+
+				Cull Front
+
+				HLSLPROGRAM
+				#pragma target 3.5
+				#pragma vertex OutlineVert
+				#pragma fragment OutlineFrag
+				#include "NPROutline.hlsl"
+				ENDHLSL
+			}
 		}
 }

@@ -25,7 +25,7 @@ public class MyPipline : RenderPipeline
     {
         foreach (var camera in cameras)
         {
-            m_render.Render(context, camera,m_useDynamicBatching,m_useGPUIstancing,m_useDeferredRendering,m_shadowSettings, m_postFXSettings);
+            m_render.Render(context, camera,m_useDynamicBatching,m_useGPUIstancing,m_useDeferredRendering,m_shadowSettings, m_postFXSettings,m_nprSettings);
         }
     }
 }
