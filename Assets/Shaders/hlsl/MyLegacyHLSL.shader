@@ -104,6 +104,7 @@ Shader "MyPipeline/LegacyHLSL"
 
 				Cull Front
 
+
 				HLSLPROGRAM
 				#pragma target 3.5
 				#pragma vertex OutlineVert

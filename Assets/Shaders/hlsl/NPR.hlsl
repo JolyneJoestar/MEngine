@@ -1,33 +1,40 @@
-#ifndef MY_LEGACY_BRDF_INCLUDE
-#define MY_LEGACY_BRDF_INCLUDE
+#ifndef NPR_INCLUDE
+#define NPR_INCLUDE
 
-#include "Common.hlsl"
+float4 _ColorStreet;
+float _SpecularSegment;
 
-float OutlineWidth;
-float4 OutlineColor;
-
-struct MVertexIn {
-	float3 positionOS : POSITION;
-	float3 normalOS : NORMAL;
-	float2 uv : TEXCOORD0;
-	UNITY_VERTEX_INPUT_INSTANCE_ID
-};
-
-struct MOutlineVertexOut {
-	float4 position : SV_POSITION;
-	UNITY_VERTEX_INPUT_INSTANCE_ID
-};
-
-MOutlineVertexOut OutlineVert(MVertexIn inVert)
+float3 GetNPRLighting(Surface surface, BRDF brdf, Light light)
 {
-	MOutlineVertexOut outVert;
-	UNITY_SETUP_INSTANCE_ID(inVert);
-	UNITY_TRANSFORM_INSTANCE_ID(inVert, outVert);
-	outVert.position.xyz = TransformObjectToView(inVert.positionOS);
-	float3 normal = TransformObjectToViewDir(inVert.normalOS, true);
-	normal.z = -0.5;
-	outVert.position.xyz += normal * OutlineWidth;
-	outVert.position = TransformViewToHClip(outVert.position);
+	_ColorStreet = float4(0.1, 0.3, 0.6, 1.0);
+	_SpecularSegment = 0.9;
+	float spec = SpecularStrength(surface, brdf, light);
+	float diff = IncomingLightAttenua;
+	float w = fwidth(diff) * 2.0;
+	if (diff < ColorStreet.x + w)
+	{
+		diff = lerp(ColorStreet.x, ColorStreet.y, smoothstep(ColorStreet.x - w, ColorStreet.x + w, diff));
+	}
+	else if (diff < ColorStreet.y + w)
+	{
+		diff = lerp(ColorStreet.y, ColorStreet.z, smoothstep(ColorStreet.y - w, ColorStreet.y + w, diff));
+	}
+	else if (diff < ColorStreet.z + w)
+	{
+		diff = lerp(ColorStreet.z, ColorStreet.w, smoothstep(ColorStreet.z - w, ColorStreet.z + w, diff));
+	}
+	else
+	{
+		diff = ColorStreet.w;
+	}
+	w = fwidth(spec);
+	if (spec < _SpecularSegment + w)
+	{
+		spec = lerp(0, 1, smoothstep(_SpecularSegment - w, _SpecularSegment + w, spec));
+	}
+	else
+		spec = 1.0;
+	return diff * light.color * surface.color * (spec * brdf.specular + brdf.diffuse);
 }
 
-#endif //MY_LEGACY_LIGHT_INCLUDE
+#endif //NPR_INCLUDE

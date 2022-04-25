@@ -7,4 +7,6 @@ public class NPRSetting
     public Color OutlineColor = Color.black;
     [Range(0.0f, 3.0f)]
     public float OutlineWidth = 1.0f;
+    [Range(0.8f, 1.0f)]
+    public float SpecularSegment = 0.9f;
 }

@@ -141,10 +141,16 @@ SimpleLight GetSimpleLight(int index, float3 posWS, ShadowData shadowData)
 	return sLight;
 }
 
+float IncomingLightAttenua(Surface surface, Light light)
+{
+	return saturate(dot(surface.normal, light.direction) * light.attenuation);
+}
+
 float3 IncomingLight(Surface surface,Light light)
 {
-    return saturate(dot(surface.normal, light.direction) * light.attenuation) * light.color;
+    return saturate(IncomingLightAttenua(surface, light)) * light.color;
 }
+
 
 //float3 GetLighting(Surface surface, Light light)
 //{

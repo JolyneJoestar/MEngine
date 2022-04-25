@@ -18,6 +18,7 @@ public partial class CameraRender {
 
     Lighting m_lighting = new Lighting();
     static ShaderTagId m_customShaderTagId = new ShaderTagId("SPRDefaultLegay");
+    static ShaderTagId m_nprOutlineId = new ShaderTagId("NPROutline");
     static Matrix4x4 dither = new Matrix4x4
     (
        new Vector4(0,       0.5f,    0.125f,  0.625f),
@@ -90,7 +91,14 @@ public partial class CameraRender {
         var filteringSettings = new FilteringSettings(RenderQueueRange.all);
         drawingSettings.SetShaderPassName(0, m_customShaderTagId);
         m_context.DrawRenderers(m_cullResult, ref drawingSettings, ref filteringSettings);
-        m_context.DrawSkybox(m_camera);
+        
+        drawingSettings.SetShaderPassName(4, m_nprOutlineId);
+        m_context.DrawRenderers(m_cullResult, ref drawingSettings, ref filteringSettings);
+    }
+
+    void DrawNPROutline(NPRSetting nprSettings)
+    {
+
     }
 
     void Submit()

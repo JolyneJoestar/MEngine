@@ -27,14 +27,14 @@ MOutlineVertexOut OutlineVert(MVertexIn inVert)
 	float3 normal = TransformObjectToWorldNormal(inVert.normalOS);
 	normal = TransformWorldToViewDir(normal);
 	normal.z = -0.5;
-	outVert.position.xyz += normal * OutlineWidth;
+	outVert.position.xyz += normalize(normal) * 0.2;
 	outVert.position = TransformWViewToHClip(outVert.position.xyz);
 	return outVert;
 }
 
 float4 OutlineFrag(MOutlineVertexOut vert) : SV_TARGET
 {
-	return OutlineColor;
+	return float4(0.0, 0.0, 0.0 ,1.0);
 }
 
 #endif //NPR_OUTLINE_INCLUDE
