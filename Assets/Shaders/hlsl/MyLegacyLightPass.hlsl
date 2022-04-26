@@ -6,9 +6,7 @@
 #include "Shadows.hlsl"
 #include "GI.hlsl"
 #include "MyLegacyLight.hlsl"
-//#include "LightVolume.hlsl"
-//#include "NPR.hlsl"
-#include "MyLegacyBRDF.hlsl"
+#include "Lighting.hlsl"
 #include "LitInput.hlsl"
 
 

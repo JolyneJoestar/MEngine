@@ -6,7 +6,7 @@
 #include "../Shadows.hlsl"
 #include "../GI.hlsl"
 #include "../MyLegacyLight.hlsl"
-#include "../MyLegacyBRDF.hlsl"
+#include "../Lighting.hlsl"
 #include "../LitInput.hlsl"
 
 TEXTURE2D(_GPosition);

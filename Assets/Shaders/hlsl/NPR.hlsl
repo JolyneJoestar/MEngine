@@ -9,23 +9,23 @@ float3 GetNPRLighting(Surface surface, BRDF brdf, Light light)
 	_ColorStreet = float4(0.1, 0.3, 0.6, 1.0);
 	_SpecularSegment = 0.9;
 	float spec = SpecularStrength(surface, brdf, light);
-	float diff = IncomingLightAttenua;
+	float diff = IncomingLightAttenua(surface, light);
 	float w = fwidth(diff) * 2.0;
-	if (diff < ColorStreet.x + w)
+	if (diff < _ColorStreet.x + w)
 	{
-		diff = lerp(ColorStreet.x, ColorStreet.y, smoothstep(ColorStreet.x - w, ColorStreet.x + w, diff));
+		diff = lerp(_ColorStreet.x, _ColorStreet.y, smoothstep(_ColorStreet.x - w, _ColorStreet.x + w, diff));
 	}
-	else if (diff < ColorStreet.y + w)
+	else if (diff < _ColorStreet.y + w)
 	{
-		diff = lerp(ColorStreet.y, ColorStreet.z, smoothstep(ColorStreet.y - w, ColorStreet.y + w, diff));
+		diff = lerp(_ColorStreet.y, _ColorStreet.z, smoothstep(_ColorStreet.y - w, _ColorStreet.y + w, diff));
 	}
-	else if (diff < ColorStreet.z + w)
+	else if (diff < _ColorStreet.z + w)
 	{
-		diff = lerp(ColorStreet.z, ColorStreet.w, smoothstep(ColorStreet.z - w, ColorStreet.z + w, diff));
+		diff = lerp(_ColorStreet.z, _ColorStreet.w, smoothstep(_ColorStreet.z - w, _ColorStreet.z + w, diff));
 	}
 	else
 	{
-		diff = ColorStreet.w;
+		diff = _ColorStreet.w;
 	}
 	w = fwidth(spec);
 	if (spec < _SpecularSegment + w)
@@ -34,7 +34,8 @@ float3 GetNPRLighting(Surface surface, BRDF brdf, Light light)
 	}
 	else
 		spec = 1.0;
-	return diff * light.color * surface.color * (spec * brdf.specular + brdf.diffuse);
+	return diff * light.color * surface.color * (spec * brdf.specular + brdf.diffuse) * light.attenuation;
 }
+
 
 #endif //NPR_INCLUDE
