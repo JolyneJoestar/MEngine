@@ -36,6 +36,7 @@ Shader "MyPipeline/LegacyHLSL"
 				#pragma multi_compile _ _CASCADE_BLEND_SOFT _CASCADE_BLEND_DITHER
 				#pragma multi_compile _ _PCF _VSM _ESM _PCSS _CSM
 				#pragma multi_compile _ LIGHTMAP_ON
+				#pragma multi_compile _NPRLIGHTING
 				#pragma multi_compile_instancing
 				#pragma vertex LegacyVertex
 				#pragma fragment LegacyFragment
@@ -103,7 +104,6 @@ Shader "MyPipeline/LegacyHLSL"
 				}
 
 				Cull Front
-
 
 				HLSLPROGRAM
 				#pragma target 3.5

@@ -3,8 +3,8 @@
 
 #include "Common.hlsl"
 
-float OutlineWidth;
-float4 OutlineColor;
+float _OutlineWidth;
+float4 _OutlineColor;
 
 struct MVertexIn {
 	float3 positionOS : POSITION;
@@ -27,14 +27,14 @@ MOutlineVertexOut OutlineVert(MVertexIn inVert)
 	float3 normal = TransformObjectToWorldNormal(inVert.normalOS);
 	normal = TransformWorldToViewDir(normal);
 	normal.z = -0.5;
-	outVert.position.xyz += normalize(normal) * 0.2;
+	outVert.position.xyz += normalize(normal) * _OutlineWidth;
 	outVert.position = TransformWViewToHClip(outVert.position.xyz);
 	return outVert;
 }
 
 float4 OutlineFrag(MOutlineVertexOut vert) : SV_TARGET
 {
-	return float4(0.0, 0.0, 0.0 ,1.0);
+	return _OutlineColor;
 }
 
 #endif //NPR_OUTLINE_INCLUDE

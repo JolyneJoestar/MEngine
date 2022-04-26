@@ -33,4 +33,5 @@ MonoBehaviour:
     ColorStreet: {x: 0.1, y: 0.3, z: 0.6, w: 1}
     OutlineColor: {r: 0, g: 0, b: 0, a: 0}
     OutlineWidth: 0.76
-  useDeferredRendering: 1
+    SpecularSegment: 0.9
+  useDeferredRendering: 0

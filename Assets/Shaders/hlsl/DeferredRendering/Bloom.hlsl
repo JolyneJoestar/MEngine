@@ -22,7 +22,8 @@ float4 BloomGenPass(v2f vert) :SV_TARGET
 	{
 		for (int j = -BLOOM_RADIUS; j <= BLOOM_RADIUS; j++)
 		{
-			color += SAMPLE_TEXTURE2D(_BloomInput, sampler_BloomInput, vert.uv + offset * float2(i, j));
+			float2 currectOffset = offset * float2(i, j);
+			color += SAMPLE_TEXTURE2D(_BloomInput, sampler_BloomInput, vert.uv + currectOffset);
 		}
 	}
 	color /= (BLOOM_RADIUS * BLOOM_RADIUS * 4.0);

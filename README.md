@@ -22,6 +22,12 @@ This project is used for learning Unity Scriptable Render Pipeline, and followin
     ![](/images/lightMap.png)
     
     ![](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/lightMap.png)
+    
+  - [x] NPR (basic implement)
+
+    ![](/images/simpleNPR.png)
+
+    ![](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/simpleNPR.png)
 
 - Deferred render pipline
   - [x] SSAO

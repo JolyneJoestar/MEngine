@@ -27,6 +27,12 @@ public partial class CameraRender {
        new Vector4(0.9375f,  0.4375f, 0.8125f, 0.3125f)
     );
 
+    static string m_nprKeywords = "_NPRLIGHTING";
+    static int m_colorStreetId = Shader.PropertyToID("_ColorStreet"),
+        m_specularSegmentId = Shader.PropertyToID("_SpecularSegment"),
+        m_outlineWidthId = Shader.PropertyToID("_OutlineWidth"),
+        m_outlineColorId = Shader.PropertyToID("_OutlineColor");
+    NPRSetting m_nprSettings;
     void ConfigerLights(ref CullingResults cull)
     {
         for (int i = 0; i < cull.visibleLights.Length; i++)
@@ -50,6 +56,7 @@ public partial class CameraRender {
     {
         this.m_context = context;
         this.m_camera = camera;
+        this.m_nprSettings = nprSetting;
 
         PrepareBuffer();
         PrepareForSceneWindow();
@@ -58,10 +65,9 @@ public partial class CameraRender {
         
         //Shadow Pass
         m_buffer.BeginSample(SampleName);
-        ExecuteBuffer();
         m_lighting.SetUp(context,m_cullResult,shadowSettings,camera, shadowPostSettings);
-
         m_buffer.EndSample(SampleName);
+        ExecuteBuffer();
 
         //Regular Pass
         Setup();
@@ -72,6 +78,10 @@ public partial class CameraRender {
         else
         {
             DrawVisibaleGeometry(useDynamicBatching, useGPUInstancing);
+        }
+        if (m_nprSettings.EnableNPR)
+        {
+            DrawNPROutline(useDynamicBatching, useGPUInstancing);
         }
         m_context.DrawSkybox(m_camera);
         DrawUnsupportedShaders();
@@ -90,15 +100,31 @@ public partial class CameraRender {
         };
         var filteringSettings = new FilteringSettings(RenderQueueRange.all);
         drawingSettings.SetShaderPassName(0, m_customShaderTagId);
+        if(m_nprSettings.EnableNPR)
+        {
+            m_buffer.SetGlobalFloat(m_outlineWidthId, m_nprSettings.OutlineWidth);
+            m_buffer.SetGlobalColor(m_outlineColorId, m_nprSettings.OutlineColor);
+            m_buffer.SetGlobalFloat(m_specularSegmentId, m_nprSettings.SpecularSegment);
+            m_buffer.SetGlobalVector(m_colorStreetId, m_nprSettings.ColorStreet);
+            m_buffer.EnableShaderKeyword(m_nprKeywords);
+            ExecuteBuffer();
+        }
         m_context.DrawRenderers(m_cullResult, ref drawingSettings, ref filteringSettings);
-        
-        drawingSettings.SetShaderPassName(4, m_nprOutlineId);
-        m_context.DrawRenderers(m_cullResult, ref drawingSettings, ref filteringSettings);
+       
     }
 
-    void DrawNPROutline(NPRSetting nprSettings)
+    void DrawNPROutline(bool useDynamicBatching, bool useGPUInstancing)
     {
-
+        var sortingSettings = new SortingSettings(m_camera) { criteria = SortingCriteria.CommonOpaque };
+        var drawingSettings = new DrawingSettings(m_customShaderTagId, sortingSettings)
+        {
+            enableDynamicBatching = useDynamicBatching,
+            enableInstancing = useGPUInstancing,
+            perObjectData = PerObjectData.Lightmaps | PerObjectData.LightProbe | PerObjectData.LightProbeProxyVolume
+        };
+        var filteringSettings = new FilteringSettings(RenderQueueRange.all);
+        drawingSettings.SetShaderPassName(4, m_nprOutlineId);
+        m_context.DrawRenderers(m_cullResult, ref drawingSettings, ref filteringSettings);
     }
 
     void Submit()
