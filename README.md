@@ -19,15 +19,15 @@ This project is used for learning Unity Scriptable Render Pipeline, and followin
 
   - [x] LightMap
 
-    ![](/images/lightMap.png)
+    ![screenshot](/images/lightMap.png)
     
-    ![](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/lightMap.png)
+    ![screenshot](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/lightMap.png)
     
   - [x] NPR (basic implement)
 
-    ![](/images/simpleNPR.png)
+    ![screenshot](/images/simpleNPR.png)
 
-    ![](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/simpleNPR.png)
+    ![screenshot](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/simpleNPR.png)
 
 - Deferred render pipline
   - [x] SSAO
@@ -38,9 +38,9 @@ This project is used for learning Unity Scriptable Render Pipeline, and followin
   
   - [x] TAA
   
-    ![](/images/ssao.png)
+    ![screenshot](/images/ssao.png)
     
-    ![](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/ssao.png)
+    ![screenshot](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/ssao.png)
   
   
 
