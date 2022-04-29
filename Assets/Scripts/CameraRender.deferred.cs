@@ -73,10 +73,9 @@ partial class CameraRender
     private Vector2 jitter;
     int frameCount = 0;
     int m_aaPingpongFlag = 0;
-        
- //   RenderTexture 
-    int width = 2048;
-    int height = 2048;
+
+    //   RenderTexture
+    Vector2Int screenSize = new Vector2Int(2048, 2048);
 
     partial void initGBuffer()
     {
@@ -89,47 +88,47 @@ partial class CameraRender
             }
         }
 
-        if (width != m_camera.scaledPixelWidth || height != m_camera.scaledPixelHeight)
+        if (screenSize.x != m_camera.scaledPixelWidth || screenSize.y != m_camera.scaledPixelHeight)
         {
-            width = m_camera.scaledPixelWidth;
-            height = m_camera.scaledPixelHeight;
+            screenSize.x = m_camera.scaledPixelWidth;
+            screenSize.y = m_camera.scaledPixelHeight;
         }
-        m_buffer.GetTemporaryRT(m_preTexture[0], width, height, 32, FilterMode.Point, RenderTextureFormat.ARGB32);
-        m_buffer.GetTemporaryRT(m_preTexture[1], width, height, 32, FilterMode.Point, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(m_preTexture[0], screenSize.x, screenSize.y, 32, FilterMode.Point, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(m_preTexture[1], screenSize.x, screenSize.y, 32, FilterMode.Point, RenderTextureFormat.ARGB32);
 
         frameCount++;
         int index = frameCount % 8;
-        jitter = new Vector2((HaltonSequence[index].x - 0.5f) / width, (HaltonSequence[index].y - 0.5f) / height);
+        jitter = new Vector2((HaltonSequence[index].x - 0.5f) / screenSize.x, (HaltonSequence[index].y - 0.5f) / screenSize.y);
 
         m_preV[m_aaPingpongFlag] = m_camera.worldToCameraMatrix;
         m_preP[m_aaPingpongFlag] = m_camera.projectionMatrix;
         
 
         int preIndex = (frameCount - 1) % 8;
-        Vector2 preJitter = new Vector2((HaltonSequence[preIndex].x - 0.5f) / width, (HaltonSequence[preIndex].y - 0.5f) / height);
+        Vector2 preJitter = new Vector2((HaltonSequence[preIndex].x - 0.5f) / screenSize.x, (HaltonSequence[preIndex].y - 0.5f) / screenSize.y);
         m_preP[m_aaPingpongFlag].m02 -= preJitter.x * 2.0f;
         m_preP[m_aaPingpongFlag].m12 -= preJitter.y * 2.0f;
         
         m_preP[m_aaPingpongFlag].m02 += jitter.x * 2.0f;
         m_preP[m_aaPingpongFlag].m12 += jitter.y * 2.0f;
 
-//        m_camera.projectionMatrix = m_preP[m_aaPingpongFlag];
+        //m_camera.projectionMatrix = m_preP[m_aaPingpongFlag];
+        
+        m_buffer.GetTemporaryRT(defaultRenderBufferId, screenSize.x, screenSize.y, 32, FilterMode.Point, RenderTextureFormat.ARGB32);
 
-        m_buffer.GetTemporaryRT(defaultRenderBufferId, width, height, 32, FilterMode.Point, RenderTextureFormat.ARGB32);
-
-        m_buffer.GetTemporaryRT(geometricTextureId[0], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
-        m_buffer.GetTemporaryRT(geometricTextureId[1], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
-        m_buffer.GetTemporaryRT(geometricTextureId[2], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
-        m_buffer.GetTemporaryRT(geometricTextureId[3], width, height, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(geometricTextureId[0], screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
+        m_buffer.GetTemporaryRT(geometricTextureId[1], screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
+        m_buffer.GetTemporaryRT(geometricTextureId[2], screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(geometricTextureId[3], screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
         ExecuteBuffer();
 
         for (int i = 0; i < geometricTextureId.Length; i++)
         {
             m_renderTarget[i] = geometricTextureId[i];
         }
-        m_buffer.GetTemporaryRT(DFColorBufferId, width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
-        m_buffer.GetTemporaryRT(baseColorBuffer, width, height, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
-        m_buffer.GetTemporaryRT(bloomInput, width / 4, height / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(DFColorBufferId, screenSize.x, screenSize.y, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(baseColorBuffer, screenSize.x, screenSize.y, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(bloomInput, screenSize.x / 4, screenSize.y / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
 
         ExecuteBuffer();
     }
@@ -154,7 +153,7 @@ partial class CameraRender
     partial void deferredRenderAOGenPass()
     {
         m_buffer.BeginSample("ao gen");
-        m_buffer.GetTemporaryRT(aoTextureId, width / 2, height / 2, 0, FilterMode.Trilinear, RenderTextureFormat.R16);
+        m_buffer.GetTemporaryRT(aoTextureId, screenSize.x / 2, screenSize.y / 2, 0, FilterMode.Trilinear, RenderTextureFormat.R16);
         m_buffer.SetRenderTarget(aoTextureId);
         for (int i = 0; i < 2; i++)
         {
@@ -208,7 +207,7 @@ partial class CameraRender
     partial void deferredRenderAOBlurPass()
     {
         m_buffer.BeginSample("ao blur");
-        m_buffer.GetTemporaryRT(bluredAoTextureId, width / 2, height / 2, 0, FilterMode.Trilinear, RenderTextureFormat.R16);
+        m_buffer.GetTemporaryRT(bluredAoTextureId, screenSize.x / 2, screenSize.y / 2, 0, FilterMode.Trilinear, RenderTextureFormat.R16);
         m_buffer.SetRenderTarget(bluredAoTextureId);
         m_buffer.SetGlobalTexture(aoTextureId, aoTextureId);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 2, MeshTopology.Triangles, 3);
@@ -219,7 +218,7 @@ partial class CameraRender
     partial void deferredLightVolumeGenPass()
     {
         m_buffer.BeginSample("lightVolume gen");
-        m_buffer.GetTemporaryRT(lightVolumeId, width / 4, height / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(lightVolumeId, screenSize.x / 4, screenSize.y / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
         m_buffer.SetRenderTarget(lightVolumeId);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 3, MeshTopology.Triangles, 3);
         m_buffer.EndSample("lightVolume gen");
@@ -229,7 +228,7 @@ partial class CameraRender
     partial void deferredLightVolumeBlurPass()
     {
         m_buffer.BeginSample("lightVolume blur");
-        m_buffer.GetTemporaryRT(bluredLightVolumeId, width / 4, height / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(bluredLightVolumeId, screenSize.x / 4, screenSize.y / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
         m_buffer.SetGlobalMatrix(ditherId, dither);
         m_buffer.SetRenderTarget(bluredLightVolumeId);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 4, MeshTopology.Triangles, 3);

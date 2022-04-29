@@ -1,5 +1,5 @@
-#ifndef SSAO_PASS_INCLUDE
-#define SSAO_PASS_INCLUDE
+#ifndef HBAO_PASS_INCLUDE
+#define HBAO_PASS_INCLUDE
 
 #include "../Common.hlsl"					
 
@@ -22,4 +22,4 @@ float4 HBAOFragment(v2f vert): SV_TARGET
 
 }
 
-#endif //SSAO_PASS_INCLUDE
+#endif //HBAO_PASS_INCLUDE

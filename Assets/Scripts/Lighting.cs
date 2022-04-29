@@ -31,7 +31,6 @@ public class Lighting
         m_buffer.EndSample(m_bufferName);
         context.ExecuteCommandBuffer(m_buffer);
         m_buffer.Clear();
-
     }
     void SetupLights()
     {
