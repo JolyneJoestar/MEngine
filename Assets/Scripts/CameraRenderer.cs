@@ -33,6 +33,7 @@ public partial class CameraRender {
         m_outlineWidthId = Shader.PropertyToID("_OutlineWidth"),
         m_outlineColorId = Shader.PropertyToID("_OutlineColor");
     NPRSetting m_nprSettings;
+
     void ConfigerLights(ref CullingResults cull)
     {
         for (int i = 0; i < cull.visibleLights.Length; i++)
@@ -52,11 +53,12 @@ public partial class CameraRender {
     }
 
     public void Render(ScriptableRenderContext context, Camera camera,bool useDynamicBatching, bool useGPUInstancing, bool m_useDeferredRendering , ShadowSettings shadowSettings, ShadowPostSettings shadowPostSettings,
-        NPRSetting nprSetting)
+        NPRSetting nprSetting, AOSetting aoSetting)
     {
         this.m_context = context;
         this.m_camera = camera;
         this.m_nprSettings = nprSetting;
+        this.m_aoSettings = aoSetting;
 
         PrepareBuffer();
         PrepareForSceneWindow();

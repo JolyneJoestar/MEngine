@@ -112,6 +112,15 @@ Shader "MyPipeline/DeferredRender"
 			ENDHLSL
 		}
 
+		Pass
+		{
+			Tags{ "LightMode" = "9" }
+			HLSLPROGRAM
+			#pragma vertex vert
+			#pragma fragment HBAOGenFragment
+			#include "HBAOPass.hlsl"
 
+			ENDHLSL
+		}
     }
 }

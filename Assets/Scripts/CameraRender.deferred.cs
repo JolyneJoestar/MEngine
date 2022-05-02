@@ -13,7 +13,8 @@ partial class CameraRender
         DeferredRenderPass_SSR,
         DeferredRenderPass_BloomGen,
         DeferredRenderPass_BloomBlur,
-        DeferredRenderPass_TAA
+        DeferredRenderPass_TAA,
+        DeferredRenderPass_HBAOGen
     }
     partial void initGBuffer();
     partial void deferredRenderGBufferPass(bool useDynamicBatching, bool useGPUInstancing);
@@ -56,11 +57,28 @@ partial class CameraRender
         currentColorBuffer = Shader.PropertyToID("_CurrentColorBuffer"),
         preV = Shader.PropertyToID("_PreV"),
         preP = Shader.PropertyToID("_PreP"),
-        jitterId = Shader.PropertyToID("_Jitter");
+        jitterId = Shader.PropertyToID("_Jitter"),
+        depthBufferId = Shader.PropertyToID("_CameraDepthTex");
 
+    static int[] ScreenParameters =
+    {
+        Shader.PropertyToID("_UV2View"),
+        Shader.PropertyToID("_ZBufferParam"),
+        Shader.PropertyToID("_TexelSize")
+    };
+
+    static int[] HBAOUniforms =
+    {
+        Shader.PropertyToID("_Radius"),
+        Shader.PropertyToID("_RadiusPixel"),
+        Shader.PropertyToID("_MaxRadiusPixel"),
+        Shader.PropertyToID("_AngleBias"),
+        Shader.PropertyToID("_AOStrength")
+    };
     static int defaultRenderBufferId = Shader.PropertyToID("defaultRenderBufferId");
     RenderTargetIdentifier[] m_renderTarget = new RenderTargetIdentifier[geometricTextureId.Length];
     static Vector4[] m_aosample;
+    AOSetting m_aoSettings;
     const string m_gbufferName = "GBufferPass";
 
     Texture2D m_noiseTexture = Resources.Load<Texture2D>("Blue_Noise");
@@ -87,6 +105,11 @@ partial class CameraRender
     private Vector2 jitter;
     int frameCount = 0;
     int m_aaPingpongFlag = 0;
+    //HBAO
+    Vector4 m_zBufferParam;
+    Vector4 m_UV2View;
+    Vector4 m_texelSize;
+    static float m_radiusPixel;
 
     //   RenderTexture
     Vector2Int screenSize = new Vector2Int(2048, 2048);
@@ -126,10 +149,20 @@ partial class CameraRender
         m_preP[m_aaPingpongFlag].m02 += jitter.x * 2.0f;
         m_preP[m_aaPingpongFlag].m12 += jitter.y * 2.0f;
 
+        //screen parameters init
+        m_zBufferParam.x = 1.0f / (-m_preP[m_aaPingpongFlag].m23 / 2.0f / m_camera.farClipPlane);
+        m_zBufferParam.y = 1.0f;
+        m_zBufferParam.z = m_zBufferParam.x / m_camera.farClipPlane;
+        m_zBufferParam.w = 1.0f / m_camera.farClipPlane;
+        var tanHalfFovY = Mathf.Tan(m_camera.fieldOfView * 0.5f * Mathf.Deg2Rad);
+        var tanHalfFovX = tanHalfFovY * ((float)screenSize.x / screenSize.y);
+        m_UV2View = new Vector4(2 * tanHalfFovX, 2 * tanHalfFovY, -tanHalfFovX, -tanHalfFovY);
+        m_texelSize = new Vector4(1f / screenSize.x, 1f / screenSize.y, screenSize.x, screenSize.y);
+        m_radiusPixel = m_camera.pixelHeight * m_aoSettings.Radius / tanHalfFovY / 2;
         //m_camera.projectionMatrix = m_preP[m_aaPingpongFlag];
-        
-        m_buffer.GetTemporaryRT(defaultRenderBufferId, screenSize.x, screenSize.y, 32, FilterMode.Point, RenderTextureFormat.ARGB32);
 
+        m_buffer.GetTemporaryRT(defaultRenderBufferId, screenSize.x, screenSize.y, 32, FilterMode.Point, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(depthBufferId, screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.Depth);
         m_buffer.GetTemporaryRT(geometricTextureId[0], screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
         m_buffer.GetTemporaryRT(geometricTextureId[1], screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
         m_buffer.GetTemporaryRT(geometricTextureId[2], screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
@@ -145,6 +178,8 @@ partial class CameraRender
         m_buffer.GetTemporaryRT(bloomInput, screenSize.x / 4, screenSize.y / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
 
         ExecuteBuffer();
+        //RenderTargetIdentifier db = defaultRenderBufferId;
+        //m_camera.targetTexture  = new RenderTexture(db);
     }
 
     partial void deferredRenderGBufferPass(bool useDynamicBatching, bool useGPUInstancing)
@@ -179,6 +214,7 @@ partial class CameraRender
         m_buffer.ReleaseTemporaryRT(bloomInput);
         m_buffer.ReleaseTemporaryRT(baseColorBuffer);
         m_buffer.ReleaseTemporaryRT(defaultRenderBufferId);
+        m_buffer.ReleaseTemporaryRT(depthBufferId);
         
         //m_buffer.ReleaseTemporaryRT(defaultDepthBufferId);
         //RenderTexture.ReleaseTemporary(defaultTexture);
@@ -188,7 +224,7 @@ partial class CameraRender
     partial void deferredRenderLightingPass()
     {
         m_buffer.BeginSample("deferred lighting pass");
-        m_buffer.SetRenderTarget(baseColorBuffer, BuiltinRenderTextureType.CameraTarget);
+        m_buffer.SetRenderTarget(baseColorBuffer, depthBufferId);
         for (int i = 0; i < m_renderTarget.Length; i++)
         {
             m_buffer.SetGlobalTexture(geometricTextureId[i], m_renderTarget[i]);
@@ -201,7 +237,7 @@ partial class CameraRender
     }
     partial void deferredRenderAOGenPass()
     {
-        SSAOPass();
+        HBAOPass();
     }
     partial void SSAOPass()
     {
@@ -221,7 +257,28 @@ partial class CameraRender
     }
     partial void HBAOPass()
     {
-
+        m_buffer.BeginSample("hbao gen");
+        m_buffer.GetTemporaryRT(aoTextureId, screenSize.x / 2, screenSize.y / 2, 0, FilterMode.Trilinear, RenderTextureFormat.R16);
+        m_buffer.SetRenderTarget(aoTextureId);
+        for (int i = 0; i < 2; i++)
+        {
+            m_buffer.SetGlobalTexture(geometricTextureId[i], m_renderTarget[i]);
+        }
+        m_buffer.SetGlobalVector(ScreenParameters[0], m_UV2View);
+        m_buffer.SetGlobalVector(ScreenParameters[1], m_zBufferParam);
+        m_buffer.SetGlobalVector(ScreenParameters[2], m_texelSize);
+        m_buffer.SetGlobalFloat(HBAOUniforms[0], m_aoSettings.Radius);
+        m_buffer.SetGlobalFloat(HBAOUniforms[1], m_radiusPixel);
+        m_buffer.SetGlobalFloat(HBAOUniforms[2], m_aoSettings.MaxRadiusPixel);
+        m_buffer.SetGlobalFloat(HBAOUniforms[3], m_aoSettings.AngleBias);
+        m_buffer.SetGlobalFloat(HBAOUniforms[4], m_aoSettings.AOStrength);
+        m_buffer.SetGlobalTexture(depthBufferId, depthBufferId);
+        m_buffer.SetGlobalTexture(noiseId, m_noiseTexture);
+        m_buffer.ClearRenderTarget(false, true, Color.white);
+        m_buffer.SetGlobalVectorArray(samplesId, m_aosample);
+        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_HBAOGen, MeshTopology.Triangles, 3);
+        m_buffer.EndSample("hbao gen");
+        ExecuteBuffer();
     }
     partial void deferredRenderAOBlurPass()
     {

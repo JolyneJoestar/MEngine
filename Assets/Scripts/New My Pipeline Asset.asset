@@ -21,7 +21,7 @@ MonoBehaviour:
     directional:
       atlasSize: 2048
       filter: 3
-      cascadeCount: 1
+      cascadeCount: 4
       cascadeRatio1: 0.108
       cascadeRatio2: 0.294
       cascadeRatio3: 0.501
@@ -35,4 +35,9 @@ MonoBehaviour:
     OutlineColor: {r: 0, g: 0, b: 0, a: 0}
     OutlineWidth: 0.29
     SpecularSegment: 0.9
+  aoSetting:
+    Radius: 2.69
+    MaxRadiusPixel: 238.9
+    AngleBias: 0
+    AOStrength: 0.98
   useDeferredRendering: 1
