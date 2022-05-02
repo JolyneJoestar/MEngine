@@ -111,5 +111,7 @@ Shader "MyPipeline/DeferredRender"
 
 			ENDHLSL
 		}
+
+
     }
 }

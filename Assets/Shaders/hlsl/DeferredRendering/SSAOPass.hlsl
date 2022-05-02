@@ -59,7 +59,7 @@ float4 SSAOFragment(v2f vert): SV_TARGET
         samplePos = viewPos.xyz + samplePos * radius;
 
         float4 offset = float4(samplePos, 1.0);
-        offset = TransformWViewToHClip(offset);
+        offset = TransformWViewToHClip(offset.xyz);
 		offset.xyz /= offset.w;
         offset.y = -offset.y;
         offset.xyz = offset.xyz * 0.5 + 0.5;

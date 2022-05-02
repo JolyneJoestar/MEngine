@@ -30,9 +30,9 @@ MonoBehaviour:
       softshadow: 0
   shadowPostSettings: {fileID: 11400000, guid: 413d5d50b9e280b45a612146214b71e2, type: 2}
   nprSetting:
-    EnableNPR: 1
+    EnableNPR: 0
     ColorStreet: {x: 0.1, y: 0.3, z: 0.6, w: 1}
     OutlineColor: {r: 0, g: 0, b: 0, a: 0}
     OutlineWidth: 0.29
     SpecularSegment: 0.9
-  useDeferredRendering: 0
+  useDeferredRendering: 1

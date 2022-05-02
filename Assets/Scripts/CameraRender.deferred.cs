@@ -3,10 +3,24 @@ using UnityEngine.Rendering;
 
 partial class CameraRender
 {
+    enum DeferredRenderPass
+    {
+        DeferredRenderPass_Lighting = 0,
+        DeferredRenderPass_SSAOGen,
+        DeferredRenderPass_AOBlur,
+        DeferredRenderPass_LightVolumeGen,
+        DeferredRenderPass_LightVolumeBlur,
+        DeferredRenderPass_SSR,
+        DeferredRenderPass_BloomGen,
+        DeferredRenderPass_BloomBlur,
+        DeferredRenderPass_TAA
+    }
     partial void initGBuffer();
     partial void deferredRenderGBufferPass(bool useDynamicBatching, bool useGPUInstancing);
     partial void deferredRenderLightingPass();
     partial void deferredRenderAOGenPass();
+    partial void SSAOPass();
+    partial void HBAOPass();
     partial void deferredRenderAOBlurPass();
     partial void deferredLightVolumeGenPass();
     partial void deferredLightVolumeBlurPass();
@@ -149,24 +163,6 @@ partial class CameraRender
         m_context.DrawRenderers(m_cullResult, ref drawingSettings, ref filteringSettings);
         ExecuteBuffer();
     }
-
-    partial void deferredRenderAOGenPass()
-    {
-        m_buffer.BeginSample("ao gen");
-        m_buffer.GetTemporaryRT(aoTextureId, screenSize.x / 2, screenSize.y / 2, 0, FilterMode.Trilinear, RenderTextureFormat.R16);
-        m_buffer.SetRenderTarget(aoTextureId);
-        for (int i = 0; i < 2; i++)
-        {
-            m_buffer.SetGlobalTexture(geometricTextureId[i], m_renderTarget[i]);
-        }
-        m_buffer.SetGlobalTexture(noiseId, m_noiseTexture);
-        m_buffer.ClearRenderTarget(false, true, Color.white);
-        m_buffer.SetGlobalVectorArray(samplesId, m_aosample);
-        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 1, MeshTopology.Triangles, 3);
-        m_buffer.EndSample("ao gen");
-        ExecuteBuffer();
-    }
-
     partial void Cleanupdr()
     {
         for (int i = 0; i < geometricTextureId.Length; i++)
@@ -199,28 +195,50 @@ partial class CameraRender
         }
         m_buffer.SetGlobalTexture(bluredLightVolumeId, bluredLightVolumeId);
         m_buffer.SetGlobalTexture(bluredAoTextureId, bluredAoTextureId);
-        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 0, MeshTopology.Triangles, 3);
+        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_Lighting, MeshTopology.Triangles, 3);
         m_buffer.EndSample("deferred lighting pass");
         ExecuteBuffer();
     }
+    partial void deferredRenderAOGenPass()
+    {
+        SSAOPass();
+    }
+    partial void SSAOPass()
+    {
+        m_buffer.BeginSample("ssao gen");
+        m_buffer.GetTemporaryRT(aoTextureId, screenSize.x / 2, screenSize.y / 2, 0, FilterMode.Trilinear, RenderTextureFormat.R16);
+        m_buffer.SetRenderTarget(aoTextureId);
+        for (int i = 0; i < 2; i++)
+        {
+            m_buffer.SetGlobalTexture(geometricTextureId[i], m_renderTarget[i]);
+        }
+        m_buffer.SetGlobalTexture(noiseId, m_noiseTexture);
+        m_buffer.ClearRenderTarget(false, true, Color.white);
+        m_buffer.SetGlobalVectorArray(samplesId, m_aosample);
+        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_SSAOGen, MeshTopology.Triangles, 3);
+        m_buffer.EndSample("ssao gen");
+        ExecuteBuffer();
+    }
+    partial void HBAOPass()
+    {
 
+    }
     partial void deferredRenderAOBlurPass()
     {
         m_buffer.BeginSample("ao blur");
         m_buffer.GetTemporaryRT(bluredAoTextureId, screenSize.x / 2, screenSize.y / 2, 0, FilterMode.Trilinear, RenderTextureFormat.R16);
         m_buffer.SetRenderTarget(bluredAoTextureId);
         m_buffer.SetGlobalTexture(aoTextureId, aoTextureId);
-        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 2, MeshTopology.Triangles, 3);
+        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_AOBlur, MeshTopology.Triangles, 3);
         m_buffer.EndSample("ao blur");
         ExecuteBuffer();
     }
-
     partial void deferredLightVolumeGenPass()
     {
         m_buffer.BeginSample("lightVolume gen");
         m_buffer.GetTemporaryRT(lightVolumeId, screenSize.x / 4, screenSize.y / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
         m_buffer.SetRenderTarget(lightVolumeId);
-        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 3, MeshTopology.Triangles, 3);
+        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_LightVolumeGen, MeshTopology.Triangles, 3);
         m_buffer.EndSample("lightVolume gen");
         ExecuteBuffer();
     }
@@ -231,7 +249,7 @@ partial class CameraRender
         m_buffer.GetTemporaryRT(bluredLightVolumeId, screenSize.x / 4, screenSize.y / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
         m_buffer.SetGlobalMatrix(ditherId, dither);
         m_buffer.SetRenderTarget(bluredLightVolumeId);
-        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 4, MeshTopology.Triangles, 3);
+        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_LightVolumeBlur, MeshTopology.Triangles, 3);
         m_buffer.EndSample("lightVolume blur");
         ExecuteBuffer();
     }
@@ -241,7 +259,7 @@ partial class CameraRender
         m_buffer.BeginSample("ssr");
         m_buffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
         m_buffer.SetGlobalTexture(DFColorBufferId, DFColorBufferId);
-        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 5, MeshTopology.Triangles, 3);
+        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_SSR, MeshTopology.Triangles, 3);
         m_buffer.EndSample("ssr");
         ExecuteBuffer();
     }
@@ -251,7 +269,7 @@ partial class CameraRender
         m_buffer.BeginSample("bloom input");
         m_buffer.SetRenderTarget(bloomInput);
         m_buffer.SetGlobalTexture(baseColorBuffer, baseColorBuffer);
-        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 6, MeshTopology.Triangles, 3);
+        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_BloomGen, MeshTopology.Triangles, 3);
         m_buffer.EndSample("bloom input");
         ExecuteBuffer();
     }
@@ -261,7 +279,7 @@ partial class CameraRender
         m_buffer.BeginSample("bloom");
         m_buffer.SetRenderTarget(DFColorBufferId);
         m_buffer.SetGlobalTexture(bloomInput, bloomInput);
-        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 7, MeshTopology.Triangles, 3);
+        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_BloomBlur, MeshTopology.Triangles, 3);
         m_buffer.EndSample("bloom");
         ExecuteBuffer();
     }
@@ -282,7 +300,7 @@ partial class CameraRender
         m_buffer.SetGlobalVector(jitterId, jitter);
         m_buffer.SetGlobalMatrix(preV, m_preV[m_aaPingpongFlag]);
         m_buffer.SetGlobalMatrix(preP, m_preP[m_aaPingpongFlag]);
-        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, 8, MeshTopology.Triangles, 3);
+        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_TAA, MeshTopology.Triangles, 3);
         m_buffer.EndSample("taa pass");
         ExecuteBuffer();
     }
