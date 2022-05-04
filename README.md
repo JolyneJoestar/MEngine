@@ -30,7 +30,6 @@ This project is used for learning Unity Scriptable Render Pipeline, and followin
     ![screenshot](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/simpleNPR.png)
 
 - Deferred render pipline
-  - [x] SSAO
   
   - [x] SSR (still have some problem)
   
@@ -38,9 +37,17 @@ This project is used for learning Unity Scriptable Render Pipeline, and followin
   
   - [x] TAA
   
-    ![screenshot](/images/ssao.png)
-    
+  - [x] SSAO
+  
+    ![ssao](/images/ssao.png)
+  
     ![screenshot](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/ssao.png)
+  
+  - [x] HBAO
+  
+    ![screenshot](/images/hbao.png)
+  
+    ![screenshot](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/hbao.png)
   
   
 

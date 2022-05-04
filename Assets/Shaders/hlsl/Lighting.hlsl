@@ -12,10 +12,10 @@ float3 GetLighting(Surface surface,BRDF brdf, GI gi)
     float3 color = gi.diffuse * brdf.diffuse;
     for (int i = 0; i < GetDirectionLightCount(); i++)
     {
-#ifdef _NPRLIGHTING
-        color += GetNPRLighting(surface, brdf, GetDirectionLight(i, surface, shadowData)) + CalculateLightVolume(i, surface.position, shadowData);
+#ifndef _NPRLIGHTING
+        color += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData)) + CalculateLightVolume(i, surface.position, shadowData);
 #else
-		color += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData)) + CalculateLightVolume(i, surface.position, shadowData);
+        color += GetNPRLighting(surface, brdf, GetDirectionLight(i, surface, shadowData)) + CalculateLightVolume(i, surface.position, shadowData);
 #endif
     }
     return color;
@@ -27,10 +27,10 @@ float3 GetLighting(Surface surface, BRDF brdf, float ao)
     float3 color = 0.25 * brdf.diffuse * ao;
     for (int i = 0; i < GetDirectionLightCount(); i++)
     {
-#ifdef _NPRLIGHTING
-        color += GetNPRLighting(surface, brdf, GetDirectionLight(i, surface, shadowData));
+#ifndef _NPRLIGHTING
+        color += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData));
 #else
-		color += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData));
+        color += GetNPRLighting(surface, brdf, GetDirectionLight(i, surface, shadowData));
 #endif
     }
     return color;

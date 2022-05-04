@@ -58,7 +58,8 @@ partial class CameraRender
         preV = Shader.PropertyToID("_PreV"),
         preP = Shader.PropertyToID("_PreP"),
         jitterId = Shader.PropertyToID("_Jitter"),
-        depthBufferId = Shader.PropertyToID("_CameraDepthTex");
+        depthBufferId = Shader.PropertyToID("_CameraDepthTex"),
+        ssrMinStep = Shader.PropertyToID("_SSRMinStep");
 
     static int[] ScreenParameters =
     {
@@ -109,7 +110,8 @@ partial class CameraRender
     Vector4 m_zBufferParam;
     Vector4 m_UV2View;
     Vector4 m_texelSize;
-    static float m_radiusPixel;
+    float m_radiusPixel;
+    float m_ssrMinStep;
 
     //   RenderTexture
     Vector2Int screenSize = new Vector2Int(2048, 2048);
@@ -159,6 +161,7 @@ partial class CameraRender
         m_UV2View = new Vector4(2 * tanHalfFovX, 2 * tanHalfFovY, -tanHalfFovX, -tanHalfFovY);
         m_texelSize = new Vector4(1f / screenSize.x, 1f / screenSize.y, screenSize.x, screenSize.y);
         m_radiusPixel = m_camera.pixelHeight * m_aoSettings.Radius / tanHalfFovY / 2;
+        m_ssrMinStep = m_radiusPixel * m_aoSettings.Radius;
         //m_camera.projectionMatrix = m_preP[m_aaPingpongFlag];
 
         m_buffer.GetTemporaryRT(defaultRenderBufferId, screenSize.x, screenSize.y, 32, FilterMode.Point, RenderTextureFormat.ARGB32);
@@ -316,6 +319,7 @@ partial class CameraRender
         m_buffer.BeginSample("ssr");
         m_buffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
         m_buffer.SetGlobalTexture(DFColorBufferId, DFColorBufferId);
+        m_buffer.SetGlobalFloat(ssrMinStep, m_ssrMinStep);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_SSR, MeshTopology.Triangles, 3);
         m_buffer.EndSample("ssr");
         ExecuteBuffer();

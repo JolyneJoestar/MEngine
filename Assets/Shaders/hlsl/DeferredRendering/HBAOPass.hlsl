@@ -36,18 +36,10 @@ float noiseScale;
 #define radius  0.5
 #define bias  0.025
 
-inline float FetchDepth(float2 uv)
-{
-	return SAMPLE_TEXTURE2D(_CameraDepthTex, sampler_CameraDepthTex, uv).r;
-}
-
 inline float3 FetchViewPos(float2 uv)
 {
-	//float depth = LinearEyeDepth(FetchDepth(uv), _ZBufferParam);
-	//return float3((uv * _UV2View.xy + _UV2View.zw) * depth, depth);
 	float3 pos = SAMPLE_TEXTURE2D(_GPosition, sampler_GPosition, uv).xyz;
 	pos = TransformWorldToView(pos);
-	//pos.z = - pos.z;
 	return pos;
 }
 
