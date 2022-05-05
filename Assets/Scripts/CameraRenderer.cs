@@ -53,12 +53,13 @@ public partial class CameraRender {
     }
 
     public void Render(ScriptableRenderContext context, Camera camera,bool useDynamicBatching, bool useGPUInstancing, bool m_useDeferredRendering , ShadowSettings shadowSettings, ShadowPostSettings shadowPostSettings,
-        NPRSetting nprSetting, AOSetting aoSetting)
+        NPRSetting nprSetting, AOSetting aoSetting, float ssrStepRatio)
     {
         this.m_context = context;
         this.m_camera = camera;
         this.m_nprSettings = nprSetting;
         this.m_aoSettings = aoSetting;
+        this.m_ssrStepRatio = ssrStepRatio;
 
         PrepareBuffer();
         PrepareForSceneWindow();

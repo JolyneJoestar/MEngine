@@ -10,8 +10,9 @@ public class MyPipline : RenderPipeline
     ShadowPostSettings m_postFXSettings;
     NPRSetting m_nprSettings;
     AOSetting m_aoSettings;
+    float m_ssrStepRatio;
     public MyPipline(bool useDynamicBatching,bool useGPUInstancing, bool useSPRBatcher, bool useDeferredRendering, ShadowSettings shadowSettings, ShadowPostSettings postFXSettings,
-        NPRSetting nprSettings, AOSetting aoSetting)
+        NPRSetting nprSettings, AOSetting aoSetting, float ssrStepRatio)
     {
         this.m_useDynamicBatching = useDynamicBatching;
         this.m_useGPUIstancing = useGPUInstancing;
@@ -20,6 +21,7 @@ public class MyPipline : RenderPipeline
         this.m_useDeferredRendering = useDeferredRendering;
         this.m_nprSettings = nprSettings;
         this.m_aoSettings = aoSetting;
+        this.m_ssrStepRatio = ssrStepRatio;
         GraphicsSettings.useScriptableRenderPipelineBatching = useSPRBatcher;
     }
 
@@ -28,7 +30,7 @@ public class MyPipline : RenderPipeline
         foreach (var camera in cameras)
         {
             m_render.Render(context, camera,m_useDynamicBatching,m_useGPUIstancing,m_useDeferredRendering,m_shadowSettings, m_postFXSettings,
-                m_nprSettings, m_aoSettings);
+                m_nprSettings, m_aoSettings, m_ssrStepRatio);
         }
     }
 }

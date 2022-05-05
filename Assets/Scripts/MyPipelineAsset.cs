@@ -17,8 +17,11 @@ public class MyPipelineAsset : RenderPipelineAsset
     AOSetting aoSetting = default;
     [SerializeField]
     bool useDeferredRendering = false;
+    [SerializeField]
+    [Range(0.0f, 1.0f)]
+    float ssrStepRatio = 0.1f;
     protected override RenderPipeline CreatePipeline() => new MyPipline(useDynamicBatching,useGPUInstancing,useSPRBatcher,useDeferredRendering,
-        shadowSettings, shadowPostSettings, nprSetting, aoSetting);
+        shadowSettings, shadowPostSettings, nprSetting, aoSetting, ssrStepRatio);
 }
 
 

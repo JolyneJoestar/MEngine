@@ -36,48 +36,11 @@ partial class CameraRender
     static Shader m_shader = Shader.Find("MyPipeline/DeferredRender");
     Material m_deferredRenderingMaterial = new Material(m_shader);
     static ShaderTagId m_gBufferPassId = new ShaderTagId("gBufferPass");
-    static int[] geometricTextureId =
-    {
-        Shader.PropertyToID("_GPosition"),
-        Shader.PropertyToID("_GNormal"),
-        Shader.PropertyToID("_GAlbedo"),
-        Shader.PropertyToID("_GMaterial")
-    };
-    static int bluredAoTextureId = Shader.PropertyToID("_BluredAoTexture"),
-        aoTextureId = Shader.PropertyToID("_AoTexture"),
-        samplesId = Shader.PropertyToID("samples"),
-        noiseId = Shader.PropertyToID("_Noise"),
-        lightVolumeId = Shader.PropertyToID("_LightVolume"),
-        bluredLightVolumeId = Shader.PropertyToID("_BluredLightVolume"),
-        ditherId = Shader.PropertyToID("_Dither"),
-        DFColorBufferId = Shader.PropertyToID("_DFColorBuffer"),
-        bloomInput = Shader.PropertyToID("_BloomInput"),
-        baseColorBuffer = Shader.PropertyToID("_BaseColorBuffer"),
-        preColorBuffer = Shader.PropertyToID("_PreColorBuffer"),
-        currentColorBuffer = Shader.PropertyToID("_CurrentColorBuffer"),
-        preV = Shader.PropertyToID("_PreV"),
-        preP = Shader.PropertyToID("_PreP"),
-        jitterId = Shader.PropertyToID("_Jitter"),
-        depthBufferId = Shader.PropertyToID("_CameraDepthTex"),
-        ssrMinStep = Shader.PropertyToID("_SSRMinStep");
+    
+    static MyShaderProperties m_shaderProperties = new MyShaderProperties();
+    static MyShaderBuffers m_shaderBuffers = new MyShaderBuffers();
 
-    static int[] ScreenParameters =
-    {
-        Shader.PropertyToID("_UV2View"),
-        Shader.PropertyToID("_ZBufferParam"),
-        Shader.PropertyToID("_TexelSize")
-    };
-
-    static int[] HBAOUniforms =
-    {
-        Shader.PropertyToID("_Radius"),
-        Shader.PropertyToID("_RadiusPixel"),
-        Shader.PropertyToID("_MaxRadiusPixel"),
-        Shader.PropertyToID("_AngleBias"),
-        Shader.PropertyToID("_AOStrength")
-    };
-    static int defaultRenderBufferId = Shader.PropertyToID("defaultRenderBufferId");
-    RenderTargetIdentifier[] m_renderTarget = new RenderTargetIdentifier[geometricTextureId.Length];
+    RenderTargetIdentifier[] m_renderTarget = new RenderTargetIdentifier[m_shaderBuffers.gbuffers.MaxGBUfferNum];
     static Vector4[] m_aosample;
     AOSetting m_aoSettings;
     const string m_gbufferName = "GBufferPass";
@@ -88,8 +51,8 @@ partial class CameraRender
     Matrix4x4[] m_preV = new Matrix4x4[2];
     Matrix4x4[] m_preP = new Matrix4x4[2];
     static int[] m_preTexture = {
-            preColorBuffer,
-            currentColorBuffer
+            m_shaderBuffers.preColorTextureID,
+            m_shaderBuffers.currentColorTextureID
         };
 
     private Vector2[] HaltonSequence = new Vector2[]
@@ -111,7 +74,7 @@ partial class CameraRender
     Vector4 m_UV2View;
     Vector4 m_texelSize;
     float m_radiusPixel;
-    float m_ssrMinStep;
+    float m_ssrStepRatio;
 
     //   RenderTexture
     Vector2Int screenSize = new Vector2Int(2048, 2048);
@@ -161,24 +124,22 @@ partial class CameraRender
         m_UV2View = new Vector4(2 * tanHalfFovX, 2 * tanHalfFovY, -tanHalfFovX, -tanHalfFovY);
         m_texelSize = new Vector4(1f / screenSize.x, 1f / screenSize.y, screenSize.x, screenSize.y);
         m_radiusPixel = m_camera.pixelHeight * m_aoSettings.Radius / tanHalfFovY / 2;
-        m_ssrMinStep = m_radiusPixel * m_aoSettings.Radius;
         //m_camera.projectionMatrix = m_preP[m_aaPingpongFlag];
 
-        m_buffer.GetTemporaryRT(defaultRenderBufferId, screenSize.x, screenSize.y, 32, FilterMode.Point, RenderTextureFormat.ARGB32);
-        m_buffer.GetTemporaryRT(depthBufferId, screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.Depth);
-        m_buffer.GetTemporaryRT(geometricTextureId[0], screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
-        m_buffer.GetTemporaryRT(geometricTextureId[1], screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
-        m_buffer.GetTemporaryRT(geometricTextureId[2], screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
-        m_buffer.GetTemporaryRT(geometricTextureId[3], screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(m_shaderBuffers.depthBufferID, screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.Depth);
+        m_buffer.GetTemporaryRT(m_shaderBuffers.gbuffers.GPositionID, screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
+        m_buffer.GetTemporaryRT(m_shaderBuffers.gbuffers.GNormalID, screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
+        m_buffer.GetTemporaryRT(m_shaderBuffers.gbuffers.GAlbedoID, screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(m_shaderBuffers.gbuffers.GMaterialID, screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
         ExecuteBuffer();
 
-        for (int i = 0; i < geometricTextureId.Length; i++)
+        for (int i = 0; i < m_shaderBuffers.gbuffers.MaxGBUfferNum; i++)
         {
-            m_renderTarget[i] = geometricTextureId[i];
+            m_renderTarget[i] = m_shaderBuffers.gbuffers[i];
         }
-        m_buffer.GetTemporaryRT(DFColorBufferId, screenSize.x, screenSize.y, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
-        m_buffer.GetTemporaryRT(baseColorBuffer, screenSize.x, screenSize.y, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
-        m_buffer.GetTemporaryRT(bloomInput, screenSize.x / 4, screenSize.y / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(m_shaderBuffers.dfColorTextureID, screenSize.x, screenSize.y, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(m_shaderBuffers.baseColorTextureID, screenSize.x, screenSize.y, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(m_shaderBuffers.bloomInputTextureID, screenSize.x / 4, screenSize.y / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
 
         ExecuteBuffer();
         //RenderTargetIdentifier db = defaultRenderBufferId;
@@ -203,37 +164,32 @@ partial class CameraRender
     }
     partial void Cleanupdr()
     {
-        for (int i = 0; i < geometricTextureId.Length; i++)
+        for (int i = 0; i < m_shaderBuffers.gbuffers.MaxGBUfferNum; i++)
         {
-            m_buffer.ReleaseTemporaryRT(geometricTextureId[i]);
+            m_buffer.ReleaseTemporaryRT(m_shaderBuffers.gbuffers[i]);
         }
         m_buffer.ReleaseTemporaryRT(m_preTexture[0]);
         m_buffer.ReleaseTemporaryRT(m_preTexture[1]);
-        m_buffer.ReleaseTemporaryRT(bluredAoTextureId);
-        m_buffer.ReleaseTemporaryRT(lightVolumeId);
-        m_buffer.ReleaseTemporaryRT(aoTextureId);
-        m_buffer.ReleaseTemporaryRT(bluredLightVolumeId);
-        m_buffer.ReleaseTemporaryRT(DFColorBufferId);
-        m_buffer.ReleaseTemporaryRT(bloomInput);
-        m_buffer.ReleaseTemporaryRT(baseColorBuffer);
-        m_buffer.ReleaseTemporaryRT(defaultRenderBufferId);
-        m_buffer.ReleaseTemporaryRT(depthBufferId);
-        
-        //m_buffer.ReleaseTemporaryRT(defaultDepthBufferId);
-        //RenderTexture.ReleaseTemporary(defaultTexture);
-        //RenderTexture.ReleaseTemporary(defaultDepthBuffer);
+        m_buffer.ReleaseTemporaryRT(m_shaderBuffers.bluredAoTextureID);
+        m_buffer.ReleaseTemporaryRT(m_shaderBuffers.lightVolumeTextureID);
+        m_buffer.ReleaseTemporaryRT(m_shaderBuffers.aoTextureID);
+        m_buffer.ReleaseTemporaryRT(m_shaderBuffers.bluredLightVolumeTextureID);
+        m_buffer.ReleaseTemporaryRT(m_shaderBuffers.dfColorTextureID);
+        m_buffer.ReleaseTemporaryRT(m_shaderBuffers.bloomInputTextureID);
+        m_buffer.ReleaseTemporaryRT(m_shaderBuffers.baseColorTextureID);
+        m_buffer.ReleaseTemporaryRT(m_shaderBuffers.depthBufferID);
         ExecuteBuffer();
     }
     partial void deferredRenderLightingPass()
     {
         m_buffer.BeginSample("deferred lighting pass");
-        m_buffer.SetRenderTarget(baseColorBuffer, depthBufferId);
+        m_buffer.SetRenderTarget(m_shaderBuffers.baseColorTextureID, m_shaderBuffers.depthBufferID);
         for (int i = 0; i < m_renderTarget.Length; i++)
         {
-            m_buffer.SetGlobalTexture(geometricTextureId[i], m_renderTarget[i]);
+            m_buffer.SetGlobalTexture(m_shaderBuffers.gbuffers[i], m_renderTarget[i]);
         }
-        m_buffer.SetGlobalTexture(bluredLightVolumeId, bluredLightVolumeId);
-        m_buffer.SetGlobalTexture(bluredAoTextureId, bluredAoTextureId);
+        m_buffer.SetGlobalTexture(m_shaderBuffers.bluredLightVolumeTextureID, m_shaderBuffers.bluredLightVolumeTextureID);
+        m_buffer.SetGlobalTexture(m_shaderBuffers.bluredAoTextureID, m_shaderBuffers.bluredAoTextureID);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_Lighting, MeshTopology.Triangles, 3);
         m_buffer.EndSample("deferred lighting pass");
         ExecuteBuffer();
@@ -245,15 +201,15 @@ partial class CameraRender
     partial void SSAOPass()
     {
         m_buffer.BeginSample("ssao gen");
-        m_buffer.GetTemporaryRT(aoTextureId, screenSize.x / 2, screenSize.y / 2, 0, FilterMode.Trilinear, RenderTextureFormat.R16);
-        m_buffer.SetRenderTarget(aoTextureId);
+        m_buffer.GetTemporaryRT(m_shaderBuffers.aoTextureID, screenSize.x / 2, screenSize.y / 2, 0, FilterMode.Trilinear, RenderTextureFormat.R16);
+        m_buffer.SetRenderTarget(m_shaderBuffers.aoTextureID);
         for (int i = 0; i < 2; i++)
         {
-            m_buffer.SetGlobalTexture(geometricTextureId[i], m_renderTarget[i]);
+            m_buffer.SetGlobalTexture(m_shaderBuffers.gbuffers[i], m_renderTarget[i]);
         }
-        m_buffer.SetGlobalTexture(noiseId, m_noiseTexture);
+        m_buffer.SetGlobalTexture(m_shaderBuffers.noiseTextureID, m_noiseTexture);
         m_buffer.ClearRenderTarget(false, true, Color.white);
-        m_buffer.SetGlobalVectorArray(samplesId, m_aosample);
+        m_buffer.SetGlobalVectorArray(m_shaderProperties.samplesID, m_aosample);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_SSAOGen, MeshTopology.Triangles, 3);
         m_buffer.EndSample("ssao gen");
         ExecuteBuffer();
@@ -261,24 +217,24 @@ partial class CameraRender
     partial void HBAOPass()
     {
         m_buffer.BeginSample("hbao gen");
-        m_buffer.GetTemporaryRT(aoTextureId, screenSize.x / 2, screenSize.y / 2, 0, FilterMode.Trilinear, RenderTextureFormat.R16);
-        m_buffer.SetRenderTarget(aoTextureId);
+        m_buffer.GetTemporaryRT(m_shaderBuffers.aoTextureID, screenSize.x / 2, screenSize.y / 2, 0, FilterMode.Trilinear, RenderTextureFormat.R16);
+        m_buffer.SetRenderTarget(m_shaderBuffers.aoTextureID);
         for (int i = 0; i < 2; i++)
         {
-            m_buffer.SetGlobalTexture(geometricTextureId[i], m_renderTarget[i]);
+            m_buffer.SetGlobalTexture(m_shaderBuffers.gbuffers[i], m_renderTarget[i]);
         }
-        m_buffer.SetGlobalVector(ScreenParameters[0], m_UV2View);
-        m_buffer.SetGlobalVector(ScreenParameters[1], m_zBufferParam);
-        m_buffer.SetGlobalVector(ScreenParameters[2], m_texelSize);
-        m_buffer.SetGlobalFloat(HBAOUniforms[0], m_aoSettings.Radius);
-        m_buffer.SetGlobalFloat(HBAOUniforms[1], m_radiusPixel);
-        m_buffer.SetGlobalFloat(HBAOUniforms[2], m_aoSettings.MaxRadiusPixel);
-        m_buffer.SetGlobalFloat(HBAOUniforms[3], m_aoSettings.AngleBias);
-        m_buffer.SetGlobalFloat(HBAOUniforms[4], m_aoSettings.AOStrength);
-        m_buffer.SetGlobalTexture(depthBufferId, depthBufferId);
-        m_buffer.SetGlobalTexture(noiseId, m_noiseTexture);
+        m_buffer.SetGlobalVector(m_shaderProperties.screenProperties.uv2ViewID, m_UV2View);
+        m_buffer.SetGlobalVector(m_shaderProperties.screenProperties.zBufferParamID, m_zBufferParam);
+        m_buffer.SetGlobalVector(m_shaderProperties.screenProperties.texelSizeID, m_texelSize);
+        m_buffer.SetGlobalFloat(m_shaderProperties.hbaoPropreties.radiusID, m_aoSettings.Radius);
+        m_buffer.SetGlobalFloat(m_shaderProperties.hbaoPropreties.radiusPixelID, m_radiusPixel);
+        m_buffer.SetGlobalFloat(m_shaderProperties.hbaoPropreties.maxRadiusPixelID, m_aoSettings.MaxRadiusPixel);
+        m_buffer.SetGlobalFloat(m_shaderProperties.hbaoPropreties.angleBiasID, m_aoSettings.AngleBias);
+        m_buffer.SetGlobalFloat(m_shaderProperties.hbaoPropreties.aoStrengthID, m_aoSettings.AOStrength);
+        m_buffer.SetGlobalTexture(m_shaderBuffers.depthBufferID, m_shaderBuffers.depthBufferID);
+        m_buffer.SetGlobalTexture(m_shaderBuffers.noiseTextureID, m_noiseTexture);
         m_buffer.ClearRenderTarget(false, true, Color.white);
-        m_buffer.SetGlobalVectorArray(samplesId, m_aosample);
+        m_buffer.SetGlobalVectorArray(m_shaderProperties.samplesID, m_aosample);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_HBAOGen, MeshTopology.Triangles, 3);
         m_buffer.EndSample("hbao gen");
         ExecuteBuffer();
@@ -286,9 +242,9 @@ partial class CameraRender
     partial void deferredRenderAOBlurPass()
     {
         m_buffer.BeginSample("ao blur");
-        m_buffer.GetTemporaryRT(bluredAoTextureId, screenSize.x / 2, screenSize.y / 2, 0, FilterMode.Trilinear, RenderTextureFormat.R16);
-        m_buffer.SetRenderTarget(bluredAoTextureId);
-        m_buffer.SetGlobalTexture(aoTextureId, aoTextureId);
+        m_buffer.GetTemporaryRT(m_shaderBuffers.bluredAoTextureID, screenSize.x / 2, screenSize.y / 2, 0, FilterMode.Trilinear, RenderTextureFormat.R16);
+        m_buffer.SetRenderTarget(m_shaderBuffers.bluredAoTextureID);
+        m_buffer.SetGlobalTexture(m_shaderBuffers.aoTextureID, m_shaderBuffers.aoTextureID);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_AOBlur, MeshTopology.Triangles, 3);
         m_buffer.EndSample("ao blur");
         ExecuteBuffer();
@@ -296,8 +252,8 @@ partial class CameraRender
     partial void deferredLightVolumeGenPass()
     {
         m_buffer.BeginSample("lightVolume gen");
-        m_buffer.GetTemporaryRT(lightVolumeId, screenSize.x / 4, screenSize.y / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
-        m_buffer.SetRenderTarget(lightVolumeId);
+        m_buffer.GetTemporaryRT(m_shaderBuffers.lightVolumeTextureID, screenSize.x / 4, screenSize.y / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
+        m_buffer.SetRenderTarget(m_shaderBuffers.lightVolumeTextureID);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_LightVolumeGen, MeshTopology.Triangles, 3);
         m_buffer.EndSample("lightVolume gen");
         ExecuteBuffer();
@@ -306,9 +262,9 @@ partial class CameraRender
     partial void deferredLightVolumeBlurPass()
     {
         m_buffer.BeginSample("lightVolume blur");
-        m_buffer.GetTemporaryRT(bluredLightVolumeId, screenSize.x / 4, screenSize.y / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
-        m_buffer.SetGlobalMatrix(ditherId, dither);
-        m_buffer.SetRenderTarget(bluredLightVolumeId);
+        m_buffer.GetTemporaryRT(m_shaderBuffers.bluredLightVolumeTextureID, screenSize.x / 4, screenSize.y / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
+        m_buffer.SetGlobalMatrix(m_shaderProperties.ditherID, dither);
+        m_buffer.SetRenderTarget(m_shaderBuffers.bluredLightVolumeTextureID);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_LightVolumeBlur, MeshTopology.Triangles, 3);
         m_buffer.EndSample("lightVolume blur");
         ExecuteBuffer();
@@ -318,8 +274,8 @@ partial class CameraRender
     {
         m_buffer.BeginSample("ssr");
         m_buffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
-        m_buffer.SetGlobalTexture(DFColorBufferId, DFColorBufferId);
-        m_buffer.SetGlobalFloat(ssrMinStep, m_ssrMinStep);
+        m_buffer.SetGlobalTexture(m_shaderBuffers.dfColorTextureID, m_shaderBuffers.dfColorTextureID);
+        m_buffer.SetGlobalFloat(m_shaderProperties.ssrStepRatioID, m_ssrStepRatio);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_SSR, MeshTopology.Triangles, 3);
         m_buffer.EndSample("ssr");
         ExecuteBuffer();
@@ -328,8 +284,8 @@ partial class CameraRender
     partial void BloomGetInput()
     {
         m_buffer.BeginSample("bloom input");
-        m_buffer.SetRenderTarget(bloomInput);
-        m_buffer.SetGlobalTexture(baseColorBuffer, baseColorBuffer);
+        m_buffer.SetRenderTarget(m_shaderBuffers.bloomInputTextureID);
+        m_buffer.SetGlobalTexture(m_shaderBuffers.baseColorTextureID, m_shaderBuffers.baseColorTextureID);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_BloomGen, MeshTopology.Triangles, 3);
         m_buffer.EndSample("bloom input");
         ExecuteBuffer();
@@ -338,8 +294,8 @@ partial class CameraRender
     partial void BloomPass()
     {
         m_buffer.BeginSample("bloom");
-        m_buffer.SetRenderTarget(DFColorBufferId);
-        m_buffer.SetGlobalTexture(bloomInput, bloomInput);
+        m_buffer.SetRenderTarget(m_shaderBuffers.dfColorTextureID);
+        m_buffer.SetGlobalTexture(m_shaderBuffers.bloomInputTextureID, m_shaderBuffers.bloomInputTextureID);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_BloomBlur, MeshTopology.Triangles, 3);
         m_buffer.EndSample("bloom");
         ExecuteBuffer();
@@ -347,7 +303,7 @@ partial class CameraRender
     partial void CopyColorBuffer()
     {
         m_buffer.BeginSample("copy");
-        m_buffer.Blit(baseColorBuffer, m_preTexture[m_aaPingpongFlag]);
+        m_buffer.Blit(m_shaderBuffers.baseColorTextureID, m_preTexture[m_aaPingpongFlag]);
         m_aaPingpongFlag = 1 - m_aaPingpongFlag;
         m_buffer.EndSample("copy");
         ExecuteBuffer();
@@ -355,12 +311,12 @@ partial class CameraRender
     partial void TAAPass()
     {
         m_buffer.BeginSample("taa pass");
-        m_buffer.SetRenderTarget(baseColorBuffer);
-        m_buffer.SetGlobalTexture(currentColorBuffer, m_preTexture[1 - m_aaPingpongFlag]);
-        m_buffer.SetGlobalTexture(preColorBuffer, m_preTexture[m_aaPingpongFlag]);
-        m_buffer.SetGlobalVector(jitterId, jitter);
-        m_buffer.SetGlobalMatrix(preV, m_preV[m_aaPingpongFlag]);
-        m_buffer.SetGlobalMatrix(preP, m_preP[m_aaPingpongFlag]);
+        m_buffer.SetRenderTarget(m_shaderBuffers.baseColorTextureID);
+        m_buffer.SetGlobalTexture(m_shaderBuffers.currentColorTextureID, m_preTexture[1 - m_aaPingpongFlag]);
+        m_buffer.SetGlobalTexture(m_shaderBuffers.preColorTextureID, m_preTexture[m_aaPingpongFlag]);
+        m_buffer.SetGlobalVector(m_shaderProperties.taaPropreties.jitterID, jitter);
+        m_buffer.SetGlobalMatrix(m_shaderProperties.taaPropreties.preVID, m_preV[m_aaPingpongFlag]);
+        m_buffer.SetGlobalMatrix(m_shaderProperties.taaPropreties.prePID, m_preP[m_aaPingpongFlag]);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_TAA, MeshTopology.Triangles, 3);
         m_buffer.EndSample("taa pass");
         ExecuteBuffer();
