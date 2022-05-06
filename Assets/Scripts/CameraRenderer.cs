@@ -103,15 +103,19 @@ public partial class CameraRender {
         };
         var filteringSettings = new FilteringSettings(RenderQueueRange.all);
         drawingSettings.SetShaderPassName(0, m_customShaderTagId);
-        if(m_nprSettings.EnableNPR)
+        if (m_nprSettings.EnableNPR)
         {
             m_buffer.SetGlobalFloat(m_outlineWidthId, m_nprSettings.OutlineWidth);
             m_buffer.SetGlobalColor(m_outlineColorId, m_nprSettings.OutlineColor);
             m_buffer.SetGlobalFloat(m_specularSegmentId, m_nprSettings.SpecularSegment);
             m_buffer.SetGlobalVector(m_colorStreetId, m_nprSettings.ColorStreet);
             m_buffer.EnableShaderKeyword(m_nprKeywords);
-            ExecuteBuffer();
         }
+        else
+        {
+            m_buffer.DisableShaderKeyword(m_nprKeywords);
+        }
+        ExecuteBuffer();
         m_context.DrawRenderers(m_cullResult, ref drawingSettings, ref filteringSettings);
        
     }
