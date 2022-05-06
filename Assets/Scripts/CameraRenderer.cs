@@ -18,6 +18,7 @@ public partial class CameraRender {
 
     Lighting m_lighting = new Lighting();
     static ShaderTagId m_customShaderTagId = new ShaderTagId("SPRDefaultLegay");
+    static ShaderTagId m_particlesTagId = new ShaderTagId("ParticlesRender");
     static ShaderTagId m_nprOutlineId = new ShaderTagId("NPROutline");
     static Matrix4x4 dither = new Matrix4x4
     (
