@@ -87,6 +87,7 @@ public partial class CameraRender {
         {
             DrawNPROutline(useDynamicBatching, useGPUInstancing);
         }
+        DrawParticles();
         m_context.DrawSkybox(m_camera);
         DrawUnsupportedShaders();
         DrawGizmos();
@@ -135,6 +136,10 @@ public partial class CameraRender {
         m_context.DrawRenderers(m_cullResult, ref drawingSettings, ref filteringSettings);
     }
 
+    void DrawParticles()
+    {
+        MaterialManager.Instance.render(m_buffer, m_context, m_camera);
+    }
     void Submit()
     {
         m_buffer.EndSample(SampleName);

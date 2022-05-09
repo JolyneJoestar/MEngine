@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Runtime.InteropServices;
+using UnityEngine.Rendering;
 
 public class ParticleEmitter : MonoBehaviour
 {
@@ -25,7 +26,7 @@ public class ParticleEmitter : MonoBehaviour
     private ComputeBuffer sizeOverLifeBuffer;
     public int sizeSteps = 16;
 
-
+    
     public float minLifetime = 3f;
     public float maxLifetime = 5f;
 
@@ -78,10 +79,13 @@ public class ParticleEmitter : MonoBehaviour
     private int groupCount;
     private int[] counterArray;
     private int deadCount = 0;
+    private Matrix4x4 m_mvp;
 
     private void Awake()
     {
         Camera.main.depthTextureMode = DepthTextureMode.Depth;
+        MaterialManager.Instance.particleMaterial = renderMaterial;
+        MaterialManager.Instance.add(this);
         DispatchInit();
     }
 
@@ -91,18 +95,26 @@ public class ParticleEmitter : MonoBehaviour
         DispatchEmit(Mathf.RoundToInt(Time.deltaTime * emissionRate * timeScale));
     }
 
-    private void OnRenderObject()
+    public void RenderParticles(CommandBuffer commandBuffer,ScriptableRenderContext context,Camera camera)
     {
-        renderMaterial.SetBuffer("particles", particles);
-        renderMaterial.SetBuffer("quad", quad);
-        renderMaterial.SetPass(0);
+        //renderMaterial.SetBuffer("particles", particles);
+        //renderMaterial.SetBuffer("quad", quad);
+        //renderMaterial.SetPass(0);
+        //Graphics.DrawProceduralNow(MeshTopology.Quads, 6, dead.count);
+        m_mvp = transform.localToWorldMatrix * camera.worldToCameraMatrix;
+        commandBuffer.BeginSample("emitter");
+        commandBuffer.SetGlobalBuffer("particles", particles);
+        commandBuffer.SetGlobalBuffer("quad", quad);
+        commandBuffer.DrawProcedural(m_mvp, renderMaterial, 0, MeshTopology.Quads, 6, dead.count);
+        commandBuffer.EndSample("emitter");
+        context.ExecuteCommandBuffer(commandBuffer);
+        commandBuffer.Clear();
         Debug.Log(particles.count);
-        Debug.Log(12345);
-        Graphics.DrawProceduralNow(MeshTopology.Quads, 6, dead.count);
     }
 
     private void OnDestroy()
     {
+        MaterialManager.Instance.remove(this);
         ReleaseBuffers();
     }
 
