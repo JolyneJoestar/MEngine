@@ -17,7 +17,7 @@ SAMPLER(sampler_BaseColorBuffer);
 float4 BloomGenPass(v2f vert) :SV_TARGET
 {
 	float3 color = 0.0;
-
+	float2 offset = float2(1.0 / 512, 1.0 / 512);
 	for (int i = -BLOOM_RADIUS; i <= BLOOM_RADIUS; i++)
 	{
 		for (int j = -BLOOM_RADIUS; j <= BLOOM_RADIUS; j++)

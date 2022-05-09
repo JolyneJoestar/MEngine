@@ -109,7 +109,6 @@ public class ParticleEmitter : MonoBehaviour
         commandBuffer.EndSample("emitter");
         context.ExecuteCommandBuffer(commandBuffer);
         commandBuffer.Clear();
-        Debug.Log(particles.count);
     }
 
     private void OnDestroy()
@@ -271,7 +270,6 @@ public class ParticleEmitter : MonoBehaviour
 
     private void DispatchUpdate()
     {
-        Debug.Log("update");
         if (timeScale > 0)
         {
             computeShader.SetBuffer(updateKernel, "particles", particles);
@@ -319,8 +317,6 @@ public class ParticleEmitter : MonoBehaviour
             }
 
             computeShader.SetVector("time", new Vector2(Time.deltaTime * timeScale, Time.time));
-            Debug.Log(updateKernel);
-            Debug.Log(groupCount);
             computeShader.Dispatch(updateKernel, groupCount, 1, 1);
 
             SetDeadCount();
