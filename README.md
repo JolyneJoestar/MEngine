@@ -14,6 +14,7 @@ This project is used for learning Unity Scriptable Render Pipeline, and followin
     - [x] PCF
   - [x] PBR
   - [x] Volume Light
+  - [x] GPU Particles
   
 - Forward render pipline 
 
