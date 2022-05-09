@@ -2,7 +2,7 @@
 #pragma kernel Emit
 #pragma kernel Update
 
-#define THREAD_COUNT 256
+#define THREAD_COUNT 64
 #define EPSILON 1e-3
 #define PI 3.1415926535
 

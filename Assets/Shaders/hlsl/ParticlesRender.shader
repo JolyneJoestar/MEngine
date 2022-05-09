@@ -28,13 +28,13 @@ Shader "MyPipeline/ParticlesRender"
 			"IgnoreProjector" = "True"
 		}
 
-		CGPROGRAM
+		HLSLPROGRAM
 
 		#pragma target 5.0
 		#pragma vertex vert
 		#pragma fragment frag
 
-		#include "UnityCG.cginc"
+		#include "Common.hlsl"
 		#include "Particle.hlsl"
 
 		uniform sampler2D _MainTex;
@@ -65,12 +65,12 @@ Shader "MyPipeline/ParticlesRender"
 			return o;
 		}
 
-		fixed4 frag(v2f i) : COLOR
+		real4 frag(v2f i) : COLOR
 		{
 			return tex2D(_MainTex, i.uv) * i.col * i.col.a;
 		}
 
-		ENDCG
+		ENDHLSL
 		}
 	}
 }

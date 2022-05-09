@@ -6,8 +6,8 @@ public class ParticleEmitter : MonoBehaviour
     public const string VERSION = "2212";
 
 
-    public const int THREAD_COUNT = 256;
-    public int maxParticles = 100000;
+    public const int THREAD_COUNT = 64;
+    public int maxParticles = 10000;
     public Transform simulationParent;
     public float timeScale = 1f;
 
@@ -35,10 +35,10 @@ public class ParticleEmitter : MonoBehaviour
     public float maxInitialSpeed = 0.5f;
     public EmissionShape emissionShape;
     public float sphereRadius = 0.2f;
-    public MeshType meshType;
-    public Mesh emissionMesh;
-    public MeshRenderer meshRenderer;
-    public SkinnedMeshRenderer skinnedMeshRenderer;
+    //public MeshType meshType;
+    //public Mesh emissionMesh;
+    //public MeshRenderer meshRenderer;
+    //public SkinnedMeshRenderer skinnedMeshRenderer;
 
     public DirectionType directionType;
     public Vector3 direction;
@@ -82,14 +82,12 @@ public class ParticleEmitter : MonoBehaviour
     private void Awake()
     {
         Camera.main.depthTextureMode = DepthTextureMode.Depth;
-
         DispatchInit();
     }
 
     private void Update()
     {
         DispatchUpdate();
-
         DispatchEmit(Mathf.RoundToInt(Time.deltaTime * emissionRate * timeScale));
     }
 
@@ -97,9 +95,9 @@ public class ParticleEmitter : MonoBehaviour
     {
         renderMaterial.SetBuffer("particles", particles);
         renderMaterial.SetBuffer("quad", quad);
-
         renderMaterial.SetPass(0);
-
+        Debug.Log(particles.count);
+        Debug.Log(12345);
         Graphics.DrawProceduralNow(MeshTopology.Quads, 6, dead.count);
     }
 
@@ -145,7 +143,7 @@ public class ParticleEmitter : MonoBehaviour
     public void DispatchInit()
     {
         ReleaseBuffers();
-
+        Debug.Log("awake");
         UpdateColorOverLifeTexture();
         UpdateSizeOverLifeBuffer();
 
@@ -261,6 +259,7 @@ public class ParticleEmitter : MonoBehaviour
 
     private void DispatchUpdate()
     {
+        Debug.Log("update");
         if (timeScale > 0)
         {
             computeShader.SetBuffer(updateKernel, "particles", particles);
@@ -308,7 +307,8 @@ public class ParticleEmitter : MonoBehaviour
             }
 
             computeShader.SetVector("time", new Vector2(Time.deltaTime * timeScale, Time.time));
-
+            Debug.Log(updateKernel);
+            Debug.Log(groupCount);
             computeShader.Dispatch(updateKernel, groupCount, 1, 1);
 
             SetDeadCount();
