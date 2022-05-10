@@ -11,8 +11,8 @@ TEXTURE2D(_GNormal);
 SAMPLER(sampler_GNormal);
 TEXTURE2D(_Noise);
 SAMPLER(sampler_Noise);
-TEXTURE2D(_CameraDepthTex);
-SAMPLER(sampler_CameraDepthTex);
+//TEXTURE2D(_CameraDepthTex);
+//SAMPLER(sampler_CameraDepthTex);
 
 #ifndef DIRECTION_NUM
 #define DIRECTION_NUM 6

@@ -81,28 +81,6 @@ Shader "MyPipeline/DeferredRender"
 
 		Pass
 		{
-			Tags { "LightMode" = "BloomInput" }
-			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment BloomGetSource
-			#include "BloomInput.hlsl"
-
-			ENDHLSL
-		}
-
-		Pass
-		{
-			Tags { "LightMode" = "BloomBlur" }
-			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment BloomBlurPass
-			#include "BloomBlur.hlsl"
-
-			ENDHLSL
-		}
-
-		Pass
-		{
 			Tags { "LightMode" = "TAA" }
 			HLSLPROGRAM
 			#pragma vertex vert
@@ -120,16 +98,6 @@ Shader "MyPipeline/DeferredRender"
 			#pragma fragment HBAOGenFragment
 			#include "HBAOPass.hlsl"
 
-			ENDHLSL
-		}
-
-		Pass
-		{
-			Tags { "LightMode" = "Bloom" }
-			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment BloomFinal
-			#include "Bloom.hlsl"
 			ENDHLSL
 		}
     }

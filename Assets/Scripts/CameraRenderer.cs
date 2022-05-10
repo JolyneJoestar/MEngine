@@ -88,6 +88,7 @@ public partial class CameraRender {
             DrawNPROutline(useDynamicBatching, useGPUInstancing);
         }
         DrawParticles();
+        PostProccess();
         m_context.DrawSkybox(m_camera);
         DrawUnsupportedShaders();
         DrawGizmos();

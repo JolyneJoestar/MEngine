@@ -11,8 +11,6 @@ partial class CameraRender
         DeferredRenderPass_LightVolumeGen,
         DeferredRenderPass_LightVolumeBlur,
         DeferredRenderPass_SSR,
-        DeferredRenderPass_BloomGen,
-        DeferredRenderPass_BloomBlur,
         DeferredRenderPass_TAA,
         DeferredRenderPass_HBAOGen
     }
@@ -26,8 +24,6 @@ partial class CameraRender
     partial void deferredLightVolumeGenPass();
     partial void deferredLightVolumeBlurPass();
     partial void deferredSSRPass();
-    partial void BloomGetInput();
-    partial void BloomPass();
     partial void CopyColorBuffer();
     partial void TAAPass();
     partial void DrawDeferred(bool useDynamicBatching, bool useGPUInstancings);
@@ -128,7 +124,7 @@ partial class CameraRender
         m_radiusPixel = m_camera.pixelHeight * m_aoSettings.Radius / tanHalfFovY / 2;
         //m_camera.projectionMatrix = m_preP[m_aaPingpongFlag];
 
-        m_buffer.GetTemporaryRT(m_shaderBuffers.depthBufferID, screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.Depth);
+ //       m_buffer.GetTemporaryRT(m_shaderBuffers.depthBufferID, screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.Depth);
         m_buffer.GetTemporaryRT(m_shaderBuffers.gbuffers.GPositionID, screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
         m_buffer.GetTemporaryRT(m_shaderBuffers.gbuffers.GNormalID, screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
         m_buffer.GetTemporaryRT(m_shaderBuffers.gbuffers.GAlbedoID, screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
@@ -144,6 +140,10 @@ partial class CameraRender
         m_buffer.GetTemporaryRT(m_shaderBuffers.bloomInputTextureID, screenSize.x / 4, screenSize.y / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
 
         ExecuteBuffer();
+
+        m_bloomPingpongTex[0] = RenderTextures.Instance.GetTemperory(m_camera.name + "m_bloomPingpongTex_0", screenSize.x / 4, screenSize.y / 4, 0, RenderTextureFormat.ARGB32);
+        m_bloomPingpongTex[1] = RenderTextures.Instance.GetTemperory(m_camera.name + "m_bloomPingpongTex_1", screenSize.x / 4, screenSize.y / 4, 0, RenderTextureFormat.ARGB32);
+
         //RenderTargetIdentifier db = defaultRenderBufferId;
         //m_camera.targetTexture  = new RenderTexture(db);
     }
@@ -179,13 +179,13 @@ partial class CameraRender
         m_buffer.ReleaseTemporaryRT(m_shaderBuffers.dfColorTextureID);
         m_buffer.ReleaseTemporaryRT(m_shaderBuffers.bloomInputTextureID);
         m_buffer.ReleaseTemporaryRT(m_shaderBuffers.baseColorTextureID);
-        m_buffer.ReleaseTemporaryRT(m_shaderBuffers.depthBufferID);
+//        m_buffer.ReleaseTemporaryRT(m_shaderBuffers.depthBufferID);
         ExecuteBuffer();
     }
     partial void deferredRenderLightingPass()
     {
         m_buffer.BeginSample("deferred lighting pass");
-        m_buffer.SetRenderTarget(m_shaderBuffers.baseColorTextureID, m_shaderBuffers.depthBufferID);
+        m_buffer.SetRenderTarget(m_shaderBuffers.baseColorTextureID, BuiltinRenderTextureType.CameraTarget);
         for (int i = 0; i < m_renderTarget.Length; i++)
         {
             m_buffer.SetGlobalTexture(m_shaderBuffers.gbuffers[i], m_renderTarget[i]);
@@ -233,7 +233,7 @@ partial class CameraRender
         m_buffer.SetGlobalFloat(m_shaderProperties.hbaoPropreties.maxRadiusPixelID, m_aoSettings.MaxRadiusPixel);
         m_buffer.SetGlobalFloat(m_shaderProperties.hbaoPropreties.angleBiasID, m_aoSettings.AngleBias);
         m_buffer.SetGlobalFloat(m_shaderProperties.hbaoPropreties.aoStrengthID, m_aoSettings.AOStrength);
-        m_buffer.SetGlobalTexture(m_shaderBuffers.depthBufferID, m_shaderBuffers.depthBufferID);
+//        m_buffer.SetGlobalTexture(m_shaderBuffers.depthBufferID, m_shaderBuffers.depthBufferID);
         m_buffer.SetGlobalTexture(m_shaderBuffers.noiseTextureID, m_noiseTexture);
         m_buffer.ClearRenderTarget(false, true, Color.white);
         m_buffer.SetGlobalVectorArray(m_shaderProperties.samplesID, m_aosample);
@@ -276,31 +276,10 @@ partial class CameraRender
     {
         m_buffer.BeginSample("ssr");
         m_buffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
-        m_buffer.SetGlobalTexture(m_shaderBuffers.dfColorTextureID, m_shaderBuffers.dfColorTextureID);
+        m_buffer.SetGlobalTexture(m_shaderBuffers.dfColorTextureID, m_shaderBuffers.baseColorTextureID);
         m_buffer.SetGlobalFloat(m_shaderProperties.ssrStepRatioID, m_ssrStepRatio);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_SSR, MeshTopology.Triangles, 3);
         m_buffer.EndSample("ssr");
-        ExecuteBuffer();
-    }
-
-    partial void BloomGetInput()
-    {
-        m_buffer.BeginSample("bloom input");
-        m_buffer.SetRenderTarget(m_shaderBuffers.bloomInputTextureID);
-        m_buffer.SetGlobalTexture(m_shaderBuffers.baseColorTextureID, m_shaderBuffers.baseColorTextureID);
-        m_buffer.SetGlobalVector(m_shaderProperties.screenProperties.downScaleTexelSizeID, m_downScaleTexelSize);
-        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_BloomGen, MeshTopology.Triangles, 3);
-        m_buffer.EndSample("bloom input");
-        ExecuteBuffer();
-    }
-
-    partial void BloomPass()
-    {
-        m_buffer.BeginSample("bloom");
-        m_buffer.SetRenderTarget(m_shaderBuffers.dfColorTextureID);
-        m_buffer.SetGlobalTexture(m_shaderBuffers.bloomInputTextureID, m_shaderBuffers.bloomInputTextureID);
-        m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_BloomBlur, MeshTopology.Triangles, 3);
-        m_buffer.EndSample("bloom");
         ExecuteBuffer();
     }
     partial void CopyColorBuffer()
@@ -336,8 +315,6 @@ partial class CameraRender
         deferredRenderLightingPass();
         CopyColorBuffer();
         TAAPass();
-        BloomGetInput();
-        BloomPass();
-        deferredSSRPass();
+        //deferredSSRPass();
     }
 }
