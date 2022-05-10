@@ -9,7 +9,6 @@ public class ParticleEmitter : MonoBehaviour
 
     public const int THREAD_COUNT = 64;
     public int maxParticles = 10000;
-    public Transform simulationParent;
     public float timeScale = 1f;
 
 
@@ -70,7 +69,7 @@ public class ParticleEmitter : MonoBehaviour
         public bool alive;
         public Vector3 position;
         public Vector3 velocity;
-        public Vector2 life; //x = age, y = lifetime
+        public Vector2 life; //(age, lifetime)
         public Color color;
         float size;
     }
@@ -84,9 +83,10 @@ public class ParticleEmitter : MonoBehaviour
     private void Awake()
     {
         Camera.main.depthTextureMode = DepthTextureMode.Depth;
-        MaterialManager.Instance.particleMaterial = renderMaterial;
-        MaterialManager.Instance.add(this);
+        ParticleEmitterManager.Instance.particleMaterial = renderMaterial;
+        ParticleEmitterManager.Instance.add(this);
         DispatchInit();
+        Debug.Log("awake");
     }
 
     private void Update()
@@ -97,15 +97,10 @@ public class ParticleEmitter : MonoBehaviour
 
     public void RenderParticles(CommandBuffer commandBuffer,ScriptableRenderContext context,Camera camera)
     {
-        //renderMaterial.SetBuffer("particles", particles);
-        //renderMaterial.SetBuffer("quad", quad);
-        //renderMaterial.SetPass(0);
-        //Graphics.DrawProceduralNow(MeshTopology.Quads, 6, dead.count);
-        m_mvp = transform.localToWorldMatrix * camera.worldToCameraMatrix;
         commandBuffer.BeginSample("emitter");
         commandBuffer.SetGlobalBuffer("particles", particles);
         commandBuffer.SetGlobalBuffer("quad", quad);
-        commandBuffer.DrawProcedural(m_mvp, renderMaterial, 0, MeshTopology.Quads, 6, dead.count);
+        commandBuffer.DrawProcedural(Matrix4x4.identity, renderMaterial, 0, MeshTopology.Quads, 6, dead.count);
         commandBuffer.EndSample("emitter");
         context.ExecuteCommandBuffer(commandBuffer);
         commandBuffer.Clear();
@@ -113,8 +108,9 @@ public class ParticleEmitter : MonoBehaviour
 
     private void OnDestroy()
     {
-        MaterialManager.Instance.remove(this);
+        ParticleEmitterManager.Instance.remove(this);
         ReleaseBuffers();
+        Debug.Log("release");
     }
 
     public int GetAliveCount()
@@ -154,7 +150,6 @@ public class ParticleEmitter : MonoBehaviour
     public void DispatchInit()
     {
         ReleaseBuffers();
-        Debug.Log("awake");
         UpdateColorOverLifeTexture();
         UpdateSizeOverLifeBuffer();
 

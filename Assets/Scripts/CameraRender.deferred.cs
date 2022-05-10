@@ -73,6 +73,7 @@ partial class CameraRender
     Vector4 m_zBufferParam;
     Vector4 m_UV2View;
     Vector4 m_texelSize;
+    Vector2 m_downScaleTexelSize;
     float m_radiusPixel;
     float m_ssrStepRatio;
 
@@ -123,6 +124,7 @@ partial class CameraRender
         var tanHalfFovX = tanHalfFovY * ((float)screenSize.x / screenSize.y);
         m_UV2View = new Vector4(2 * tanHalfFovX, 2 * tanHalfFovY, -tanHalfFovX, -tanHalfFovY);
         m_texelSize = new Vector4(1f / screenSize.x, 1f / screenSize.y, screenSize.x, screenSize.y);
+        m_downScaleTexelSize = new Vector2(4f / screenSize.x, 4f / screenSize.y);
         m_radiusPixel = m_camera.pixelHeight * m_aoSettings.Radius / tanHalfFovY / 2;
         //m_camera.projectionMatrix = m_preP[m_aaPingpongFlag];
 
@@ -286,6 +288,7 @@ partial class CameraRender
         m_buffer.BeginSample("bloom input");
         m_buffer.SetRenderTarget(m_shaderBuffers.bloomInputTextureID);
         m_buffer.SetGlobalTexture(m_shaderBuffers.baseColorTextureID, m_shaderBuffers.baseColorTextureID);
+        m_buffer.SetGlobalVector(m_shaderProperties.screenProperties.downScaleTexelSizeID, m_downScaleTexelSize);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_BloomGen, MeshTopology.Triangles, 3);
         m_buffer.EndSample("bloom input");
         ExecuteBuffer();

@@ -11,7 +11,7 @@ Shader "MyPipeline/DeferredRender"
 
         Pass
         {
-			Tags{ "LightMode" = "0" }
+			Tags { "LightMode" = "DeferredLighting" }
             HLSLPROGRAM
 			#pragma multi_compile _ _DIRECTIONAL_PCF3 _DIRECTIONAL_PCF5 _DIRECTIONAL_PCF7
 			#pragma multi_compile _ _CASCADE_BLEND_SOFT _CASCADE_BLEND_DITHER
@@ -26,7 +26,7 @@ Shader "MyPipeline/DeferredRender"
 
         Pass
         {
-			Tags{ "LightMode" = "1" }
+			Tags { "LightMode" = "SSAO" }
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment SSAOFragment
@@ -37,7 +37,7 @@ Shader "MyPipeline/DeferredRender"
 
         Pass
         {
-			Tags{ "LightMode" = "2" }
+			Tags { "LightMode" = "SSAOBlur" }
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment SSAOBlurFragment
@@ -48,7 +48,7 @@ Shader "MyPipeline/DeferredRender"
 
         Pass
         {
-			Tags{ "LightMode" = "3" }
+			Tags { "LightMode" = "LightVolume" }
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment deferredLightVolumeFrag
@@ -59,7 +59,7 @@ Shader "MyPipeline/DeferredRender"
 
 		Pass
 		{
-			Tags{ "LightMode" = "4" }
+			Tags { "LightMode" = "LightVolumeBlur" }
 			HLSLPROGRAM
 			#pragma vertex vert
 			#pragma fragment lightVolumeBlurFragment
@@ -70,7 +70,7 @@ Shader "MyPipeline/DeferredRender"
 
 		Pass
 		{
-			Tags{ "LightMode" = "5" }
+			Tags { "LightMode" = "SSR" }
 			HLSLPROGRAM
 			#pragma vertex vert
 			#pragma fragment SSRGenPass
@@ -81,7 +81,7 @@ Shader "MyPipeline/DeferredRender"
 
 		Pass
 		{
-			Tags{ "LightMode" = "6" }
+			Tags { "LightMode" = "BloomInput" }
 			HLSLPROGRAM
 			#pragma vertex vert
 			#pragma fragment BloomGetSource
@@ -92,18 +92,18 @@ Shader "MyPipeline/DeferredRender"
 
 		Pass
 		{
-			Tags{ "LightMode" = "7" }
+			Tags { "LightMode" = "BloomBlur" }
 			HLSLPROGRAM
 			#pragma vertex vert
-			#pragma fragment BloomGenPass
-			#include "Bloom.hlsl"
+			#pragma fragment BloomBlurPass
+			#include "BloomBlur.hlsl"
 
 			ENDHLSL
 		}
 
 		Pass
 		{
-			Tags{ "LightMode" = "8" }
+			Tags { "LightMode" = "TAA" }
 			HLSLPROGRAM
 			#pragma vertex vert
 			#pragma fragment TAA
@@ -114,12 +114,22 @@ Shader "MyPipeline/DeferredRender"
 
 		Pass
 		{
-			Tags{ "LightMode" = "9" }
+			Tags { "LightMode" = "HBAOGen" }
 			HLSLPROGRAM
 			#pragma vertex vert
 			#pragma fragment HBAOGenFragment
 			#include "HBAOPass.hlsl"
 
+			ENDHLSL
+		}
+
+		Pass
+		{
+			Tags { "LightMode" = "Bloom" }
+			HLSLPROGRAM
+			#pragma vertex vert
+			#pragma fragment BloomFinal
+			#include "Bloom.hlsl"
 			ENDHLSL
 		}
     }

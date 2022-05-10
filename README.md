@@ -1,6 +1,6 @@
 This project is used for learning Unity Scriptable Render Pipeline, and following functions have been realized until now。
 
-- Preprocess functions
+- Precompute functions
   - [x] Gen brdf LUT
   - [x] Gen irradiance map
 

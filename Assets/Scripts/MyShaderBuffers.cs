@@ -1,13 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class GBuffers
 {
-    public int GPositionID;
-    public int GNormalID;
-    public int GAlbedoID;
-    public int GMaterialID;
+    public int GPositionID { get; private set; }
+    public int GNormalID { get; private set; }
+    public int GAlbedoID { get; private set; }
+    public int GMaterialID { get; private set; }
     public int MaxGBUfferNum { get; private set; }
 
     public GBuffers()
@@ -37,17 +35,17 @@ public class GBuffers
 
 public class MyShaderBuffers
 {
-    public int bluredAoTextureID;
-    public int aoTextureID;
-    public int lightVolumeTextureID;
-    public int bluredLightVolumeTextureID;
-    public int baseColorTextureID;
-    public int preColorTextureID;
-    public int currentColorTextureID;
-    public int dfColorTextureID;
-    public int noiseTextureID;
-    public int bloomInputTextureID;
-    public int depthBufferID;
+    public int bluredAoTextureID { get; private set; }
+    public int aoTextureID { get; private set; }
+    public int lightVolumeTextureID { get; private set; }
+    public int bluredLightVolumeTextureID { get; private set; }
+    public int baseColorTextureID { get; private set; }
+    public int preColorTextureID { get; private set; }
+    public int currentColorTextureID { get; private set; }
+    public int dfColorTextureID { get; private set; }
+    public int noiseTextureID { get; private set; }
+    public int bloomInputTextureID { get; private set; }
+    public int depthBufferID { get; private set; }
 
     public GBuffers gbuffers;
 

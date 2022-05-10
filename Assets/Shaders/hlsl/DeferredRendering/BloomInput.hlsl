@@ -8,10 +8,6 @@
 TEXTURE2D(_BaseColorBuffer);
 SAMPLER(sampler_BaseColorBuffer);
 
-#ifndef BLOOM_RADIUS
-#define BLOOM_RADIUS 4
-#endif
-
 float4 BloomGetSource(v2f vert) :SV_TARGET
 {
 	float3 color = SAMPLE_TEXTURE2D(_BaseColorBuffer, sampler_BaseColorBuffer, vert.uv).rgb;

@@ -138,7 +138,7 @@ public partial class CameraRender {
 
     void DrawParticles()
     {
-        MaterialManager.Instance.render(m_buffer, m_context, m_camera);
+        ParticleEmitterManager.Instance.render(m_buffer, m_context, m_camera);
     }
     void Submit()
     {
@@ -149,17 +149,6 @@ public partial class CameraRender {
     void Setup()
     {
         m_context.SetupCameraProperties(m_camera);
-        //if (postFXStack.IsActive)
-        //{
-        //    m_buffer.GetTemporaryRT(
-        //        frameBufferId, m_camera.pixelWidth, m_camera.pixelHeight,
-        //        32, FilterMode.Bilinear, RenderTextureFormat.Default
-        //    );
-        //    m_buffer.SetRenderTarget(
-        //        frameBufferId,
-        //        RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store
-        //    );
-        //}
         m_buffer.ClearRenderTarget(true, true, Color.clear);
         m_buffer.BeginSample(SampleName);
         ExecuteBuffer();

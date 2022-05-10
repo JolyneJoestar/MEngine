@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-public class MaterialManager
-{
-    private static MaterialManager m_instance = null;
 
+public class ParticleEmitterManager
+{
+    private static ParticleEmitterManager m_instance = null;
     public Material particleMaterial { get; set; }
     List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
     public void add(ParticleEmitter emitter)
@@ -24,14 +25,14 @@ public class MaterialManager
         }
     }
 
-    private MaterialManager() { }
-    public static MaterialManager Instance
+    private ParticleEmitterManager() { }
+    public static ParticleEmitterManager Instance
     {
         get
         {
             if(m_instance == null)
             {
-                m_instance = new MaterialManager();
+                m_instance = new ParticleEmitterManager();
             }
             return m_instance;
         }
