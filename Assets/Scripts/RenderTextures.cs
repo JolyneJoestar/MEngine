@@ -20,9 +20,14 @@ public class RenderTextures
     {
         if (m_textures.ContainsKey(name))
         {
+            if (m_textures[name] == null)
+            {
+                m_textures[name] = new RenderTexture(width, height, depth, format);
+                return m_textures[name];
+            }
             if (m_textures[name].width == width && m_textures[name].height == height)
             {
-                    return m_textures[name];
+                 return m_textures[name];
             }
         }
         m_textures[name] = new RenderTexture(width, height, depth, format);

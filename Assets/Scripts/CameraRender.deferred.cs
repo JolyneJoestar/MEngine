@@ -112,7 +112,7 @@ partial class CameraRender
         var tanHalfFovX = tanHalfFovY * ((float)screenSize.x / screenSize.y);
         m_UV2View = new Vector4(2 * tanHalfFovX, 2 * tanHalfFovY, -tanHalfFovX, -tanHalfFovY);
         m_texelSize = new Vector4(1f / screenSize.x, 1f / screenSize.y, screenSize.x, screenSize.y);
-        m_downScaleTexelSize = new Vector2(4f / screenSize.x, 4f / screenSize.y);
+
         m_radiusPixel = m_camera.pixelHeight * m_aoSettings.Radius / tanHalfFovY / 2;
         //m_camera.projectionMatrix = m_preP[m_aaPingpongFlag];
 

@@ -5,7 +5,7 @@ partial class CameraRender
 {
     const int BLOOM_NUM = 10;
     partial void InitPostBuffers();
-
+    partial void BlitColor();
     partial void BloomGetInput();
     partial void BloomFilter();
     partial void BloomPass();
@@ -25,6 +25,7 @@ partial class CameraRender
     partial void PostProccess()
     {
         InitPostBuffers();
+        BlitColor();
         BloomGetInput();
         BloomFilter();
         BloomPass();
@@ -34,11 +35,20 @@ partial class CameraRender
         m_bloomPingpongTex[0] = RenderTextures.Instance.GetTemperory(m_camera.name + "m_bloomPingpongTex_0", screenSize.x / 4, screenSize.y / 4, 0, RenderTextureFormat.ARGB32);
         m_bloomPingpongTex[1] = RenderTextures.Instance.GetTemperory(m_camera.name + "m_bloomPingpongTex_1", screenSize.x / 4, screenSize.y / 4, 0, RenderTextureFormat.ARGB32);
         m_buffer.GetTemporaryRT(m_shaderBuffers.baseColorTextureID, screenSize.x, screenSize.y, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
+        m_downScaleTexelSize = new Vector2(4f / screenSize.x, 4f / screenSize.y);
+    }
+    partial void BlitColor()
+    {
+        m_buffer.BeginSample("copy");
+        m_buffer.Blit(m_carmeraTarget, m_shaderBuffers.baseColorTextureID);
+        m_buffer.EndSample("copy");
+        ExecuteBuffer();
     }
     partial void BloomGetInput()
     {
         m_buffer.BeginSample("bloom input");
         m_buffer.SetRenderTarget(m_bloomPingpongTex[0]);
+        m_buffer.ClearRenderTarget(false,true,Color.black);
         m_buffer.SetGlobalTexture(m_shaderBuffers.baseColorTextureID, m_shaderBuffers.baseColorTextureID);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_postProccessMaterial, (int)PostProccessPass.PostProccessPass_BloomGetInput, MeshTopology.Triangles, 3);
         m_buffer.EndSample("bloom input");
