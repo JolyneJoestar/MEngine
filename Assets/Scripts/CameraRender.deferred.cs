@@ -73,9 +73,6 @@ partial class CameraRender
     float m_radiusPixel;
     float m_ssrStepRatio;
 
-    //   RenderTexture
-    Vector2Int screenSize = new Vector2Int(2048, 2048);
-
     partial void initGBuffer()
     {
         if(m_aosample == null)
@@ -87,11 +84,6 @@ partial class CameraRender
             }
         }
 
-        if (screenSize.x != m_camera.scaledPixelWidth || screenSize.y != m_camera.scaledPixelHeight)
-        {
-            screenSize.x = m_camera.scaledPixelWidth;
-            screenSize.y = m_camera.scaledPixelHeight;
-        }
         m_buffer.GetTemporaryRT(m_preTexture[0], screenSize.x, screenSize.y, 32, FilterMode.Point, RenderTextureFormat.ARGB32);
         m_buffer.GetTemporaryRT(m_preTexture[1], screenSize.x, screenSize.y, 32, FilterMode.Point, RenderTextureFormat.ARGB32);
 
@@ -136,21 +128,16 @@ partial class CameraRender
             m_renderTarget[i] = m_shaderBuffers.gbuffers[i];
         }
         m_buffer.GetTemporaryRT(m_shaderBuffers.dfColorTextureID, screenSize.x, screenSize.y, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
-        m_buffer.GetTemporaryRT(m_shaderBuffers.baseColorTextureID, screenSize.x, screenSize.y, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
-        m_buffer.GetTemporaryRT(m_shaderBuffers.bloomInputTextureID, screenSize.x / 4, screenSize.y / 4, 0, FilterMode.Trilinear, RenderTextureFormat.ARGB32);
+        
 
         ExecuteBuffer();
-
-        m_bloomPingpongTex[0] = RenderTextures.Instance.GetTemperory(m_camera.name + "m_bloomPingpongTex_0", screenSize.x / 4, screenSize.y / 4, 0, RenderTextureFormat.ARGB32);
-        m_bloomPingpongTex[1] = RenderTextures.Instance.GetTemperory(m_camera.name + "m_bloomPingpongTex_1", screenSize.x / 4, screenSize.y / 4, 0, RenderTextureFormat.ARGB32);
-
         //RenderTargetIdentifier db = defaultRenderBufferId;
         //m_camera.targetTexture  = new RenderTexture(db);
     }
 
     partial void deferredRenderGBufferPass(bool useDynamicBatching, bool useGPUInstancing)
     {
-        m_buffer.SetRenderTarget(m_renderTarget, BuiltinRenderTextureType.CameraTarget);
+        m_buffer.SetRenderTarget(m_renderTarget, m_carmeraTarget.depthBuffer);
         m_buffer.ClearRenderTarget(true, true, Color.white);
         ExecuteBuffer();
         var sortingSettings = new SortingSettings(m_camera) { criteria = SortingCriteria.CommonOpaque };
@@ -177,7 +164,6 @@ partial class CameraRender
         m_buffer.ReleaseTemporaryRT(m_shaderBuffers.aoTextureID);
         m_buffer.ReleaseTemporaryRT(m_shaderBuffers.bluredLightVolumeTextureID);
         m_buffer.ReleaseTemporaryRT(m_shaderBuffers.dfColorTextureID);
-        m_buffer.ReleaseTemporaryRT(m_shaderBuffers.bloomInputTextureID);
         m_buffer.ReleaseTemporaryRT(m_shaderBuffers.baseColorTextureID);
 //        m_buffer.ReleaseTemporaryRT(m_shaderBuffers.depthBufferID);
         ExecuteBuffer();
@@ -185,7 +171,7 @@ partial class CameraRender
     partial void deferredRenderLightingPass()
     {
         m_buffer.BeginSample("deferred lighting pass");
-        m_buffer.SetRenderTarget(m_shaderBuffers.baseColorTextureID, BuiltinRenderTextureType.CameraTarget);
+        m_buffer.SetRenderTarget(m_carmeraTarget);
         for (int i = 0; i < m_renderTarget.Length; i++)
         {
             m_buffer.SetGlobalTexture(m_shaderBuffers.gbuffers[i], m_renderTarget[i]);
@@ -275,8 +261,8 @@ partial class CameraRender
     partial void deferredSSRPass()
     {
         m_buffer.BeginSample("ssr");
-        m_buffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
-        m_buffer.SetGlobalTexture(m_shaderBuffers.dfColorTextureID, m_shaderBuffers.baseColorTextureID);
+        m_buffer.SetRenderTarget(m_carmeraTarget);
+        m_buffer.SetGlobalTexture(m_shaderBuffers.dfColorTextureID, m_carmeraTarget);
         m_buffer.SetGlobalFloat(m_shaderProperties.ssrStepRatioID, m_ssrStepRatio);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_SSR, MeshTopology.Triangles, 3);
         m_buffer.EndSample("ssr");
@@ -285,7 +271,7 @@ partial class CameraRender
     partial void CopyColorBuffer()
     {
         m_buffer.BeginSample("copy");
-        m_buffer.Blit(m_shaderBuffers.baseColorTextureID, m_preTexture[m_aaPingpongFlag]);
+        m_buffer.Blit(m_carmeraTarget, m_preTexture[m_aaPingpongFlag]);
         m_aaPingpongFlag = 1 - m_aaPingpongFlag;
         m_buffer.EndSample("copy");
         ExecuteBuffer();
@@ -293,7 +279,7 @@ partial class CameraRender
     partial void TAAPass()
     {
         m_buffer.BeginSample("taa pass");
-        m_buffer.SetRenderTarget(m_shaderBuffers.baseColorTextureID);
+        m_buffer.SetRenderTarget(m_carmeraTarget);
         m_buffer.SetGlobalTexture(m_shaderBuffers.currentColorTextureID, m_preTexture[1 - m_aaPingpongFlag]);
         m_buffer.SetGlobalTexture(m_shaderBuffers.preColorTextureID, m_preTexture[m_aaPingpongFlag]);
         m_buffer.SetGlobalVector(m_shaderProperties.taaPropreties.jitterID, jitter);

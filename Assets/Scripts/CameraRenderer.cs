@@ -34,6 +34,9 @@ public partial class CameraRender {
         m_outlineWidthId = Shader.PropertyToID("_OutlineWidth"),
         m_outlineColorId = Shader.PropertyToID("_OutlineColor");
     NPRSetting m_nprSettings;
+    //   RenderTexture
+    Vector2Int screenSize = new Vector2Int(2048, 2048);
+    RenderTexture m_carmeraTarget;
 
     void ConfigerLights(ref CullingResults cull)
     {
@@ -52,7 +55,14 @@ public partial class CameraRender {
             //       Debug.Log(m_visibleLightColor[i]);
         }
     }
-
+    void SetData()
+    {
+        if (screenSize.x != m_camera.scaledPixelWidth || screenSize.y != m_camera.scaledPixelHeight)
+        {
+            screenSize.x = m_camera.scaledPixelWidth;
+            screenSize.y = m_camera.scaledPixelHeight;
+        }
+    }
     public void Render(ScriptableRenderContext context, Camera camera,bool useDynamicBatching, bool useGPUInstancing, bool m_useDeferredRendering , ShadowSettings shadowSettings, ShadowPostSettings shadowPostSettings,
         NPRSetting nprSetting, AOSetting aoSetting, float ssrStepRatio)
     {
@@ -61,6 +71,11 @@ public partial class CameraRender {
         this.m_nprSettings = nprSetting;
         this.m_aoSettings = aoSetting;
         this.m_ssrStepRatio = ssrStepRatio;
+
+        SetData();
+
+        m_carmeraTarget = RenderTextures.Instance.GetTemperory(m_camera.name, screenSize.x, screenSize.y, 32, RenderTextureFormat.Default);
+        m_camera.SetTargetBuffers(m_carmeraTarget.colorBuffer, m_carmeraTarget.depthBuffer);
 
         PrepareBuffer();
         PrepareForSceneWindow();

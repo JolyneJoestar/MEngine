@@ -40,5 +40,5 @@ MonoBehaviour:
     MaxRadiusPixel: 215.4
     AngleBias: 0.036
     AOStrength: 1
-  useDeferredRendering: 1
+  useDeferredRendering: 0
   ssrStepRatio: 0.239

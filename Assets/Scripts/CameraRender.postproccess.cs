@@ -4,6 +4,8 @@ using UnityEngine.Rendering;
 partial class CameraRender
 {
     const int BLOOM_NUM = 10;
+    partial void InitPostBuffers();
+
     partial void BloomGetInput();
     partial void BloomFilter();
     partial void BloomPass();
@@ -22,9 +24,16 @@ partial class CameraRender
 
     partial void PostProccess()
     {
+        InitPostBuffers();
         BloomGetInput();
         BloomFilter();
         BloomPass();
+    }
+    partial void InitPostBuffers()
+    {
+        m_bloomPingpongTex[0] = RenderTextures.Instance.GetTemperory(m_camera.name + "m_bloomPingpongTex_0", screenSize.x / 4, screenSize.y / 4, 0, RenderTextureFormat.ARGB32);
+        m_bloomPingpongTex[1] = RenderTextures.Instance.GetTemperory(m_camera.name + "m_bloomPingpongTex_1", screenSize.x / 4, screenSize.y / 4, 0, RenderTextureFormat.ARGB32);
+        m_buffer.GetTemporaryRT(m_shaderBuffers.baseColorTextureID, screenSize.x, screenSize.y, 0, FilterMode.Bilinear, RenderTextureFormat.ARGB32);
     }
     partial void BloomGetInput()
     {
@@ -54,8 +63,9 @@ partial class CameraRender
     partial void BloomPass()
     {
         m_buffer.BeginSample("bloom");
-        m_buffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
+        m_buffer.SetRenderTarget(m_carmeraTarget);
         m_buffer.SetGlobalTexture(m_shaderBuffers.bloomInputTextureID, m_bloomPingpongTex[1 - m_bloomPingpongFlag]);
+        m_buffer.SetGlobalTexture(m_shaderBuffers.baseColorTextureID, m_shaderBuffers.baseColorTextureID);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_postProccessMaterial, (int)PostProccessPass.PostProccessPass_Bloom, MeshTopology.Triangles, 3);
         m_buffer.EndSample("bloom");
         ExecuteBuffer();
