@@ -12,9 +12,18 @@ This project is used for learning Unity Scriptable Render Pipeline, and followin
     - [x] PCSS 
     - [ ] ESM
     - [x] PCF
+    
   - [x] PBR
+  
   - [x] Volume Light
+  
+  - [x] Bloom
+  
+    ![screenshot](\images\Bloom.png)
+  
   - [x] GPU Particles
+  
+    ![screenshot](\images\GPUParticle.png)
   
 - Forward render pipline 
 
@@ -33,8 +42,6 @@ This project is used for learning Unity Scriptable Render Pipeline, and followin
 - Deferred render pipline
   
   - [x] SSR (still have some problem)
-  
-  - [x] Bloom
   
   - [x] TAA
   

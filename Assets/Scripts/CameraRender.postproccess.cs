@@ -40,7 +40,7 @@ partial class CameraRender
     partial void BlitColor()
     {
         m_buffer.BeginSample("copy");
-        m_buffer.Blit(m_carmeraTarget, m_shaderBuffers.baseColorTextureID);
+        m_buffer.Blit(BuiltinRenderTextureType.CameraTarget, m_shaderBuffers.baseColorTextureID);
         m_buffer.EndSample("copy");
         ExecuteBuffer();
     }
@@ -73,7 +73,7 @@ partial class CameraRender
     partial void BloomPass()
     {
         m_buffer.BeginSample("bloom");
-        m_buffer.SetRenderTarget(m_carmeraTarget);
+        m_buffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
         m_buffer.SetGlobalTexture(m_shaderBuffers.bloomInputTextureID, m_bloomPingpongTex[1 - m_bloomPingpongFlag]);
         m_buffer.SetGlobalTexture(m_shaderBuffers.baseColorTextureID, m_shaderBuffers.baseColorTextureID);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_postProccessMaterial, (int)PostProccessPass.PostProccessPass_Bloom, MeshTopology.Triangles, 3);

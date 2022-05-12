@@ -100,10 +100,11 @@ public class ParticleEmitter : MonoBehaviour
         commandBuffer.BeginSample("emitter");
         commandBuffer.SetGlobalBuffer("particles", particles);
         commandBuffer.SetGlobalBuffer("quad", quad);
-        commandBuffer.DrawProcedural(Matrix4x4.identity, renderMaterial, 0, MeshTopology.Quads, 6, dead.count);
+        commandBuffer.DrawProcedural(Matrix4x4.identity, renderMaterial, 0, MeshTopology.Triangles, 6, dead.count);
         commandBuffer.EndSample("emitter");
         context.ExecuteCommandBuffer(commandBuffer);
         commandBuffer.Clear();
+        Debug.Log(dead.count);
     }
 
     private void OnDestroy()
@@ -244,6 +245,7 @@ public class ParticleEmitter : MonoBehaviour
                 computeShader.Dispatch(emitKernel, count, 1, 1);
             }
         }
+        Debug.Log(dead.count);
     }
 
     private int GetDeadCount()
@@ -316,6 +318,7 @@ public class ParticleEmitter : MonoBehaviour
 
             SetDeadCount();
         }
+        Debug.Log(dead.count);
     }
 
     private void ReleaseBuffers()

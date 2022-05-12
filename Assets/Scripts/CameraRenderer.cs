@@ -36,7 +36,6 @@ public partial class CameraRender {
     NPRSetting m_nprSettings;
     //   RenderTexture
     Vector2Int screenSize = new Vector2Int(2048, 2048);
-    RenderTexture m_carmeraTarget;
 
     void ConfigerLights(ref CullingResults cull)
     {
@@ -73,9 +72,6 @@ public partial class CameraRender {
         this.m_ssrStepRatio = ssrStepRatio;
 
         SetData();
-
-        m_carmeraTarget = RenderTextures.Instance.GetTemperory(m_camera.name, screenSize.x, screenSize.y, 32, RenderTextureFormat.Default);
-        m_camera.SetTargetBuffers(m_carmeraTarget.colorBuffer, m_carmeraTarget.depthBuffer);
 
         PrepareBuffer();
         PrepareForSceneWindow();

@@ -137,7 +137,7 @@ partial class CameraRender
 
     partial void deferredRenderGBufferPass(bool useDynamicBatching, bool useGPUInstancing)
     {
-        m_buffer.SetRenderTarget(m_renderTarget, m_carmeraTarget.depthBuffer);
+        m_buffer.SetRenderTarget(m_renderTarget, BuiltinRenderTextureType.CameraTarget);
         m_buffer.ClearRenderTarget(true, true, Color.white);
         ExecuteBuffer();
         var sortingSettings = new SortingSettings(m_camera) { criteria = SortingCriteria.CommonOpaque };
@@ -171,7 +171,7 @@ partial class CameraRender
     partial void deferredRenderLightingPass()
     {
         m_buffer.BeginSample("deferred lighting pass");
-        m_buffer.SetRenderTarget(m_carmeraTarget);
+        m_buffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
         for (int i = 0; i < m_renderTarget.Length; i++)
         {
             m_buffer.SetGlobalTexture(m_shaderBuffers.gbuffers[i], m_renderTarget[i]);
@@ -261,8 +261,8 @@ partial class CameraRender
     partial void deferredSSRPass()
     {
         m_buffer.BeginSample("ssr");
-        m_buffer.SetRenderTarget(m_carmeraTarget);
-        m_buffer.SetGlobalTexture(m_shaderBuffers.dfColorTextureID, m_carmeraTarget);
+        m_buffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
+        m_buffer.SetGlobalTexture(m_shaderBuffers.dfColorTextureID, m_shaderBuffers.baseColorTextureID);
         m_buffer.SetGlobalFloat(m_shaderProperties.ssrStepRatioID, m_ssrStepRatio);
         m_buffer.DrawProcedural(Matrix4x4.identity, m_deferredRenderingMaterial, (int)DeferredRenderPass.DeferredRenderPass_SSR, MeshTopology.Triangles, 3);
         m_buffer.EndSample("ssr");
@@ -271,7 +271,7 @@ partial class CameraRender
     partial void CopyColorBuffer()
     {
         m_buffer.BeginSample("copy");
-        m_buffer.Blit(m_carmeraTarget, m_preTexture[m_aaPingpongFlag]);
+        m_buffer.Blit(BuiltinRenderTextureType.CameraTarget, m_preTexture[m_aaPingpongFlag]);
         m_aaPingpongFlag = 1 - m_aaPingpongFlag;
         m_buffer.EndSample("copy");
         ExecuteBuffer();
@@ -279,7 +279,7 @@ partial class CameraRender
     partial void TAAPass()
     {
         m_buffer.BeginSample("taa pass");
-        m_buffer.SetRenderTarget(m_carmeraTarget);
+        m_buffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
         m_buffer.SetGlobalTexture(m_shaderBuffers.currentColorTextureID, m_preTexture[1 - m_aaPingpongFlag]);
         m_buffer.SetGlobalTexture(m_shaderBuffers.preColorTextureID, m_preTexture[m_aaPingpongFlag]);
         m_buffer.SetGlobalVector(m_shaderProperties.taaPropreties.jitterID, jitter);
