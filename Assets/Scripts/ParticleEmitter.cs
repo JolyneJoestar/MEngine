@@ -35,10 +35,6 @@ public class ParticleEmitter : MonoBehaviour
     public float maxInitialSpeed = 0.5f;
     public EmissionShape emissionShape;
     public float sphereRadius = 0.2f;
-    //public MeshType meshType;
-    //public Mesh emissionMesh;
-    //public MeshRenderer meshRenderer;
-    //public SkinnedMeshRenderer skinnedMeshRenderer;
 
     public DirectionType directionType;
     public Vector3 direction;
@@ -100,11 +96,10 @@ public class ParticleEmitter : MonoBehaviour
         commandBuffer.BeginSample("emitter");
         commandBuffer.SetGlobalBuffer("particles", particles);
         commandBuffer.SetGlobalBuffer("quad", quad);
-        commandBuffer.DrawProcedural(Matrix4x4.identity, renderMaterial, 0, MeshTopology.Triangles, 6, dead.count);
+        commandBuffer.DrawProcedural(Matrix4x4.identity, renderMaterial, 0, MeshTopology.Triangles, 6, particles.count);
         commandBuffer.EndSample("emitter");
         context.ExecuteCommandBuffer(commandBuffer);
         commandBuffer.Clear();
-        Debug.Log(dead.count);
     }
 
     private void OnDestroy()
@@ -189,8 +184,7 @@ public class ParticleEmitter : MonoBehaviour
     {
         if (enableEmission)
         {
-            count = Mathf.Min(count, maxParticles - (bufferSize - deadCount));
-
+            count = Mathf.Min(count, maxParticles - GetAliveCount());
             if (count > 0)
             {
                 Vector3 velocity = (transform.position - previousPositon) / Time.deltaTime;
@@ -245,7 +239,6 @@ public class ParticleEmitter : MonoBehaviour
                 computeShader.Dispatch(emitKernel, count, 1, 1);
             }
         }
-        Debug.Log(dead.count);
     }
 
     private int GetDeadCount()
@@ -318,7 +311,6 @@ public class ParticleEmitter : MonoBehaviour
 
             SetDeadCount();
         }
-        Debug.Log(dead.count);
     }
 
     private void ReleaseBuffers()
