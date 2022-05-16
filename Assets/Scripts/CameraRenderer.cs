@@ -18,6 +18,8 @@ public partial class CameraRender {
 
     Lighting m_lighting = new Lighting();
     static ShaderTagId m_customShaderTagId = new ShaderTagId("SPRDefaultLegay");
+    static ShaderTagId m_particlesTagId = new ShaderTagId("ParticlesRender");
+    static ShaderTagId m_nprOutlineId = new ShaderTagId("NPROutline");
     static Matrix4x4 dither = new Matrix4x4
     (
        new Vector4(0,       0.5f,    0.125f,  0.625f),
@@ -25,6 +27,15 @@ public partial class CameraRender {
        new Vector4(0.1875f,  0.6875f, 0.0625f, 0.5625f),
        new Vector4(0.9375f,  0.4375f, 0.8125f, 0.3125f)
     );
+
+    static string m_nprKeywords = "_NPRLIGHTING";
+    static int m_colorStreetId = Shader.PropertyToID("_ColorStreet"),
+        m_specularSegmentId = Shader.PropertyToID("_SpecularSegment"),
+        m_outlineWidthId = Shader.PropertyToID("_OutlineWidth"),
+        m_outlineColorId = Shader.PropertyToID("_OutlineColor");
+    NPRSetting m_nprSettings;
+    //   RenderTexture
+    Vector2Int screenSize = new Vector2Int(2048, 2048);
 
     void ConfigerLights(ref CullingResults cull)
     {
@@ -43,11 +54,24 @@ public partial class CameraRender {
             //       Debug.Log(m_visibleLightColor[i]);
         }
     }
-
-    public void Render(ScriptableRenderContext context, Camera camera,bool useDynamicBatching, bool useGPUInstancing, bool m_useDeferredRendering , ShadowSettings shadowSettings, ShadowPostSettings shadowPostSettings)
+    void SetData()
+    {
+        if (screenSize.x != m_camera.scaledPixelWidth || screenSize.y != m_camera.scaledPixelHeight)
+        {
+            screenSize.x = m_camera.scaledPixelWidth;
+            screenSize.y = m_camera.scaledPixelHeight;
+        }
+    }
+    public void Render(ScriptableRenderContext context, Camera camera,bool useDynamicBatching, bool useGPUInstancing, bool m_useDeferredRendering , ShadowSettings shadowSettings, ShadowPostSettings shadowPostSettings,
+        NPRSetting nprSetting, AOSetting aoSetting, float ssrStepRatio)
     {
         this.m_context = context;
         this.m_camera = camera;
+        this.m_nprSettings = nprSetting;
+        this.m_aoSettings = aoSetting;
+        this.m_ssrStepRatio = ssrStepRatio;
+
+        SetData();
 
         PrepareBuffer();
         PrepareForSceneWindow();
@@ -56,10 +80,9 @@ public partial class CameraRender {
         
         //Shadow Pass
         m_buffer.BeginSample(SampleName);
-        ExecuteBuffer();
         m_lighting.SetUp(context,m_cullResult,shadowSettings,camera, shadowPostSettings);
-
         m_buffer.EndSample(SampleName);
+        ExecuteBuffer();
 
         //Regular Pass
         Setup();
@@ -71,6 +94,12 @@ public partial class CameraRender {
         {
             DrawVisibaleGeometry(useDynamicBatching, useGPUInstancing);
         }
+        if (m_nprSettings.EnableNPR)
+        {
+            DrawNPROutline(useDynamicBatching, useGPUInstancing);
+        }
+        DrawParticles();
+        PostProccess();
         m_context.DrawSkybox(m_camera);
         DrawUnsupportedShaders();
         DrawGizmos();
@@ -88,10 +117,41 @@ public partial class CameraRender {
         };
         var filteringSettings = new FilteringSettings(RenderQueueRange.all);
         drawingSettings.SetShaderPassName(0, m_customShaderTagId);
+        if (m_nprSettings.EnableNPR)
+        {
+            m_buffer.SetGlobalFloat(m_outlineWidthId, m_nprSettings.OutlineWidth);
+            m_buffer.SetGlobalColor(m_outlineColorId, m_nprSettings.OutlineColor);
+            m_buffer.SetGlobalFloat(m_specularSegmentId, m_nprSettings.SpecularSegment);
+            m_buffer.SetGlobalVector(m_colorStreetId, m_nprSettings.ColorStreet);
+            m_buffer.EnableShaderKeyword(m_nprKeywords);
+        }
+        else
+        {
+            m_buffer.DisableShaderKeyword(m_nprKeywords);
+        }
+        ExecuteBuffer();
         m_context.DrawRenderers(m_cullResult, ref drawingSettings, ref filteringSettings);
-        m_context.DrawSkybox(m_camera);
+       
     }
 
+    void DrawNPROutline(bool useDynamicBatching, bool useGPUInstancing)
+    {
+        var sortingSettings = new SortingSettings(m_camera) { criteria = SortingCriteria.CommonOpaque };
+        var drawingSettings = new DrawingSettings(m_customShaderTagId, sortingSettings)
+        {
+            enableDynamicBatching = useDynamicBatching,
+            enableInstancing = useGPUInstancing,
+            perObjectData = PerObjectData.Lightmaps | PerObjectData.LightProbe | PerObjectData.LightProbeProxyVolume
+        };
+        var filteringSettings = new FilteringSettings(RenderQueueRange.all);
+        drawingSettings.SetShaderPassName(4, m_nprOutlineId);
+        m_context.DrawRenderers(m_cullResult, ref drawingSettings, ref filteringSettings);
+    }
+
+    void DrawParticles()
+    {
+        ParticleEmitterManager.Instance.render(m_buffer, m_context, m_camera);
+    }
     void Submit()
     {
         m_buffer.EndSample(SampleName);
@@ -101,17 +161,6 @@ public partial class CameraRender {
     void Setup()
     {
         m_context.SetupCameraProperties(m_camera);
-        //if (postFXStack.IsActive)
-        //{
-        //    m_buffer.GetTemporaryRT(
-        //        frameBufferId, m_camera.pixelWidth, m_camera.pixelHeight,
-        //        32, FilterMode.Bilinear, RenderTextureFormat.Default
-        //    );
-        //    m_buffer.SetRenderTarget(
-        //        frameBufferId,
-        //        RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store
-        //    );
-        //}
         m_buffer.ClearRenderTarget(true, true, Color.clear);
         m_buffer.BeginSample(SampleName);
         ExecuteBuffer();

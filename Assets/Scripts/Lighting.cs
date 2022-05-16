@@ -31,7 +31,6 @@ public class Lighting
         m_buffer.EndSample(m_bufferName);
         context.ExecuteCommandBuffer(m_buffer);
         m_buffer.Clear();
-
     }
     void SetupLights()
     {
@@ -63,7 +62,7 @@ public class Lighting
     {
         return m_shadows.GetAtlasSize();
     }
-        void SetDirectionLight(int index,ref VisibleLight visibleLight)
+    void SetDirectionLight(int index,ref VisibleLight visibleLight)
     {
         //       UnityEngine.Light light = RenderSettings.sun;
         //m_buffer.SetGlobalVector(m_dirLightColorId, visibleLight.finalColor);

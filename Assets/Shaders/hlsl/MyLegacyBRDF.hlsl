@@ -3,8 +3,6 @@
 
 #define MIN_REFLECTIVITY 0.04
 
-#include "GI.hlsl"
-
 #ifndef SAMPLE_COUNT
 #define SAMPLE_COUNT 64
 #endif
@@ -85,17 +83,6 @@ float3 GetLighting(Surface surface,BRDF brdf, Light light)
     return IncomingLight(surface, light) * DirectBRDF(surface,brdf,light);
 }
 
-float3 GetLighting(Surface surface,BRDF brdf, GI gi)
-{
-    ShadowData shadowData = GetShadowData(surface);
-    float3 color = gi.diffuse * brdf.diffuse;
-    for (int i = 0; i < GetDirectionLightCount(); i++)
-    {
-        color += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData)) + CalculateLightVolume(i, surface.position, shadowData);
-    }
-    return color;
-}
-
 float3 GetLightVolume(float3 posWS)
 {
     ShadowData shadowData = GetShadowData(posWS);
@@ -107,14 +94,4 @@ float3 GetLightVolume(float3 posWS)
     return color;
 }
 
-float3 GetLighting(Surface surface, BRDF brdf, float ao)
-{
-    ShadowData shadowData = GetShadowData(surface);
-    float3 color = 0.25 * brdf.diffuse * ao;
-    for (int i = 0; i < GetDirectionLightCount(); i++)
-    {
-        color += GetLighting(surface, brdf, GetDirectionLight(i, surface, shadowData));
-    }
-    return color;
-}
 #endif //MY_LEGACY_LIGHT_INCLUDE

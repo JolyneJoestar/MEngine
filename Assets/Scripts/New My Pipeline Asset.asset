@@ -21,7 +21,7 @@ MonoBehaviour:
     directional:
       atlasSize: 2048
       filter: 3
-      cascadeCount: 1
+      cascadeCount: 4
       cascadeRatio1: 0.108
       cascadeRatio2: 0.294
       cascadeRatio3: 0.501
@@ -29,4 +29,16 @@ MonoBehaviour:
       cascadeBlend: 1
       softshadow: 0
   shadowPostSettings: {fileID: 11400000, guid: 413d5d50b9e280b45a612146214b71e2, type: 2}
+  nprSetting:
+    EnableNPR: 0
+    ColorStreet: {x: 0.1, y: 0.3, z: 0.6, w: 1}
+    OutlineColor: {r: 0, g: 0, b: 0, a: 0}
+    OutlineWidth: 0.29
+    SpecularSegment: 0.9
+  aoSetting:
+    Radius: 1.5
+    MaxRadiusPixel: 215.4
+    AngleBias: 0.036
+    AOStrength: 1
   useDeferredRendering: 1
+  ssrStepRatio: 0.239

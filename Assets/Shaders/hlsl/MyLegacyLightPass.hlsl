@@ -6,9 +6,9 @@
 #include "Shadows.hlsl"
 #include "GI.hlsl"
 #include "MyLegacyLight.hlsl"
-//#include "LightVolume.hlsl"
-#include "MyLegacyBRDF.hlsl"
+#include "Lighting.hlsl"
 #include "LitInput.hlsl"
+
 
 struct MVertexIn {
 	float3 positionOS : POSITION;

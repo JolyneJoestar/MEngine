@@ -36,6 +36,7 @@ Shader "MyPipeline/LegacyHLSL"
 				#pragma multi_compile _ _CASCADE_BLEND_SOFT _CASCADE_BLEND_DITHER
 				#pragma multi_compile _ _PCF _VSM _ESM _PCSS _CSM
 				#pragma multi_compile _ LIGHTMAP_ON
+				#pragma multi_compile _ _NPRLIGHTING
 				#pragma multi_compile_instancing
 				#pragma vertex LegacyVertex
 				#pragma fragment LegacyFragment
@@ -94,6 +95,21 @@ Shader "MyPipeline/LegacyHLSL"
 				#pragma vertex MetaPassVertex
 				#pragma fragment MetaPassFragment
 				#include "MetaPass.hlsl"
+				ENDHLSL
+			}
+
+			Pass {
+				Tags {
+					"LightMode" = "NPROutline"
+				}
+
+				Cull Front
+
+				HLSLPROGRAM
+				#pragma target 3.5
+				#pragma vertex OutlineVert
+				#pragma fragment OutlineFrag
+				#include "NPROutline.hlsl"
 				ENDHLSL
 			}
 		}

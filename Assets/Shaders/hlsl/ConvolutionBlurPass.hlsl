@@ -56,11 +56,11 @@ void GetGaussianTent7x7(out float2 offsets[49],out float weight[49])
         }
 
     }
-    for (int i = -3; i <= 3; i++)
+    for (int m = -3; m <= 3; m++)
     {
-        for (int j = -3; j <= 3; j++)
+        for (int n = -3; n <= 3; n++)
         {
-            int index = (i + 3) * length + j + 3;
+            int index = (m + 3) * length + n + 3;
             weight[index] /= totalWeight;
         }
     }

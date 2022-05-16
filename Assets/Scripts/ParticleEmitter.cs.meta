@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: c3e638327e7b88b4b9d6c5040021a238
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - simulationParent: {instanceID: 0}
+  - emissionMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+  - meshRenderer: {instanceID: 0}
+  - skinnedMeshRenderer: {instanceID: 0}
+  - computeShader: {fileID: 7200000, guid: dd2027cd1a5caee4893e7bf345ff4708, type: 3}
+  - renderMaterial: {fileID: 2100000, guid: e2e0d2909e45b894eafa1434eb7a2197, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

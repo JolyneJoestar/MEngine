@@ -18,6 +18,8 @@ SAMPLER(sampler_GMaterial);
 #define STEP_COUNT 32
 #endif
 
+float stepRatio;
+
 float4 SSRGenPass(v2f vert) :SV_TARGET
 {
 	float2 material = SAMPLE_TEXTURE2D(_GMaterial, sampler_GMaterial, vert.uv).xy;
@@ -34,7 +36,6 @@ float4 SSRGenPass(v2f vert) :SV_TARGET
 	float4 viewOutHCS = TransformWorldToHClip(viewOut);
 
 	float3 stepPosScr = pos;
-	float stepRatio = 0.2;
 	for (int i = 0; i < STEP_COUNT; i++)
 	{
 		float3 stepPos = stepPosScr + viewOut * stepRatio;

@@ -2,28 +2,17 @@
 #define BLOOM_PASS_INCLUDE
 
 #include "../Common.hlsl"					
-#include "DeferredRenderHelper.hlsl"
+#include "../DeferredRendering/DeferredRenderHelper.hlsl"
 
 
 TEXTURE2D(_BloomInput);
 SAMPLER(sampler_BloomInput);
+TEXTURE2D(_BaseColorBuffer);
+SAMPLER(sampler_BaseColorBuffer);
 
-#ifndef BLOOM_RADIUS
-#define BLOOM_RADIUS 4
-#endif
-
-float4 SSRGenPass(v2f vert) :SV_TARGET
+float4 BloomFinal(v2f vert) :SV_TARGET
 {
-	float3 color = 0.0;
-	for (int i = -BLOOM_RADIUS; i <= BLOOM_RADIUS; i++)
-	{
-		for (int j = -BLOOM_RADIUS; j <= BLOOM_RADIUS; j++)
-		{
-			color += SAMPLE_TEXTURE2D(_BloomInput, sampler_BloomInput, vert.uv);
-		}
-	}
-	color /= (BLOOM_RADIUS * BLOOM_RADIUS * 4);
+	float3 color = SAMPLE_TEXTURE2D(_BloomInput, sampler_BloomInput, vert.uv).rgb + SAMPLE_TEXTURE2D(_BaseColorBuffer, sampler_BaseColorBuffer, vert.uv).rgb;
 	return float4(color, 1.0);
 }
-
 #endif //BLOOM_PASS_INCLUDE

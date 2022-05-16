@@ -1,6 +1,6 @@
 This project is used for learning Unity Scriptable Render Pipeline, and following functions have been realized until now。
 
-- Preprocess functions
+- Precompute functions
   - [x] Gen brdf LUT
   - [x] Gen irradiance map
 
@@ -12,29 +12,50 @@ This project is used for learning Unity Scriptable Render Pipeline, and followin
     - [x] PCSS 
     - [ ] ESM
     - [x] PCF
+    
   - [x] PBR
+  
   - [x] Volume Light
+  
+  - [x] Bloom
+  
+    ![screenshot](\images\Bloom.png)
+  
+  - [x] GPU Particles
+  
+    ![screenshot](\images\GPUParticle.png)
   
 - Forward render pipline 
 
   - [x] LightMap
 
-    ![](/images/lightMap.png)
+    ![screenshot](/images/lightMap.png)
     
-    ![](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/lightMap.png)
+    ![screenshot](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/lightMap.png)
+    
+  - [x] NPR (basic implement)
+
+    ![screenshot](/images/simpleNPR.png)
+
+    ![screenshot](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/simpleNPR.png)
 
 - Deferred render pipline
-  - [x] SSAO
   
   - [x] SSR (still have some problem)
   
-  - [x] Bloom
-  
   - [x] TAA
   
-    ![](/images/ssao.png)
-    
-    ![](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/ssao.png)
+  - [x] SSAO
+  
+    ![ssao](/images/ssao.png)
+  
+    ![screenshot](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/ssao.png)
+  
+  - [x] HBAO
+  
+    ![screenshot](/images/hbao.png)
+  
+    ![screenshot](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/hbao.png)
   
   
 
