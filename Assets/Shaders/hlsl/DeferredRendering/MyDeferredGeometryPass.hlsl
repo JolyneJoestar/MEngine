@@ -48,8 +48,10 @@ MFragOut DeferredGeometricFragment(MVertexOut vert)
 	MFragOut fragOut;
 
     float4 texColor = GetBase(vert.uv);
+	float3 normal = normalize(vert.normal);
+	normal = normal * 0.5 + 0.5;
 	fragOut.position = vert.positionWS;
-	fragOut.normal = normalize(vert.normal);
+	fragOut.normal = normal;
 	fragOut.albedo = texColor.rgb;
 	fragOut.material = float4(GetMetallic(), GetSmoothness(), vert.uv.x, vert.uv.y);
 

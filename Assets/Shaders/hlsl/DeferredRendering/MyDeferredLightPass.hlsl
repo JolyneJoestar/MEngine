@@ -28,6 +28,7 @@ float4 deferredLightingFragPass(v2f vert) : SV_TARGET
 	Surface surface;
 	surface.position = SAMPLE_TEXTURE2D(_GPosition, sampler_GPosition, vert.uv).rgb;
 	surface.normal = SAMPLE_TEXTURE2D(_GNormal, sampler_GNormal, vert.uv).rgb;
+	surface.normal = surface.normal * 2.0 - 1.0;
     surface.viewDirection = normalize(_WorldSpaceCameraPos - surface.position);
     surface.depth = -TransformWorldToView(surface.position).z;
 	surface.color = SAMPLE_TEXTURE2D(_GAlbedo, sampler_GAlbedo, vert.uv).rgb;

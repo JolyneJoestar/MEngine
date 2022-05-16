@@ -118,7 +118,7 @@ partial class CameraRender
 
  //       m_buffer.GetTemporaryRT(m_shaderBuffers.depthBufferID, screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.Depth);
         m_buffer.GetTemporaryRT(m_shaderBuffers.gbuffers.GPositionID, screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
-        m_buffer.GetTemporaryRT(m_shaderBuffers.gbuffers.GNormalID, screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGBFloat);
+        m_buffer.GetTemporaryRT(m_shaderBuffers.gbuffers.GNormalID, screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGB2101010);
         m_buffer.GetTemporaryRT(m_shaderBuffers.gbuffers.GAlbedoID, screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
         m_buffer.GetTemporaryRT(m_shaderBuffers.gbuffers.GMaterialID, screenSize.x, screenSize.y, 0, FilterMode.Point, RenderTextureFormat.ARGB32);
         ExecuteBuffer();
