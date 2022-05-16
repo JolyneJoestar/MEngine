@@ -15,15 +15,19 @@ This project is used for learning Unity Scriptable Render Pipeline, and followin
     
   - [x] PBR
   
-  - [x] Volume Light
+  - [x] Volumetric Light
   
   - [x] Bloom
   
     ![screenshot](\images\Bloom.png)
   
+    ![screenshot](https://github.com/JolyneJoestar/MapEngine/tree/main/images/Bloom.png)
+  
   - [x] GPU Particles
   
     ![screenshot](\images\GPUParticle.png)
+    
+    ![screenshot](https://github.com/JolyneJoestar/MapEngine/tree/main/images/GPUParticle.png)
   
 - Forward render pipline 
 
@@ -31,13 +35,13 @@ This project is used for learning Unity Scriptable Render Pipeline, and followin
 
     ![screenshot](/images/lightMap.png)
     
-    ![screenshot](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/lightMap.png)
+    ![screenshot](https://github.com/JolyneJoestar/MapEngine/tree/main/images/lightMap.png)
     
   - [x] NPR (basic implement)
 
     ![screenshot](/images/simpleNPR.png)
 
-    ![screenshot](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/simpleNPR.png)
+    ![screenshot](https://github.com/JolyneJoestar/MapEngine/tree/main/images/simpleNPR.png)
 
 - Deferred render pipline
   
@@ -49,13 +53,13 @@ This project is used for learning Unity Scriptable Render Pipeline, and followin
   
     ![ssao](/images/ssao.png)
   
-    ![screenshot](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/ssao.png)
+    ![screenshot](https://github.com/JolyneJoestar/MapEngine/tree/main/images/ssao.png)
   
   - [x] HBAO
   
     ![screenshot](/images/hbao.png)
   
-    ![screenshot](https://github.com/JolyneJoestar/MapEngine/blob/SSR/images/hbao.png)
+    ![screenshot](https://github.com/JolyneJoestar/MapEngine/tree/main/images/hbao.png)
   
   
 
