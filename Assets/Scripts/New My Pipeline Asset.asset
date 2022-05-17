@@ -36,9 +36,9 @@ MonoBehaviour:
     OutlineWidth: 0.29
     SpecularSegment: 0.9
   aoSetting:
-    Radius: 1.5
-    MaxRadiusPixel: 215.4
-    AngleBias: 0.036
+    Radius: 1.1
+    MaxRadiusPixel: 220
+    AngleBias: 0
     AOStrength: 1
   useDeferredRendering: 1
   ssrStepRatio: 0.239

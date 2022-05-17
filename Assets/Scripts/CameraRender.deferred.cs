@@ -46,11 +46,8 @@ partial class CameraRender
     //taa properties
     Matrix4x4[] m_preV = new Matrix4x4[2];
     Matrix4x4[] m_preP = new Matrix4x4[2];
-    static int[] m_preTexture = {
-            m_shaderBuffers.preColorTextureID,
-            m_shaderBuffers.currentColorTextureID
-        };
 
+    RenderTexture[] m_preTextures = new RenderTexture[2];
     private Vector2[] HaltonSequence = new Vector2[]
     {
             new Vector2(0.5f, 1.0f / 3),
@@ -84,8 +81,8 @@ partial class CameraRender
             }
         }
 
-        m_buffer.GetTemporaryRT(m_preTexture[0], screenSize.x, screenSize.y, 32, FilterMode.Point, RenderTextureFormat.ARGB32);
-        m_buffer.GetTemporaryRT(m_preTexture[1], screenSize.x, screenSize.y, 32, FilterMode.Point, RenderTextureFormat.ARGB32);
+        m_preTextures[0] = RenderTextures.Instance.GetTemperory(m_camera.name + "pre1", screenSize.x, screenSize.y, 0, RenderTextureFormat.ARGB32);
+        m_preTextures[1] = RenderTextures.Instance.GetTemperory(m_camera.name + "pre2", screenSize.x, screenSize.y, 0, RenderTextureFormat.ARGB32);
 
         frameCount++;
         int index = frameCount % 8;
@@ -157,8 +154,8 @@ partial class CameraRender
         {
             m_buffer.ReleaseTemporaryRT(m_shaderBuffers.gbuffers[i]);
         }
-        m_buffer.ReleaseTemporaryRT(m_preTexture[0]);
-        m_buffer.ReleaseTemporaryRT(m_preTexture[1]);
+        //m_buffer.ReleaseTemporaryRT(m_preTextureID[0]);
+        //m_buffer.ReleaseTemporaryRT(m_preTextureID[1]);
         m_buffer.ReleaseTemporaryRT(m_shaderBuffers.bluredAoTextureID);
         m_buffer.ReleaseTemporaryRT(m_shaderBuffers.lightVolumeTextureID);
         m_buffer.ReleaseTemporaryRT(m_shaderBuffers.aoTextureID);
@@ -271,7 +268,7 @@ partial class CameraRender
     partial void CopyColorBuffer()
     {
         m_buffer.BeginSample("copy");
-        m_buffer.Blit(BuiltinRenderTextureType.CameraTarget, m_preTexture[m_aaPingpongFlag]);
+        m_buffer.Blit(BuiltinRenderTextureType.CameraTarget, m_preTextures[m_aaPingpongFlag]);
         m_aaPingpongFlag = 1 - m_aaPingpongFlag;
         m_buffer.EndSample("copy");
         ExecuteBuffer();
@@ -280,8 +277,9 @@ partial class CameraRender
     {
         m_buffer.BeginSample("taa pass");
         m_buffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
-        m_buffer.SetGlobalTexture(m_shaderBuffers.currentColorTextureID, m_preTexture[1 - m_aaPingpongFlag]);
-        m_buffer.SetGlobalTexture(m_shaderBuffers.preColorTextureID, m_preTexture[m_aaPingpongFlag]);
+        m_buffer.SetGlobalVector(m_shaderProperties.screenProperties.texelSizeID,m_texelSize);
+        m_buffer.SetGlobalTexture(m_shaderBuffers.currentColorTextureID, m_preTextures[1 - m_aaPingpongFlag]);
+        m_buffer.SetGlobalTexture(m_shaderBuffers.preColorTextureID, m_preTextures[m_aaPingpongFlag]);
         m_buffer.SetGlobalVector(m_shaderProperties.taaPropreties.jitterID, jitter);
         m_buffer.SetGlobalMatrix(m_shaderProperties.taaPropreties.preVID, m_preV[m_aaPingpongFlag]);
         m_buffer.SetGlobalMatrix(m_shaderProperties.taaPropreties.prePID, m_preP[m_aaPingpongFlag]);

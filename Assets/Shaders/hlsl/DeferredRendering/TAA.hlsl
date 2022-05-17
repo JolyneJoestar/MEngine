@@ -15,6 +15,7 @@ SAMPLER(sampler_GPosition);
 float4x4 _PreV;
 float4x4 _PreP;
 float2 _Jitter;
+float2 _TexelSize;
 
 #ifndef STEP_COUNT
 #define STEP_COUNT 32
@@ -44,8 +45,8 @@ float4 TAA(v2f vert) : SV_TARGET
 	float2 uv = vert.uv - _Jitter;
 	float3 posWS = SAMPLE_TEXTURE2D(_GPosition, sampler_GPosition, vert.uv);
 	float4 prePosHCS = mul(_PreP,mul(_PreV, float4(posWS, 1.0)));
-	float2 texelSizeU = float2(1.0 / 2560.0, 0.0);
-	float2 texelSizeV = float2(0.0, 1.0 / 1440.0);
+	float2 texelSizeU = float2(_TexelSize.x, 0.0);
+	float2 texelSizeV = float2(0.0, _TexelSize.y);
 	prePosHCS /= prePosHCS.w;
 	float2 preUV = prePosHCS.xy * 0.5 + 0.5;
 	float3 color00 = SAMPLE_TEXTURE2D(_CurrentColorBuffer, sampler_CurrentColorBuffer, uv - texelSizeU - texelSizeV).rgb;
